@@ -1,0 +1,42 @@
+{% extends 'nuka/base.html' %}
+
+{% load i18n bootstrap3 mptt_tags %}
+
+{% block title %}{% trans "Kampanjat" %} - {{ block.super }}{% endblock title %}
+
+{% block content %}
+    <article class="row initiative">
+        {% if object_list %}
+            <div class="col-md-4 side">
+                <div class="well" style="min-height:400px;">
+                    <h1 class="h3-style">{% trans "Kampanjat" %}</h1>
+                    <ul style="list-style-type:none; padding-left:15px;">
+                        {% recursetree object_list %}
+                            <li>
+                                <a href="{% url 'campaign:campaign_detail' pk=node.pk %}">
+                                    {{ node.title }}
+                                </a>
+                                {% if not node.is_leaf_node %}
+                                    <ul class="children">
+                                        {{ children }}
+                                    </ul>
+                                {% endif %}
+                            </li>
+                        {% endrecursetree %}
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-8 main">
+                <div class="well" style="min-height:400px;">
+                    {% include "campaign/campaign_detail.html" with object=selected_campaign %}
+                </div>
+            </div>
+        {% else %}
+            <div class="col-md-12">
+                <div class="well">
+                    {% trans "Yhtään kampanjaa ei ole vielä aloitettu." %}
+                </div>
+            </div>
+        {% endif %}
+    </article>
+{% endblock content %}

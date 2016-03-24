@@ -1,0 +1,9 @@
+{% load i18n fontawesome %}
+
+{% if object.picture %}
+    {% include 'content/idea_main_picture.html' %}
+{% else %}
+    <div class="col-md-10 placeholder" title="{% trans "Lisää kuva" %}">
+        {% fa_icon "image" "5x fa-border" %}
+    </div>
+{% endif  %}

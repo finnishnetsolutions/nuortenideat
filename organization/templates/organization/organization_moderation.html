@@ -1,0 +1,18 @@
+{% load i18n %}
+<div class="well organization">
+    <div class="row">
+        <h3>{{ object.name }}</h3>
+
+        <div class="editable-wrap ajaxy-wrap col-md-3">
+            {% include "organization/organization_detail_picture.html" %}
+        </div>
+        <div class="editable-wrap ajaxy-wrap col-md-9">
+            {% include "organization/organization_detail_description.html" %}
+        </div>
+    </div>
+
+    <h2>{% trans "Yhteyshenkilöt" %}</h2>
+    <div class="editable-wrap ajaxy-wrap">
+        {% include "organization/organization_detail_admins.html" %}
+    </div>
+</div>

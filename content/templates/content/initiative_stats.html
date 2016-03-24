@@ -1,0 +1,14 @@
+<div class="stats">
+    <div class="row initiative-stats-row">
+        <div class="col-xs-8">
+            {% if object.is_idea %}
+                <div class="row ajaxy-wrap">
+                    {% include 'content/idea_vote.html' with votable_object=object %}
+                </div>
+            {% endif %}
+        </div>
+        <div class="col-xs-4">
+            {% include 'nkcomments/comment_count.html' %}
+        </div>
+    </div>
+</div>

@@ -1,0 +1,39 @@
+{% extends 'nuka/base.html' %}
+{% load i18n static %}
+
+{% block js %}{% endblock js %}
+
+{% block css %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static "nkvote/css/results_pdf.css" %}" type="text/css">
+{% endblock css %}
+
+{% block precontent %}
+    {% with BASE_URL|add:object.get_absolute_url as link %}
+        {% include "nuka/pdf/header.html" with link=link %}
+    {% endwith %}
+{% endblock precontent %}
+
+{% block content %}
+    <h2>{% trans "Idea" %}: {{ object.title }}</h2>
+    <article class="gallup well">
+        <header><h4>{% trans "Gallup" %}</h4></header>
+        <div class="body">
+            <div class="status">
+                <p>{% spaceless %}
+                    {% if gallup.is_closed %}
+                        {% trans 'Gallup on suljettu.' %}
+                    {% elif gallup.is_draft %}
+                        {% trans 'Gallup on luonnostilassa. Vain idean omistajat näkevät sen.' %}
+                    {% endif %}
+                {% endspaceless %}</p>
+            </div>
+            <div class="questions">
+                <form method="post" id="gallup-{{ gallup.pk }}_form" action="{% url 'content:gallup:answer' gallup.idea.pk gallup.pk %}" class="ajaxy-form">
+                    {% csrf_token %}
+                    {% include "gallup/well/questions.html" %}
+                </form>
+            </div>
+        </div>
+    </article>
+{% endblock content %}

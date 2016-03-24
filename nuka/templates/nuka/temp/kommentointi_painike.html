@@ -1,0 +1,12 @@
+{# TODO: remove template after commenting rounds #}
+<button type="button" style="border: 1px solid #D98000;border-top-color: #FF9B0D;border-left-color:#FF9B0D;padding:3px 1.5px 3px 1.5px;float: right; margin-right: 10px; margin-top: -110px; background-color: #EF8D00;color: #fff; {{ extra_style }}" class="kommentointi-painike" data-toiminto="{{ toiminto }}" name="kommentoi">Kommentoi toimintoa</button>
+
+<script language="javascript">
+    $(function () {
+        $(document).on('click', '.kommentointi-painike', function () {
+            var toiminto = $(this).attr('data-toiminto');
+            var aikaleima = new Date().getTime();
+            window.open("http://blue.fns.fi/kommentointi/index.php?jarjestelma=nk3&cache="+aikaleima+"&toiminto="+toiminto,"kommentointi","width=950,height=600,top=50,left=50,toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=1|0,resizable=yes");
+        });
+    });
+</script>

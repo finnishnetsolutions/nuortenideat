@@ -1,0 +1,60 @@
+{% load i18n bootstrap3 flagging %}
+
+<div class="row">
+    <div class="col-md-12">
+        <!-- User picture and name -->
+        {% if not deleted %}
+            {% if comment.user %}
+                {% include "account/profile_picture.html" with user=comment.user class="profile-pic-small" %}
+                <a class="username{% if highlight %} username-highlight{% endif %}" href="{{ comment.user.get_absolute_url }}">{{ comment.user }}</a>
+            {% else %}
+                {% include "account/profile_picture.html" with user=None no_link=True class="profile-pic-small" %}
+                {{ comment.user_name }}
+            {% endif %}
+
+
+            {% if comment.user_id in object.target_organization_admin_ids %}
+                {% for organization in object.target_organizations.all %}
+                    {% if comment.user in organization.admins.all %},
+                        <a href="{{ organization.get_absolute_url }}">{{ organization }}</a>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        {% else %}
+            {% include "account/profile_picture.html" with user=None no_link=True class="profile-pic-small" %}
+        {% endif %}
+
+        <!-- Voting comment -->
+        <div class="voting">
+            {% include 'nkcomments/comment_vote.html' %}
+        </div>
+
+        <div class="edit-comment">
+            <!-- Editing comment -->
+            {% if comment in perm.nkcomments.CanEditComment and not deleted %}
+                <a href="{% url 'nkcomments:edit_comment' comment.pk %}" title="{% trans "Muokkaa kommenttia" %}" class="delete-comment btn btn-default ajaxy-link" data-ajaxy-target="#comment-{{ comment.pk }}-content" style="margin-right:50px;">
+                    <span class="glyphicon glyphicon-edit"></span>
+                </a>
+            {% endif %}
+
+            <!-- Deleting comment -->
+            {% if comment in perm.nkcomments.CanDeleteComment and not deleted and object in perm.content.InitiativeIsNotArchived %}
+                <a href="{% url 'nkcomments:delete_comment' comment.pk %}" title="{% trans 'Poista kommentti' %}" class="delete-comment btn btn-default ajaxy-link" data-ajaxy-method="POST">
+                    <span class="glyphicon glyphicon-trash"></span>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div id="comment-{{ comment.pk }}-content" class="col-lg-12 ajaxy-wrap comment-content">
+        {% include "nkcomments/comment_content.html" %}
+    </div>
+</div>
+
+<div class="row" style="margin-top:5px;">
+    <div class="col-lg-12">
+        <span class="pull-left">{{ comment.submit_date|date:"j.n.Y H.i" }}</span>
+        {% if not deleted and not pdf_mode %}{% flag_link comment label=_("Ilmoita asiaton kommentti") %}{% endif %}
+    </div>
+</div>

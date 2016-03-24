@@ -1,0 +1,99 @@
+{% extends 'content/content_base.html' %}
+
+{% load i18n bootstrap3 fontawesome static custom_comments comments bleach_tags flagging moderation %}
+
+{% block title %}{% trans "Kysymys" %}: {{ object.title|truncatechars:50 }} - {{ block.super }}{% endblock title %}
+
+
+{% block initiative_header_owners %}
+    {% include 'content/question_owners.html' with owners=object.owners.all comma_separated=True %}
+{% endblock initiative_header_owners %}
+
+{% block idea_main %}
+
+    <div id="title" class="ajaxy-wrap editable-wrap">
+        {% include "content/idea_detail_title.html" with title=_("Muokkaa otsikkoa") %}
+    </div>
+
+    {{ block.super }}
+
+    <div id="text">
+        <div class="description ajaxy-wrap editable-wrap">
+            {% include "content/idea_detail_description.html" with title=_("Muokkaa kuvausta") %}
+        </div>
+    </div>
+
+    <hr>
+    {% flag_link object %}
+
+    {% moderation_reasons object %}
+{% endblock idea_main %}
+
+{% block idea_comments %}
+    <article class="well" id="comments">{% include 'nkcomments/comment_block.html' %}</article>
+{% endblock idea_comments %}
+
+{% block idea_side_title_text %}
+    <i class="ni-icon ni-icon-question"><span class="sr-only">{% trans "Kysymys" %}</span></i>
+    {% trans "Kysymys" %}
+{% endblock idea_side_title_text %}
+
+{% block idea_side_1 %}
+    {{ block.super }}
+{% endblock idea_side_1 %}
+
+{% block idea_owners %}
+    <div id="organizations">
+        {% include "organization/organization_picture.html" with object=object.organization img_class="center-img" %}
+        <a href="{{ object.organization.get_absolute_url }}">{{ object.organization }}</a>
+    </div>
+{% endblock idea_owners %}
+
+{% block idea_organizations %}
+    <hr>
+    <div id="owners">
+        <h5>{% trans "Kysyjä" %}</h5>
+        {% if object.owner %}
+            {% include "content/owner_list.html" with owners=object.owners.all  %}
+        {% else %}
+            <span>
+                {% include "content/question_owners.html" %}
+            </span>
+        {% endif %}
+    </div>
+{% endblock idea_organizations %}
+
+{% block idea_status %}{% endblock idea_status %}
+{% block initiative_stats %}{% endblock initiative_stats %}
+
+
+{% block idea_tools_menu %}
+    {% if object in perm.content.CanViewQuestionTools %}
+        {{ block.super }}
+    {% endif %}
+{% endblock idea_tools_menu %}
+
+{% block idea_tools_menu_items %}
+    {% if object in perm.content.CanViewQuestionTools %}
+
+        {% if object in perm.content.CanCreateIdeaFromQuestion %}
+            <li role="presentation">
+                <a role="menuitem" tabindex="-1"
+                   href="{% url 'content:question_to_idea' object.pk %}"
+                   class="ajaxy-link" data-ajaxy-method="POST"
+                   data-ajaxy-confirm="{% trans "Haluatko varmasti luoda idean?" %}">{% trans "Muunna ideaksi" %}</a>
+            </li>
+        {% endif %}
+
+        {% if object in perm.content.CanDeleteQuestion %}
+            <li role="presentation" class="divider"></li>
+            <li role="presentation">
+                <a role="menuitem" tabindex="-1" href="{% url 'content:delete_question' object.pk %}"
+                   class="ajaxy-link" data-ajaxy-method="POST"
+                   data-ajaxy-confirm="{% trans "Haluatko varmasti poistaa kysymyksen?" %}">{% trans "Poista kysymys" %}</a>
+            </li>
+        {% endif %}
+    {% endif %}
+{% endblock idea_tools_menu_items %}
+
+{% block idea_gallup %}{% endblock idea_gallup %}

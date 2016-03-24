@@ -1,0 +1,12 @@
+{% load i18n bootstrap3 fontawesome %}
+
+<h3>
+    {% trans "Ilmoitusasetukset" %}
+    <a href="{% url 'account:notification_options_edit' user_id=object.pk %}" class="btn btn-default ajaxy-link edit-link" style="margin-left: 10px; text-transform: none;">
+        {% fa_icon "edit" %} {% trans "Muokkaa ilmoitusasetuksia" %}
+    </a>
+</h3>
+
+{% include "account/notification_options/help_text.html" %}
+
+{% bootstrap_form forms.notification_options layout='notification_options_preview' %}

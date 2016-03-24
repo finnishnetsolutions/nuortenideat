@@ -1,0 +1,35 @@
+{% load i18n fontawesome staticfiles %}
+{% load firstof from future %}
+
+{% spaceless %}
+
+    {% if not no_link %}
+        <a href="{{ user.get_absolute_url }}">
+    {% endif %}
+
+
+        {% if user.settings.picture %}
+
+            <img class="{% spaceless %}
+                    {% firstof img_class class "img-responsive profile-picture" %}
+                    {% if highlight %}profile-pic-highlight{% endif %}
+                    {% endspaceless %}"
+                 src="{% spaceless %}
+                    {% if small or class == 'profile-pic-small' or img_class == 'profile-pict-small' %}
+                        {{ user.settings.picture_small.url }}
+                    {% else %}
+                        {{ user.settings.picture_medium.url }}
+                    {% endif %}
+                    {% endspaceless %}"
+                 alt="{{ user.username }}">
+
+        {% else %}
+            <img class="{% firstof ph_class class "" %}{% if highlight %} profile-pic-highlight{% endif %}"  src="{% static 'nuka/img/profile_pic_placeholder.png' %}" alt="{% trans "Profiilikuvan paikka" %}">
+        {% endif %}
+
+
+    {% if not no_link %}
+       </a>
+    {% endif %}
+
+{% endspaceless %}

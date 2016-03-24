@@ -1,0 +1,18 @@
+<div class="moderation-status alert alert-warning">
+    {{# blocked.visitor }}
+        {{# blocked.participant }}
+            {{#_}}Keskusteluoikeus rajattu moderaattoreihin ja vastaajiin.{{/_}}
+        {{/ blocked.participant }}
+        {{^ blocked.participant }}
+            {{#_}}Keskusteluoikeus vain kirjautuneilla käyttäjillä.{{/_}}
+        {{/ blocked.participant }}
+    {{/ blocked.visitor }}
+    {{^ blocked.visitor }}
+        {{# blocked.participant }}
+            {{#_}}Keskusteluoikeus rajattu moderaattoreihin, vastaajiin ja vierailijoihin.{{/_}}
+        {{/ blocked.participant }}
+        {{^ blocked.participant }}
+            {{#_}}Keskustelurajoitukset poistettu.{{/_}}
+        {{/ blocked.participant }}
+    {{/ blocked.visitor }}
+</div>

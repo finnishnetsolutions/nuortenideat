@@ -1,0 +1,61 @@
+{% extends 'account/profile_base.html' %}
+
+{% load i18n %}
+
+{% block subcontent %}
+    <a name="sisalto"></a>
+    <div class="well">
+        <div class="row">
+            <div class="col-sm-3"><b>{% trans "Lähettäjä" %}</b></div>
+            <div class="col-sm-9">
+                {% include 'account/messages/sender.html' %}
+            </div>
+        </div>
+        {% if message.feedback.email %}
+        <div class="row">
+            <div class="col-sm-3"><b>{% trans "Sähköposti" %}</b></div>
+            <div class="col-sm-9">
+                {{ message.feedback.email }}
+            </div>
+        </div>
+        {% endif %}
+        <div class="row">
+            <div class="col-sm-3"><b>{% trans "Aihe" %}</b></div>
+            <div class="col-sm-9">
+                {% include "account/messages/subject.html" with no_link=True %}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-3"><b>{% trans "Vastaanottaja" %}</b></div>
+            <div class="col-sm-9">
+                {% include "account/messages/receivers.html" %}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-3"><b>{% trans "Päiväys" %}</b></div>
+            <div class="col-sm-9">{{ message.sent|date:"d.m.Y  H.i" }}</div>
+        </div>
+        <hr />
+        <div class="row">
+            <div class="col-sm-12">
+                {{ message.message|linebreaks }}
+            </div>
+        </div>
+        <hr />
+        <div class="row">
+            <div class="col-md-12">
+                <a href="{% url 'account:messages' object.pk %}#sisalto" class="btn btn-default">{% trans "Takaisin viesteihin" %}</a>
+                {% if message.sender %}
+                    <a href="{% url 'account:respond_message' object.pk message.pk %}" class="btn btn-default">{% trans "Vastaa" %}</a>
+                {% endif %}
+
+                <form action="{% url 'account:delete_message' object.pk message.pk %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-default pull-right">
+                        {% trans "Poista" %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock subcontent %}

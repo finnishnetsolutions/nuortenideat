@@ -1,0 +1,53 @@
+{% load i18n bootstrap3 humanize permitter %}
+{% csrf_token %}
+<div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">{% trans "Sulje" %}</span></button>
+    <br>
+</div>
+<div class="modal-body">
+    <div class="row">
+        {% if object in perm.content.CanCreatePdf %}
+            <div class="col-md-6">
+                <div class="idea-transfer-method-col">
+                    <h3>{% trans "Lähetä idea eteenpäin" %}</h3>
+                    {% blocktrans %}<p>Jos haluat toteuttaa ideasi, lähetä se lomakkeella eteenpäin idean käsittelijän sähköpostiin. </p><p>Organisaatioiden yhteyshenkilöt käsittelevät ja toimittavat eteenpäin heille lähetetyt ideat. </p><p>Tästä voit myös kirjata tiedon jos olet vienyt idean muulla tavalla eteenpäin.</p>{% endblocktrans %}
+                    <a href="{% url 'content:idea_to_pdf' initiative_id=object.pk %}" class="btn btn-primary">{% trans "Lähetä eteenpäin" %}&hellip;</a>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if object in perm.content.CanTransferIdeaToKUA %}
+            <div class="col-md-6">
+                <div class="idea-transfer-method-col">
+                    <h3>{% trans "Tee ideasta kuntalaisaloite" %}</h3>
+                    {% blocktrans %}<p>Voit tehdä kuntalaisaloitteen jos ideasi koskee kotikuntasi toimintaa. </p><p>Tästä voit viedä ideasi Kuntalaisaloite.fi-palveluun, josta se ohjautuu kunnan käsiteltäväksi.</p>{% endblocktrans %}
+
+                    {% if object in perm.content.CanTransferIdeaToKUAWithoutExtraConfirmation %}
+                        <a href="{% url 'content:transfer_idea_to_kua' initiative_id=object.pk %}" class="btn btn-primary ajaxy-link kuntalaisaloite-button" data-ajaxy-method="POST" data-ajaxy-confirm="{% trans "Olet tekemässä kuntalaisaloitetta. Olethan varmistanut, että ideasi on sellainen, joka voidaan käsitellä kuntalaisaloitteena? Tukea saat yhteyshenkilöltä tai ylläpidolta." %}">
+                            {% trans "Tee kuntalaisaloite" %}
+                        </a>
+                    {% else %}
+                        <a href="{% url 'content:transfer_idea_to_kua' initiative_id=object.pk %}" class="btn btn-primary ajaxy-link kuntalaisaloite-button" data-ajaxy-confirm="{% trans "Olet tekemässä kuntalaisaloitetta. Olethan varmistanut, että ideasi on sellainen, joka voidaan käsitellä kuntalaisaloitteena? Tukea saat yhteyshenkilöltä tai ylläpidolta." %}">
+                            {% trans "Tee kuntalaisaloite" %}&hellip;
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% elif object.target_municipality %}
+
+        {% endif %}
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <h3>{% trans "Tarvitsetko apua?" %}</h3>
+
+            <p>{% trans "Kysy yhteyshenkilöltä neuvoa." %} <span style="margin-right:20px;"></span> <a href="{% url 'account:transfer_idea_by_message' user_id=request.user.pk initiative_id=object.pk %}" class="btn btn-primary">
+                {% trans "Lähetä yhteyshenkilölle" %}&hellip;
+            </a></p>
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button class="btn btn-default pull-right" data-dismiss="modal">{% trans "Peruuta" %}</button>
+</div>

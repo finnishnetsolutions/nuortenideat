@@ -1,0 +1,10 @@
+{% load i18n bootstrap3 %}
+
+<h3>{% trans "Ilmoitusasetukset" %}</h3>
+
+{% include "account/notification_options/help_text.html" %}
+
+<form action="{% url 'account:notification_options_edit' object.pk %}" method="post" class="ajaxy-form" novalidate>
+    <div id="notification-options-container">{% bootstrap_form form %}</div>
+    <button class="btn btn-default" type="submit">{% bootstrap_icon "ok" %} {% trans "Tallenna" %}</button>
+</form>

@@ -1,0 +1,20 @@
+{% load i18n static bootstrap3 custom_comments %}
+
+<header>
+    <h4>{% trans "Kommentit" %} ({{ object.comments.count }})</h4>
+</header>
+<div class="content">
+    {% include 'nkcomments/comment_list.html' with comments=object.public_comments %}
+
+    {% if request.is_ajax %}{# HACK: dont re-display non-ajax messsages already show on page header #}
+        {% bootstrap_messages %}
+    {% endif %}
+
+    <a name="add-comment"></a>
+    {% if object in perm.content.CanCommentInitiative %}
+        <div class="ajaxy-wrap comment-form-container">
+            {% get_custom_comment_form object 'comment_form' %}
+            {% include 'nkcomments/comment_form.html' with form=comment_form %}
+        </div>
+    {% endif %}
+</div>

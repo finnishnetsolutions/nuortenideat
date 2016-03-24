@@ -1,0 +1,7 @@
+{% spaceless %}
+    {% if initiator_organization %}
+        <a href="{{ initiator_organization.get_absolute_url }}">{{ initiator_organization }}</a>
+    {% else %}
+        {% for owner in owners %}<a href="{{ owner.get_absolute_url }}">{{ owner }}</a>{% if comma_separated and not forloop.last %}, {% endif %}{% endfor %}
+    {% endif %}
+{% endspaceless %}

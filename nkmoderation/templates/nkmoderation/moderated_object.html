@@ -1,0 +1,23 @@
+{% load i18n bootstrap3 flagging objecttype moderation %}
+
+<div class="ajaxy-wrap">
+    <div class="panel panel-default">
+        <div class="panel-heading">{% bootstrap_icon "eye-open" %} <a href="{% moderated_object_url moderated_object %}"><strong>{{ object|verbose_name|capfirst }}: {{ object|striptags }}</strong></a></div>
+        <div class="panel-body">
+            {% flaggings object as flags %}
+            {% if flags %}
+                <ul class="list-group">
+                    <li class="list-group-item disabled">{% trans "Ilmoitukset käyttäjiltä" %}</li>
+                    {% for flag in flags %}
+                        <li class="list-group-item list-group-item-warning">{% if flag.flagger %}<a href="{{ flag.flagger.get_absolute_url }}">{{ flag.flagger }}</a>{% else %}({% trans "anonyymi" %}){% endif %}: {{ flag.reason }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            {% include moderated_object.moderator.get_moderation_queue_template_name %}
+        </div>
+         <div class="panel-footer">
+             <a class="btn btn-primary btn-lg ajaxy-link" href="{% url 'nkmoderation:approve_object' moderated_object_id=moderated_object.pk %}" data-ajaxy-method="POST">{% bootstrap_icon "ok" %} {% trans "Hyväksy" %}</a>
+             <a class="btn btn-danger btn-lg pull-right ajaxy-link" href="{% url 'nkmoderation:reject_object' moderated_object_id=moderated_object.pk %}" data-ajaxy-method="POST">{% bootstrap_icon "remove" %} {% trans "Poista" %}</a>
+         </div>
+    </div>
+</div>

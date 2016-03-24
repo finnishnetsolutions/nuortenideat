@@ -1,0 +1,9 @@
+{% if initiative.initiator_organization %}
+    <a href="{% url 'organization:detail' initiative.initiator_organization.pk %}" target="_blank">
+        {{ initiative.initiator_organization.name }}
+    </a>
+{% else %}
+    {% for owner in initiative.owners.all %}
+        <a href="{% url 'account:profile' owner.pk %}" target="_blank">{{ owner }}</a>{% if not forloop.last %}, {% endif %}
+    {% endfor %}
+{% endif %}

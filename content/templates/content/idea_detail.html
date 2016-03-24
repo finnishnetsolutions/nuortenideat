@@ -1,0 +1,160 @@
+{% extends 'content/content_base.html' %}
+
+{% load i18n bootstrap3 fontawesome static permitter flagging favorites moderation %}
+{% block title %}{% trans "Idea" %}: {{ object.title|truncatechars:50 }} - {{ block.super }}{% endblock title %}
+
+{% block idea_main %}
+
+    {% if object.status == object.STATUS_DRAFT %}
+        <script type="text/javascript">
+            $(function() { $(".description").children("a.edit-link").trigger("click"); });
+        </script>
+
+        <div class="alert alert-info">
+            {% blocktrans %}Idea on luonnostilassa ja voit jatkaa idean muokkausta. Täytä idean kuvausteskti. Voit lisätä mm. kuvia ja linkittää videoita. Idealle voi lisätä myös pääkuvan joka näkyy hakusivulla otsikon yläpuolella. Julkaise valmis idea “Julkaise idea -painikkeesta”. Kun julkaistulla idealla on ensimmäinen kannatus tai kommentti, sitä ei voi enää muokata, mutta sille voi kirjata lisätietoja.{% endblocktrans %}
+        </div>
+    {% endif %}
+
+    <div id="idea-picture" class="ajaxy-wrap editable-wrap">
+        {% include "content/idea_detail_picture.html" %}
+    </div>
+
+    {% if object.visibility == object.VISIBILITY_ARCHIVED %}
+        <div class="alert alert-info">
+            {% trans "Idea on arkistoitu." %}
+        </div>
+    {% endif %}
+
+
+    <div id="title" class="ajaxy-wrap editable-wrap">
+        {% include "content/idea_detail_title.html" %}
+    </div>
+
+    {{ block.super }}
+
+    <div class="description ajaxy-wrap editable-wrap">
+        {% include "content/idea_detail_description.html" %}
+    </div>
+
+    {% moderation_reasons object %}
+
+    {% if not object.visibility == object.VISIBILITY_ARCHIVED %}
+        <hr>
+        <div id="vote-buttons">
+            {% include "content/idea_vote_buttons.html" %}
+            {% if request.user.is_authenticated %}
+                <span class="ajaxy-wrap">{% fav_link object %}</span>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    {% if object.details.count or object in perm.content.CanAddIdeaDetails %}
+        <hr>
+        <section id="additional-details">
+            {% include "content/idea_detail_additional_details.html" %}
+        </section>
+    {% endif %}
+
+    <!-- flag link object also in content/idea_detail_additional_details_list.html for layout reasons -->
+    {% if object not in perm.content.CanAddIdeaDetails %}
+        <hr>
+        {% flag_link object %}
+    {% endif %}
+{% endblock idea_main %}
+
+{% block idea_share_buttons %}
+    {% if not object.visibility == object.VISIBILITY_ARCHIVED %}
+        {{ block.super }}
+    {% endif %}
+{% endblock idea_share_buttons %}
+
+{% block idea_tools_menu %}
+    {% if object in perm.content.CanViewIdeaTools %}
+        {{ block.super }}
+    {% endif %}
+{% endblock idea_tools_menu %}
+
+{% block idea_tools_menu_items %}
+    {% if object in perm.content.CanViewIdeaTools %}
+        {% if object in perm.nkvote.CanCreateGallup %}
+            <li role="presentation">
+                <a role="menuitem" tabindex="-1" href="{% url 'content:gallup:create' object.pk  %}">
+                    {% fa_icon "bar-chart fa-fw" %} {% trans "Uusi gallup" %}
+                </a>
+            </li>
+        {% endif %}
+
+        <!-- moved to share buttons -->
+        <!--{% if object in perm.content.CanCreatePdf %}
+            <li role="presentation">
+                <a target="_blank" role="menuitem" tabindex="-1" href="{% url 'content:idea_to_pdf_download' initiative_id=object.pk %}">
+                    {% fa_icon "print fa-fw" %} {% trans "Luo PDF" %}
+                </a>
+            </li>
+        {% endif %}//-->
+
+        <li role="presentation">
+            <a role="menuitem" tabindex="-1" href="{% url 'account:create_message' user.pk %}">
+                {% fa_icon "print fa-envelope" %} {% trans "Kirjoita viesti" %}
+            </a>
+        </li>
+
+        {% if object in perm.content.CanChangeIdeaSettings %}
+            <li role="presentation" class="divider"></li>
+            <li role="presentation">
+                <a role="menuitem" tabindex="-1" href="{% url 'content:toggle_idea_premoderation' initiative_id=object.pk premoderation_state=object.premoderation|yesno:"0,1" %}" class="ajaxy-link" data-ajaxy-method="POST" title="{% trans "Jos kommenttien esimoderointi otetaan käyttöön, ideaan lisättävät kommentit julkaistaan vasta kun palvelun moderaattori on hyväksynyt ne." %}">
+                    {% if object.premoderation %}{% fa_icon "check fa-fw" alt=_("käytössä") %}{% else %}{% fa_icon "check fa-fw off" alt=_("ei käytössä") %}{% endif %} {% trans "Kommenttien esimoderointi" %}
+                </a>
+            </li>
+        {% endif %}
+
+
+        {% if object in perm.content.CanArchiveIdea %}
+            <li role="presentation">
+                <a role="menuitem" tabindex="-1" href="{% url 'content:archive_idea' initiative_id=object.pk %}" class="ajaxy-link" data-ajaxy-method="POST">{% fa_icon 'archive' %} {% trans "Arkistoi idea" %}</a>
+            </li>
+        {% elif object in perm.content.CanUnArchiveIdea %}
+            <li role="presentation">
+                <a role="menuitem" tabindex="-1" href="{% url 'content:unarchive_idea' initiative_id=object.pk %}" class="ajaxy-link" data-ajaxy-method="POST">{% trans "Palauta arkistoitu idea" %}</a>
+            </li>
+        {% endif %}
+
+        {% if object in perm.content.CanDeleteIdea and not object in perm.content.CanUnArchiveIdea  %}
+            <li role="presentation" class="divider"></li>
+            <li role="presentation">
+                <a role="menuitem" tabindex="-1" href="{% url 'content:delete_idea' object.pk %}" id="delete-idea">
+                    {% fa_icon "remove fa-fw" %} {% trans "Poista idea" %}
+                </a>
+            </li>
+        {% endif %}
+
+
+
+    {% endif %}
+{% endblock idea_tools_menu_items %}
+
+{% block idea_gallup %}
+    {% if object.interaction != object.INTERACTION_REGISTERED_USERS or request.user.is_authenticated %}
+        {% for gallup in object.gallup_set.all %}
+            {% if gallup in perm.nkvote.CanViewGallup %}
+                <aside class="ajaxy-wrap">
+                    <a name="gallup-{{ gallup.id }}"></a>
+                    {# Below checks could probably be done better #}
+                    {% if gallup.is_draft and gallup.default_results %}
+                        {% include "gallup/well.html" with show_results=True disabled=True %}
+                    {% elif gallup.is_draft %}
+                        {% include "gallup/well.html" with disabled=True %}
+                    {% elif gallup.is_closed %}
+                        {% include "gallup/well.html" with show_results=True disabled=True %}
+                    {% elif gallup in answered_gallups %}
+                        {% include "gallup/well.html" with show_results=True disabled=True %}
+                    {% elif gallup.default_results %}
+                        {% include "gallup/well.html" with show_results=True %}
+                    {% else %}
+                        {% include "gallup/well.html"%}
+                    {% endif %}
+                </aside>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+{% endblock idea_gallup %}

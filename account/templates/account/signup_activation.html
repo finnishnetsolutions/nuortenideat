@@ -1,0 +1,23 @@
+{% extends 'nuka/base.html' %}
+
+{% load i18n bootstrap3 %}
+
+{% block content %}
+
+    <div class="well">
+        <h1>{% trans "Vahvista rekisteröityminen" %}</h1>
+
+        <p style="max-width:600px;">{% trans "Vahvista rekisteröityminen syöttämällä alla olevaan kenttään PIN-koodi, joka lähetettiin sähköpostiisi tai matkapuhelimeesi." %}</p>
+
+        <form method="post">
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            {% buttons %}
+                <button type="submit" class="btn btn-primary">
+                    {% bootstrap_icon "share" %} {% trans "Vahvista" %}
+                </button>
+            {% endbuttons %}
+        </form>
+    </div>
+
+{% endblock content %}

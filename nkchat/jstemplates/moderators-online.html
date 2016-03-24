@@ -1,0 +1,6 @@
+{{ #moderators }}
+    <li class="moderator"><a href="#" class="open-private-chat" data-name="{{ name }}" data-uid="{{ id }}">{{ name }}</a></li>
+{{ /moderators }}
+{{ ^moderators }}
+    <li class="moderator"><a href="#">{{#_}}Ei moderaattoreita online-tilassa.{{/_}}</a></li>
+{{ /moderators }}

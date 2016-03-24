@@ -1,0 +1,3 @@
+{% for organization in organizations %}
+    <a href="{% url 'organization:detail' organization.pk %}">@{{ organization.name }}</a>{% if not forloop.last %}, {% endif %}
+{% endfor %}

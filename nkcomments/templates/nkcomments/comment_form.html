@@ -1,0 +1,15 @@
+{% load i18n static custom_comments comments bootstrap3 %}
+
+<h4>{% trans "Kommentoi" %}</h4>
+{% if object.premoderation %}
+    <div class="alert alert-warning">{% trans "Kommenttien esimoderointi on käytössä. Uudet kommentit julkaistaan vasta kun palvelun moderaattori on hyväksynyt ne." %}</div>
+{% endif %}
+
+<form class="ajaxy-form" novalidate action="{% url 'nkcomments:post-comment' initiative_id=object.pk %}" method="post"
+      data-ajaxy-success-wrap="#comments">
+    {% csrf_token %}
+    {% bootstrap_form form %}
+
+    <input type="submit" name="submit" class="btn btn-default" id="send-comment"
+           value="{% trans 'Lähetä kommentti' %}">
+</form>

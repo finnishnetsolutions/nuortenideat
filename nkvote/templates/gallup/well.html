@@ -1,0 +1,67 @@
+{% load i18n %}
+
+<article class="gallup well">
+    <header>
+        <div class="buttons">
+            {% if gallup in perm.nkvote.CanSeeGallupModifyMenu %}
+            <div class="btn-group gallup-header-btn-group">
+                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" title="{% trans 'Toiminnot' %}">
+                    <span class="glyphicon glyphicon-edit"></span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-right" role="menu">
+                    <li {% if gallup not in perm.nkvote.CanEditGallup %}class="disabled"{% endif %}>
+                        <a href="{% url 'content:gallup:edit' gallup.idea_id gallup.pk %}">{% trans "Muokkaa" %}</a>
+                    </li>
+                    {% if gallup in perm.nkvote.CanOpenGallup %}
+                        <li><a href="{% url 'content:gallup:open' gallup.idea_id gallup.pk %}" class="ajaxy-link" data-ajaxy-method="POST">{% trans "Avaa äänestettäväksi" %}</a></li>
+                    {% endif %}
+                    {% if gallup in perm.nkvote.CanCloseGallup %}
+                        <li><a href="{% url 'content:gallup:close' gallup.idea_id gallup.pk %}" class="ajaxy-link" data-ajaxy-method="POST">{% trans "Sulje äänestäminen" %}</a></li>
+                    {% endif %}
+                    <li><a href="{% url 'content:gallup:results_pdf' gallup.idea_id gallup.pk %}" target="_blank">{% trans "Tulokset (PDF)" %}</a></li>
+                    <li class="divider"></li>
+                    <li {% if gallup not in perm.nkvote.CanDeleteGallup %}class="disabled"{% endif %}>
+                        <a href="{% url 'content:gallup:delete' gallup.idea_id gallup.pk %}">{% trans "Poista" %}</a>
+                    </li>
+                </ul>
+            </div>
+            {% endif %}
+            {% if not gallup.is_draft %}
+            <div class="btn-group gallup-header-btn-group">
+                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" title="{% trans 'Jaa' %}">
+                    <span class="glyphicon glyphicon-share"></span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-right" role="menu">
+                    <li role="presentation" class="dropdown-header">Jaa gallup</li>
+                    <li role="presentation" class="divider"></li>
+                    <li role="presentation"><a href="http://www.facebook.com/sharer.php?u={{ absolute_uri|iriencode }}#gallup-{{ gallup.pk }}">Facebook</a></li>
+                    <li role="presentation"><a href="https://twitter.com/intent/tweet?url={{ absolute_uri|iriencode }}#gallup-{{ gallup.pk }}">Twitter</a></li>
+                    <li role="presentation"><a href="https://plus.google.com/share?&hl=en&url={{ absolute_uri|iriencode }}#gallup-{{ gallup.pk }}">Google+</a></li>
+                    <li role="presentation"><a href="mailto:?subject=Nuortenideat.fi-gallup&body=%0D%0A{{ absolute_uri|iriencode }}#gallup-{{ gallup.pk }}">{% trans "Sähköposti" %}</a></li>
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+        <h4>Gallup</h4>
+    </header>
+    <div class="body">
+        <div class="status">
+            {% if gallup.is_closed %}
+            <p>{% trans 'Gallup on suljettu.' %}</p>
+            {% elif gallup.is_draft %}
+            <p>{% trans 'Gallup on luonnostilassa. Vain idean omistajat näkevät sen.' %}</p>
+            {% endif %}
+        </div>
+        <div class="questions">
+            <form method="post" id="gallup-{{ gallup.pk }}_form" action="{% url 'content:gallup:answer' gallup.idea.pk gallup.pk %}" class="ajaxy-form">
+                {% csrf_token %}
+                {% include "gallup/well/questions.html" %}
+                {% if gallup in perm.nkvote.CanAnswerGallup %}
+                    <footer>
+                        <button class="btn btn-default ajaxy-button">{% trans "Vastaa" %}</button>
+                    </footer>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</article>

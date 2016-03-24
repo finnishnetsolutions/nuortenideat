@@ -1,0 +1,38 @@
+{% extends 'notifications/email/base.txt' %}{% load i18n configs %}{% block content %}{% base_url as base_url %}{% if notifications.CustomComment_content_owner_created_idea_commented %}- {% trans "Seuraavia ideoitasi on kommentoitu" %} -
+{% for obj in notifications.CustomComment_content_owner_created_idea_commented %}{{ obj.action.content_object.submit_date|date:"SHORT_DATETIME_FORMAT" }} : {{ obj.action.content_object.content_object }} {% trans base_url %}{{ obj.action.content_object.content_object.get_absolute_url }}
+{% endfor %}
+
+{% endif %}{% if notifications.CustomComment_content_owner_created_question_commented %}- {% trans "Seuraaviin kysymyksiisi on tullut vastauksia / kommentteja" %} -
+{% for obj in notifications.CustomComment_content_owner_created_question_commented %}{{ obj.action.content_object.submit_date|date:"SHORT_DATETIME_FORMAT" }} : {{ obj.action.content_object.content_object }} {% trans base_url %}{{ obj.action.content_object.content_object.get_absolute_url }}
+{% endfor %}
+
+{% endif %}{% if notifications.Idea_content_owner_updated_status_updated %}- {% trans "Seuraavien ideoidesi tila on muuttunut" %} -
+{% for obj in notifications.Idea_content_owner_updated_status_updated %}{{ obj.action.created|date:"SHORT_DATETIME_FORMAT" }} : {{ obj.action.content_object }} {% trans base_url %}{{ obj.action.content_object.get_absolute_url }}
+{% endfor %}
+
+{% endif %}{% if notifications.Idea_organization_contact_updated_idea_published %}- {% trans "Uudet ideat organisaatiollesi" %} -
+{% for obj in notifications.Idea_organization_contact_updated_idea_published %}{{ obj.action.created|date:"SHORT_DATETIME_FORMAT" }} : {{ obj.action.content_object }} {% trans base_url %}{{ obj.action.content_object.get_absolute_url }}
+{% endfor %}
+
+{% endif %}{% if notifications.Question_organization_contact_created_ %}- {% trans "Uudet kysymykset organisaatiollesi" %} -
+{% for obj in notifications.Question_organization_contact_created_ %}{{ obj.action.created|date:"SHORT_DATETIME_FORMAT" }} : {{ obj.action.content_object }} {% trans base_url %}{{ obj.action.content_object.get_absolute_url }}
+{% endfor %}
+
+{% endif %}{% if notifications.Idea_organization_contact_updated_status_updated_after_publish %}- {% trans "Seuraavien organisaatiotasi koskevien ideoiden tila on muuttunut" %} -
+{% for obj in notifications.Idea_organization_contact_updated_status_updated_after_publish %}{{ obj.action.created|date:"SHORT_DATETIME_FORMAT" }} : {{ obj.action.content_object }} {% trans base_url %}{{ obj.action.content_object.get_absolute_url }}
+{% endfor %}
+
+{% endif %}{% if notifications.CustomComment_organization_contact_created_idea_commented %}- {% trans "Seuraavia organisaatiotasi koskevia ideoita on kommentoitu" %} -
+{% for obj in notifications.CustomComment_organization_contact_created_idea_commented %}{{ obj.action.content_object.submit_date|date:"SHORT_DATETIME_FORMAT" }} : {{ obj.action.content_object.content_object }} {% trans base_url %}{{ obj.action.content_object.content_object.get_absolute_url }}
+{% endfor %}
+
+{% endif %}{% if notifications.Organization_moderator_created_ %}- {% trans "Uudet organisaatiot" %} -
+{% for obj in notifications.Organization_moderator_created_ %}{{ obj.action.created|date:"SHORT_DATETIME_FORMAT" }} : {{ obj.action.content_object }} {% trans base_url %}{{ obj.action.content_object.get_absolute_url }}
+{% endfor %}
+
+{% endif %}{% if notifications.ContentFlag_moderator_created_ %}- {% trans "Asiattomaksi ilmoitetut" %} -
+{% trans "Idea" %}: {{ notifications.ContentFlag_moderator_created__count.0.idea_count }}
+{% trans "kommentti" %}: {{ notifications.ContentFlag_moderator_created__count.0.comment_count }}
+{% trans base_url %}{% url 'nkadmin:moderation_queue' %}
+{% endif %}{% endblock content %}
+{% block link %}{% base_url as base_url %}{% trans base_url %} {% endblock link %}

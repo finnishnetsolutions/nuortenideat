@@ -1,0 +1,34 @@
+{% extends 'nuka/base.html' %}
+
+{% load i18n bootstrap3 %}
+
+{% block title %}{% trans "Organisaatiot" %}: {% trans "Uusi organisaatio" %} - {{ block.super }}{% endblock title %}
+
+{% block js_extra %}
+    <script type="text/javascript">
+        $(function () {
+            $('input[name="target_type"]').on('change', function () {
+                if($(this).prop('checked')) {
+                    $('#id_target_organizations_wrap').toggle($(this).val() === '{{ form.TARGET_TYPE_ORGANIZATION }}');
+                }
+            });
+            $('input[name="target_type"]:checked').trigger('change');
+        });
+    </script>
+{% endblock js_extra %}
+
+{% block content %}
+<div class="well">
+    <h1>{% trans "Uusi organisaatio" %}</h1>
+
+    <div class="alert alert-info">
+        {% trans "Uudet organisaatiot menevät palvelun ylläpitäjien hyväksyttäväksi ennen kuin ne tulevat julkisesti nähtäville. " %}
+    </div>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {% bootstrap_form form %}
+        <button type="submit" class="btn btn-default">{% trans "Luo organisaatio" %}</button>
+    </form>
+</div>
+{% endblock content %}

@@ -1,0 +1,12 @@
+{% load i18n bleach_tags moderation %}
+{% if not deleted %}
+    {% if comment.user %}
+        {{ comment.comment|bleach }}
+    {% else %}
+        {{ comment.comment|linebreaksbr }}
+    {% endif %}
+
+    {% moderation_reasons comment %}
+{% else %}
+    <p><i>{% trans "Kommentti poistettu" %}.</i></p>
+{% endif %}

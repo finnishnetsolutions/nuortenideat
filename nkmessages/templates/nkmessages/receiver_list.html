@@ -1,0 +1,1 @@
+{% for user in receivers %}<a href="{{ user.get_absolute_url }}">{{ user.get_full_name }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}

@@ -1,0 +1,1 @@
+{% extends 'nuka/email/base.txt' %}{% block content %}This text comes from template. Body context is: '{{ body }}'.{% endblock content %}

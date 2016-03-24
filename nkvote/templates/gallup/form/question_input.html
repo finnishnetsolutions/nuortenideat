@@ -1,0 +1,6 @@
+{% load i18n %}
+<div class="multilingo-language-version form-group" data-language-code="{{ code }}">
+    <label for="q-{{ question_seq }}-{{ code }}">{% trans "Kysymys" %} <span class="question_seq_number">{{ question_seq }}</span>.</label>
+    <input id="q-{{ question_seq }}-{{ code }}" name="q-{{ question_seq }}-{{ code }}" placeholder="{% trans 'Anna kysymys' %}" value="{% if code in question_text %}{{ question_text }}{% endif %}" class="form-control input-lg multilingo-input" maxlength="150" type="text" data-language-code="{{ code }}" />
+    <input type="hidden" name="db_id_q-{{ question_seq }}" value="{{ question_id }}">
+</div>

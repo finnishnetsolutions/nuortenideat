@@ -1,0 +1,176 @@
+{% extends 'nuka/base.html' %}
+
+{% load i18n static bootstrap3 permitter bleach_tags configs %}
+
+{% block meta_extra %}
+    {% with yesnoargs=object.picture_main.url|add:","|add:FB_NK_LOGO_URL %}
+        {% include 'nuka/meta_og_tags.html' with title=object.title description=object.description_plaintext picture_url=object.picture|yesno:yesnoargs %}
+    {% endwith %}
+{% endblock meta_extra %}
+
+{% block js_extra %}
+    {{ block.super }}
+    <script type="text/javascript" src="{% static 'nkvote/js/gallup/well.js' %}"></script>
+    <script type="text/javascript">
+        $(function() {
+            if (navigator.userAgent.match(/Android|iPhone/i) && !navigator.userAgent.match(/iPod|iPad/i)) {
+                $('.wa_button').show();
+            }
+
+            /**
+             * Ask for confirmation to leave the page if:
+             * - description or detail field are open
+             * - comment field has focus
+             **/
+            $(window).on("beforeunload", function() {
+                var comment = $("#id_comment");
+                if ($("#id_description-fi, #id_description-sv").length || $("#additional-details").find(".multilingo-input").length || comment.val()) {
+                    return "{% trans 'Sinulla on tallentamattomia muutoksia. Poistutaanko sivulta? Tallentamattomat muutokset menetetään.' %}";
+                }
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block precontent %}{% endblock precontent %}
+
+{% block content %}
+    {% block content_head %}{% endblock content_head %}
+    <article class="row initiative">
+        <div class="col-md-8 main">
+            <article id="idea-main" class="idea-main well">
+                {% block idea_main %}
+                    <div class="row">
+                        <div id="info" class="col-md-12">
+                            {% if object.published %}
+                                <span>{{ object.published|date:"SHORT_DATETIME_FORMAT" }}</span>
+                            {% else %}
+                                <span>{{ object.created|date:"SHORT_DATETIME_FORMAT" }}</span>
+                            {% endif %}
+
+                            <span style="margin-left: 15px;">
+                                {% block initiative_header_owners %}
+                                    {% include "content/owner_links.html" with owners=object.owners.all comma_separated=True %}
+                                {% endblock initiative_header_owners %}
+                            </span>
+                        </div>
+                    </div>
+
+                {% endblock idea_main %}
+            </article>
+
+            {% block idea_gallup %}{% endblock idea_gallup %}
+
+            {% block idea_comments %}
+                {% if object.is_public %}
+                    <article class="well" id="comments">{% include 'nkcomments/comment_block.html' %}</article>
+                {% endif %}
+            {% endblock idea_comments %}
+        </div>
+
+        <div class="col-md-4 side">
+            <aside id="idea-side" class="well">
+
+                <h2 class="h1-style">
+                    {% block idea_side_title_text %}
+                        <i class="ni-icon ni-icon-idea"><span class="sr-only">{% trans "Idea" %}</span></i>
+                        {% trans "Idea" %}
+                    {% endblock idea_side_title_text %}
+                </h2>
+
+                {% block idea_side_1 %}
+
+                    {% block idea_owners %}
+                        <div id="owners">
+                            <div class="ajaxy-wrap editable-wrap">
+                                {% include "content/idea_detail_owners.html" %}
+                            </div>
+                        </div>
+                    {% endblock idea_owners %}
+
+                    {% block initiative_stats %}
+                        <div id="votes-comments">
+                            {% include "content/initiative_stats.html" %}
+                        </div>
+                    {% endblock initiative_stats %}
+                    {% block idea_status %}
+                        <hr>
+                        {% include "content/idea_status.html" %}
+                    {% endblock idea_status %}
+
+                    {% block idea_organizations %}
+                        <hr>
+                        <div id="organizations">
+                           <h3 class="h5-style">{% trans "Organisaatiot" %}</h3>
+                           <div class="ajaxy-wrap editable-wrap">
+                               {% include "content/idea_detail_organizations.html" %}
+                           </div>
+                        </div>
+                    {% endblock idea_organizations %}
+
+                    <hr>
+                    <div id="subjects">
+                        <h3 class="h5-style">{% trans "Aiheet" %}</h3>
+                        <div class="ajaxy-wrap editable-wrap">
+                            {% include "content/idea_detail_tags.html" %}
+                        </div>
+                    </div>
+
+                    {% block idea_tools %}
+                        <hr>
+
+                        {% block idea_tools_menu %}
+                            <div id="tools" style="text-align: center">
+                                {% comment %}btn-group is a fix for the dropdown aligning left{% endcomment %}
+                                <div class="btn-group">
+                                    <div class="dropdown">
+                                        <button class="btn btn-default dropdown-toggle" id="tools-dropdown" data-toggle="dropdown" aria-expanded="true">
+                                            <span class="glyphicon glyphicon-cog"></span>
+                                            {% trans 'Työkalut' %}
+                                            <span class="caret"></span>
+                                        </button>
+                                        <ul class="dropdown-menu" role="menu" aria-labelledby="tools-dropdown">
+                                            {% block idea_tools_menu_items %}<li>empty</li>{% endblock idea_tools_menu_items %}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endblock idea_tools_menu %}
+                    {% endblock idea_tools %}
+
+                {% endblock idea_side_1 %}
+            </aside>
+
+            {% block idea_share_buttons %}
+                <aside id="idea-share-buttons" class="well">
+                    {% block idea_side_2 %}
+                        <h4 class="h5-style">{% trans 'Kerro kavereille' %}</h4>
+                        <a href="http://www.facebook.com/sharer.php?u={{ absolute_uri|iriencode }}" target="_blank" title="{% trans 'Jaa Facebookissa' %}" onclick="return !window.open(this.href, 'Facebook', 'width=640,height=300')">
+                            <i class="ni-icon ni-icon-facebook"><span class="sr-only">{% trans "Jaa Facebookissa" %}</span></i>
+                        </a>
+                        <a href="https://twitter.com/intent/tweet?url={{ absolute_uri|iriencode }}" target="_blank" title="{% trans 'Jaa Twitterissä' %}" onclick="return !window.open(this.href, 'Twitter', 'width=640,height=300')">
+                            <i class="ni-icon ni-icon-twitter"><span class="sr-only">{% trans "Jaa Twitterissä" %}</span></i>
+                        </a>
+                        <a href="https://plus.google.com/share?hl=en&amp;url={{ absolute_uri|iriencode }}" target="_blank" title="{% trans 'Jaa Google+:ssa' %}" onclick="return !window.open(this.href, 'Google+', 'width=640,height=300')">
+                            <i class="ni-icon ni-icon-googleplus"><span class="sr-only">{% trans "Jaa Google+:ssa" %}</span></i>
+                        </a>
+                        <a href="mailto:?subject=Nuortenideat.fi%20-%20{{ object.title|iriencode }}&amp;body=%0A{{ absolute_uri|iriencode }}" title="{% trans 'Jaa sähköpostilla' %}">
+                            <i class="ni-icon ni-icon-email"><span class="sr-only">{% trans "Jaa sähköpostilla" %}</span></i>
+                        </a>
+                        <a href="whatsapp://send?text={{ absolute_uri|iriencode }}" class="wa_button" style="display:none" title="{% trans "Jaa WhatsAppissa" %}" onclick="return !window.open(this.href, 'WhatsApp', 'width=640,height=300')">
+                            <i class="ni-icon ni-icon-whatsapp"><span class="sr-only">{% trans "Jaa WhatsAppissa" %}</span></i>
+                        </a>
+                        <a href="{% url 'content:idea_to_pdf_download' initiative_id=object.pk %}" title="{% trans "Tulosta PDF" %}" target="_blank">
+                            <i class="ni-icon ni-icon-pdf"><span class="sr-only">{% trans "Tulosta PDF" %}</span></i>
+                        </a>
+                        <a href="#" title="{% trans "Tulosta" %}" onclick="return window.print();">
+                            <i class="ni-icon ni-icon-printer"><span class="sr-only">{% trans "Tulosta" %}</span></i>
+                        </a>
+                    {% endblock idea_side_2 %}
+                </aside>
+            {% endblock idea_share_buttons %}
+        </div>
+    </article>
+
+{% endblock content %}
+

@@ -1,0 +1,21 @@
+{% load i18n static comments bootstrap3 fontawesome bleach_tags %}
+
+{# Deprecated file? Deleted comment included in comment_list_item. #}
+<div class="row">
+    <div class="col-lg-1"></div>
+    <div class="col-lg-2">{% include "nkcomments/comment_list_item_commenter.html" %}</div>
+    <div class="col-lg-3">{{ comment.submit_date|date:"j.n.Y H.i" }}</div>
+    <div class="col-lg-4 col-lg-offset-2">
+        <div class="row ajaxy-wrap">
+            {% include 'nkcomments/comment_vote.html' with votable_object=comment voted=True %}
+        </div>
+    </div>
+</div>
+<div class="row" style="margin-top:20px;">
+    <div class="col-lg-12">
+        <p style="font-style: italic" class="deleted-comment">{% trans 'Kommentti poistettu.' %}</p>
+    </div>
+</div>
+<div class="row" style="margin-top:5px;">
+    <div class="col-lg-12"></div>
+</div>

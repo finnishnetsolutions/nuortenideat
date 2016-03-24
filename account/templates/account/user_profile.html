@@ -1,0 +1,23 @@
+{% extends 'account/profile_base.html' %}
+
+{% load i18n static bootstrap3 %}
+
+{% block subcontent %}
+    <div class="well">
+        <h2>{% trans "Omat ideat ja kysymykset" %}</h2>
+
+        {% if object == request.user %}
+            <form class="ajaxy-form" data-ajaxy-target="#initiative_list" novalidate method="get" action="{% url 'account:idea_list' user_id=object.pk %}">
+                {% bootstrap_form form %}
+                <div class="clearfix"></div>
+                <!--<button type="submit" class="btn btn-default">{% trans "Hae" %}</button>-->
+            </form>
+        {% endif %}
+    </div>
+
+
+    <div id="initiative_list" class="ajaxy-wrap">
+        {% include 'account/user_profile_idea_list.html' with obj_list=initiatives %}
+    </div>
+
+{% endblock subcontent %}

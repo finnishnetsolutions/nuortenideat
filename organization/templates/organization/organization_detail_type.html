@@ -1,0 +1,2 @@
+{% load i18n organization %}
+<h4>{% trans "Tyyppi" %}: <span class="organization-type">{{ object.type|type_name }}</span> {% include "organization/organization_fragment_edit_link.html" with fragment="type" title=_("Muokkaa tyyppiä") %}</h4>

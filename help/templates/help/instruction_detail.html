@@ -1,0 +1,6 @@
+{% load i18n bleach_tags %}
+<h2>{{ object.title }}</h2>
+
+<div class="unsafe contain-images">
+    {{ object.description|bleach }}
+</div>

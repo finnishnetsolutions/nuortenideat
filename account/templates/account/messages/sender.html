@@ -1,0 +1,13 @@
+{% load i18n %}
+
+{% spaceless %}
+    {% if message.sender %}
+    <a href="{% url 'account:profile' message.sender.pk %}">{{ message.sender.get_full_name }}</a>
+    {% elif message.feedback %}
+        {% if message.feedback.name %}
+            {% trans "Palaute" %}: {{ message.feedback.name }}
+        {% else %}
+            {% trans "Nimetön palaute" %}
+        {% endif %}
+    {% endif %}
+{% endspaceless %}

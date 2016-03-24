@@ -1,0 +1,29 @@
+{% load i18n staticfiles %}
+
+
+{% if not all_small %}
+
+        {% if object.owners.all.count == 1 %}
+            {% include "account/profile_picture.html" with user=object.owners.first class="profile-pic-large" %}
+            <div class="username-large"><a href="{% url 'account:profile' object.owners.first.pk %}">{{ object.owners.first }}</a></div>
+        {% else %}
+            <ul class="owner-list">
+                {% for owner in owners %}
+                <li>
+                    {% include "account/profile_picture.html" with user=owner class="profile-pic-medium" %}
+                    <div class="username"><a href="{{ owner.get_absolute_url }}">{{ owner }}</a></div>
+                </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+{% else %}
+    <ul class="owner-list">
+        {% for owner in owners %}
+            <li>
+                {% include "account/profile_picture.html" with user=owner class="profile-pic-small" %}
+                <a class="text-link" href="{{ owner.get_absolute_url }}">{{ owner }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+{% endif %}

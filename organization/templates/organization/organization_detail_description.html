@@ -1,0 +1,4 @@
+{% load bleach_tags %}
+<div class="links-underlined">{{ object.description|bleach }}</div>
+
+{% include "organization/organization_fragment_edit_link.html" with fragment='description' title=_("Muokkaa kuvausta") %}

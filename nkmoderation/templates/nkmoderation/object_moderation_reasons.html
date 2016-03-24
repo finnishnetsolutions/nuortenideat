@@ -1,0 +1,14 @@
+{% load i18n %}
+{% if reasons %}
+    {% with reason_count=reasons|length %}
+        <ul class="object-moderation-reasons ajaxy-wrap">
+            {% for reason in reasons %}
+                <li>
+                    <span class="timestamp">{{ reason.timestamp|date:"SHORT_DATETIME_FORMAT" }}</span>
+                    {% blocktrans with moderator=reason.moderator reason=reason.reason profile_url=moderator.get_absolute_url %}<a href="{{ profile_url }}">{{ moderator }}</a> moderoi sisältöä: {{ reason }}{% endblocktrans %}
+                    {% if forloop.first and reason_count > 1 %} <a href="#" class="show-more">{% blocktrans with count=reason_count|add:"-1" %}Näytä lisää ({{ count }} kpl){% endblocktrans %}</a>{% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endwith %}
+{% endif %}

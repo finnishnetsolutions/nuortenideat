@@ -1,0 +1,34 @@
+
+.info_description {
+    line-height: 1.5em;
+}
+
+.info_description ul {
+    list-style-type: circle;
+    padding-left: 3em;
+}
+
+
+.info_description ul li {
+    margin-bottom: 1em;
+}
+
+.info_description ul li pre, .info_description ul li pre * {
+    color: #000;
+}
+
+#header {
+    background-color: #fff;
+}
+
+body {
+    background-color: #f0f0f0;
+}
+
+.navbar .navbar-brand {
+
+}
+
+.swagger-ui-wrap {
+    max-width: 1140px;
+}

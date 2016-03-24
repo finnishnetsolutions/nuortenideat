@@ -1,0 +1,13 @@
+{% load i18n fontawesome comments staticfiles %}
+
+{% get_comment_count for object as comment_count %}
+
+{% if class %}
+    <a href="#add-comment" class="{{ class|default:'' }}">
+{% endif %}
+
+<i class="ni-icon ni-icon-comment"><span class="sr-only">{% trans "Kommentit" %}</span></i> {{ comment_count }}
+
+{% if class %}
+    </a>
+{% endif %}

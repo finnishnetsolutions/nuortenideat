@@ -1,0 +1,6 @@
+{% load i18n %}
+<h2>{% trans "KUA simulation" %}</h2>
+
+Name: <input type="text" value="{{ object.idea.title }}">
+<br>
+Proposal: <textarea rows="20" cols="50">{{ object.idea.description_plaintext }}</textarea>

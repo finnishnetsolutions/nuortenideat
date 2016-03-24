@@ -1,0 +1,46 @@
+{% extends 'nuka/base.html' %}
+
+{% load i18n bootstrap3 %}
+
+{% block content %}
+
+<div class="well">
+
+    <h1>{% trans "Kirjaudu sisään" %}</h1>
+
+    <div class="row">
+        <div class="col-xs-12 col-md-6">
+            <h2 class="h4-style">{% trans "Nuortenideat.fi tunnuksilla" %}</h2>
+
+            <form method="post">
+                {% csrf_token %}
+                {% bootstrap_form form %}
+                {% buttons %}
+                    <button type="submit" class="btn btn-primary pull-left">
+                        {% bootstrap_icon "share" %} {% trans "Kirjaudu sisään" %}
+                    </button>
+                {% endbuttons %}
+                <a href="{% url 'account:reset_password' %}" class="pull-right">{% trans "Salasana hukassa?" %}</a>
+            </form>
+        </div>
+
+        <div class="col-xs-12 col-md-6">
+            <div style="margin-bottom: 25px">
+                <h2 class="h4-style">{% trans "Facebook tunnuksilla" %}</h2>
+
+                <p>{% trans "Kirjaudu Facebook-tunnuksillasi, jos olet rekisteröitynyt jo aikaisemmin." %}</p>
+                <a href="{% url 'social:begin' 'facebook' %}?next={% url 'frontpage' %}&action=login" class="btn btn-default">
+                    {% trans 'Kirjaudu Facebook-tunnuksilla' %}
+                </a>
+            </div>
+            <div>
+                <h2 class="h4-style">{% trans "Oletko uusi käyttäjä?" %}</h2>
+
+                {% url 'account:signup_choices' as signup_url %}
+                <p>{% blocktrans %}Tee tunnus <a href="{{ signup_url }}">rekisteröitymällä</a>{% endblocktrans %}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}

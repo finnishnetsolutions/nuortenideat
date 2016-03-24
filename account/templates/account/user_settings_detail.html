@@ -1,0 +1,12 @@
+{% load i18n bootstrap3 fontawesome %}
+
+<h2 class="h3-style">
+    {% trans "Omat tiedot" %}
+    <a href="{% url 'account:settings_edit' user_id=object.pk %}" class="btn btn-default ajaxy-link edit-link" style="margin-left: 10px; text-transform: none;">
+        {% fa_icon "edit" %} {% trans "Muokkaa tietoja" %}
+    </a>
+</h2>
+
+
+{% bootstrap_form forms.user layout='preview' %}
+{% bootstrap_form forms.usersettings layout='preview' %}

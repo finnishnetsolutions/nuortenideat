@@ -1,0 +1,61 @@
+{% extends 'nuka/base.html' %}
+{% load i18n bootstrap3 staticfiles %}
+
+{% block title %}{% trans "Organisaatiot" %} - {{ block.super }}{% endblock title %}
+
+{% block js_extra %}
+    <script type="text/javascript" src="{% static "nuka/js/jquery.buttonselect.js" %}"></script>
+{% endblock js_extra %}
+
+{% block content %}
+<div class="well organization-search-well">
+    <div class="row organization-search-header">
+        <div class="col-md-8 col-sm-8">
+            <h1>{% trans "Organisaatiot" %}</h1>
+        </div>
+        <div class="col-md-4 col-sm-4">
+            <a class="btn btn-default btn-lg" href="{% url 'organization:create' %}">{% trans "Uusi organisaatio" %}</a>
+        </div>
+    </div>
+
+    <form id="organization_search_form" method="get">
+        <div class="row">
+            <div class="col-md-4">
+                {% bootstrap_field searchform.words %}
+            </div>
+            <div class="col-md-4">
+                {% bootstrap_field searchform.municipalities %}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12 form-group hidden-xs">
+                <button type="submit" class="btn btn-default btn-lg">{% bootstrap_icon "search" %} {% trans "Hae" %}</button>
+            </div>
+            <div class="col-md-12 form-group visible-xs">
+                <button type="submit" class="btn btn-default btn-lg btn-block">{% bootstrap_icon "search" %} {% trans "Hae" %}</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                {% bootstrap_field searchform.type_or_activity %}
+            </div>
+        </div>
+        <!--<span class="pull-right">{% trans "Piilota hakuehdot" %}</span>-->
+    </form>
+</div>
+<div class="well">
+    <div class="row">
+        {% for object in object_list %}
+            <div class="organization-box col-md-3 col-sm-4 col-xs-6">
+                <a href="{{ object.get_absolute_url }}">{% include "organization/organization_picture.html" %}</a>
+                <a href="{{ object.get_absolute_url }}">{{ object }}</a>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="text-center">
+        {% bootstrap_pagination page_obj url=request.path|add:"?"|add:request.GET.urlencode %}
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,13 @@
+{% load i18n staticfiles %}
+
+<a href="{% url 'organization:detail' organization.pk %}">
+    {% if organization.picture %}
+        <img class="organization-picture" src="{{ organization.picture_medium.url }}" alt="{% trans "Organisaation profiilikuva" %}: {{ organization }}">
+    {% else %}
+        <img src="{% static 'nuka/img/organisaatio_placeholder200x200.png' %}" alt="{% trans "Organisaation profiilikuva" %}">
+    {% endif %}
+</a>
+
+<div class="organization-name">
+    {{ organization.name }}
+</div>

@@ -1,0 +1,9 @@
+{% load i18n %}
+
+{% spaceless %}
+    {% if message.receivers.all %}
+        {% include "nkmessages/receiver_list.html" with receivers=message.receivers.all %}
+    {% elif message.feedback %}
+        {% trans "Moderaattorit" %}
+    {% endif %}
+{% endspaceless %}

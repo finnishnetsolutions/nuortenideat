@@ -1,0 +1,8 @@
+{% load i18n %}
+
+{% if not object.initiator_organization %}
+    {% include "content/owner_list.html" with owners=object.owners.all  %}
+    {% include "content/idea_fragment_edit_link.html" with fragment='owners' title=_("Muokkaa omistajia") no_pull=True %}
+{% else %}
+    {% include "content/organization_detail.html" with organization=object.initiator_organization %}
+{% endif %}

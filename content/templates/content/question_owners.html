@@ -1,0 +1,5 @@
+{% if question.owners.all %}
+    {% include 'content/owner_links.html' with owners=question.owners.all %}
+{% else %}
+    {{ question.user_name }}
+{% endif %}

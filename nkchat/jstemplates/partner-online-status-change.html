@@ -1,0 +1,12 @@
+<li class="notification">
+    {{#online}}
+        <p class="online-status-change online">
+            {{#_}}{{ name }} on jälleen tavoitettavissa.{{/_}}
+        </p>
+    {{/online}}
+    {{^online}}
+        <p class="online-status-change offline">
+            {{#_}}{{ name }} ei ole enää online-tilassa. Viestejä ei toimiteta.{{/_}}
+        </p>
+    {{/online}}
+</li>

@@ -1,0 +1,18 @@
+{% extends 'nkadmin/base.html' %}
+
+{% load i18n %}
+
+{% block subtitle %}nkadmin/search_filter.html{% endblock subtitle %}
+
+{% block content %}
+    {{ block.super }}
+
+    <div class="well">
+        <h2>{% trans "Hae / suodata" %}</h2>
+        {% block search_filter_content %}{% endblock search_filter_content %}
+    </div>
+    <div class="well">
+        {% block list_content %}{% endblock list_content %}
+    </div>
+{% endblock content %}
+

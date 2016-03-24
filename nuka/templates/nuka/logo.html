@@ -1,0 +1,5 @@
+{% load i18n static %}
+
+{% with logo_url=PRACTICE|yesno:'nuka/img/nuorten_ideat_logo_practice_,nuka/img/nuorten_ideat_logo_'|add:request.LANGUAGE_CODE|add:".png" %}
+    <img class="{{ img_class|default:"img-responsive" }}" src="{% static logo_url %}" alt="{% trans "Nuortenideat.fi" %}">
+{% endwith %}

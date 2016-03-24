@@ -1,0 +1,16 @@
+{% load bootstrap3 i18n %}
+{% block before_form %}
+{% endblock %}
+<form action="{{ request.path }}" method="post" class="ajaxy-form" novalidate>
+    {% csrf_token %}
+    {% block form_body %}
+        {% bootstrap_form form %}
+    {% endblock form_body %}
+    {% block form_actions %}
+        {% comment %}pull-right removed from classes{% endcomment %}
+        <button class="btn btn-default" type="submit">{% bootstrap_icon "ok" %} {% trans "Tallenna" %}</button>
+        <div class="clearfix"></div>
+    {% endblock form_actions %}
+</form>
+{% block after_form %}
+{% endblock %}

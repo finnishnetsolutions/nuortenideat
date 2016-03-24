@@ -1,0 +1,3 @@
+{% extends "nuka/email/base.txt" %}{% load i18n %}{% block content %}{% blocktrans %}Hei {{ user }},
+
+Tervetuloa Nuortenideat.fi palvelun käyttäjäksi.{% endblocktrans %}{% endblock content %}

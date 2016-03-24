@@ -1,0 +1,103 @@
+{% extends 'nuka/base.html' %}
+{% load i18n fontawesome staticfiles %}
+
+{% block meta_extra %}
+    {% with yesnoargs=object.picture_medium.url|add:","|add:FB_NK_LOGO_URL %}
+        {% include 'nuka/meta_og_tags.html' with title=object description=object.description_plaintext picture_url=object.picture|yesno:yesnoargs %}
+    {% endwith %}
+{% endblock meta_extra %}
+
+{% block title %}{% trans "Organisaatio" %}: {{ object }} - {{ block.super }}{% endblock title %}
+
+{% block content %}
+    {% if not object.is_active %}
+        <div class="alert alert-info">
+            {% trans "Organisaatio ei ole aktiivinen." %}
+        </div>
+    {% endif %}
+    <div class="well detail-page-header organization-detail">
+        <div class="row">
+            <div class="col-md-3 col-sm-6 organization-detail-pic-wrap">
+                <div class="editable-wrap ajaxy-wrap">
+                    {% include "organization/organization_detail_picture.html" %}
+                </div>
+            </div>
+
+            <div class="col-md-6 col-sm-6">
+                <div class="editable-wrap ajaxy-wrap">
+                    {% include "organization/organization_detail_name.html" %}
+                </div>
+
+                <div class="editable-wrap ajaxy-wrap">
+                    {% include "organization/organization_detail_type.html" %}
+                </div>
+
+                <ul class="stats">
+                    <li>{% trans "Ideoita" %}: {{ ideas_count }}</li>
+                    <li>{% trans "Kysymyksia" %}: {{ question_count }}</li>
+                </ul>
+            </div>
+
+            <div class="col-md-3 col-sm-6 organization-detail-buttons">
+                <a href="{% url 'content:create_idea' %}?organization_id={{ object.pk }}" class="btn btn-default btn-green btn-lg">
+                    <img src="{% static 'nuka/img/ikoni_lamppu_valkoinen.png' %}" alt=""> {% trans "Kirjoita idea" %}
+                </a>
+                <br />
+                <a href="{% url 'content:create_question' object.pk %}" class="btn btn-default btn-lg organization-initiative" style="margin-top: 10px;">
+                    {% trans "Kysy organisaatiolta" %}
+                </a>
+                {% if user.is_moderator %}
+                    <div class="dropdown organization-tools-wrap">
+                        <button class="btn btn-default btn-lg dropdown-toggle" type="button" id="organization-tools" data-toggle="dropdown" aria-expanded="true">
+                            <span class="glyphicon glyphicon-cog"></span>
+                            {% trans "Työkalut" %}
+                            <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-labelledby="organization-tools">
+                            {% if object.is_active %}
+                                <li role="presentation">
+                                    <a role="menuitem" href="{% url 'organization:deactivate' object.pk %}" class="ajaxy-link" data-ajaxy-method="POST">
+                                        Piilota
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li role="presentation">
+                                    <a role="menuitem" href="{% url 'organization:activate' object.pk %}" class="ajaxy-link" data-ajaxy-method="POST">
+                                        Muuta näkyväksi
+                                    </a>
+                                </li>
+                            {% endif %}
+                            <li role="presentation" class="divider"></li>
+                            <li role="presentation">
+                                <a role="menuitem" href="{% url 'organization:archive' object.pk %}" class="ajaxy-link" data-ajaxy-method="POST" title="{% trans 'Poistaa yhteyshenkilöt ja piilottaa organisaation' %}">
+                                    Arkistoi
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="clearfix"></div>
+
+        <div class="editable-wrap ajaxy-wrap" style="margin-top:20px;">
+            {% include "organization/organization_detail_description.html" %}
+        </div>
+
+        <hr />
+
+        <h2>{% trans "Yhteyshenkilöt" %}</h2>
+        <div class="editable-wrap ajaxy-wrap">
+            {% include "organization/organization_detail_admins.html" %}
+        </div>
+        <div class="clearfix"></div>
+    </div>
+
+
+
+    <h3 class="h2-style">{% trans "Ideat ja kysymykset" %}</h3>
+
+    {% include "content/initiative_boxes_list.html" with initiatives=initiatives_list %}
+
+{% endblock %}

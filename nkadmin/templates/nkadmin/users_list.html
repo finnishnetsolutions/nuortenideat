@@ -1,0 +1,140 @@
+{% extends "nkadmin/base_list.html" %}
+
+{% load i18n %}
+
+{% block subtitle %}{% trans "Käyttäjähallinta" %}{% endblock subtitle %}
+
+{% block search_filter_content %}
+    <p>{% trans "Hae käyttäjätunnuksella tai nimellä" %}</p>
+    <form method="get">
+        <div class="row" style="margin-bottom: 10px">
+            <div class="col-md-12 user-list-search">
+                <input class="form-control" type="text" name="haku" value="{{ last_search }}" />
+                <button class="btn btn-primary" type="submit">
+                    <span class="glyphicon glyphicon-search"></span> {% trans "Hae" %}
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <a href="{% url 'nkadmin:users' filter='kaikki' %}{{ query_string.get_without_page_dpf }}" class="btn btn-default {% if filter == "kaikki" %}active{% endif %}">{% trans "Kaikki" %}</a>
+    <a href="{% url 'nkadmin:users' filter='osallistujat' %}{{ query_string.get_without_page_dpf }}" class="btn btn-default {% if filter == "osallistujat" %}active{% endif %}">{% trans "Osallistuja" %}</a>
+    <a href="{% url 'nkadmin:users' filter='moderaattorit' %}{{ query_string.get_without_page_dpf }}" class="btn btn-default {% if filter == "moderaattorit" %}active{% endif %}">{% trans "Moderaattori" %}</a>
+    <a href="{% url 'nkadmin:users' filter='yllapitajat' %}{{ query_string.get_without_page_dpf }}" class="btn btn-default {% if filter == "yllapitajat" %}active{% endif %}">{% trans "Ylläpitäjä" %}</a>
+    <p style="margin-top: 10px">{% trans "Tuloksia" %}: {{ user_list.count }}</p>
+{% endblock search_filter_content %}
+
+{% block list_content %}
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>
+                        {% if order_by == "nimi" %}
+                        <span class="glyphicon glyphicon-arrow-down"></span>
+                        {% endif %}
+                        <a href="{% url 'nkadmin:users' filter=filter %}?jarjestys=nimi{{ query_string.get_without_order }}">
+                            {% trans "Nimi" %}
+                        </a>
+                    </th>
+                    <th>{% trans "Käyttäjätunnus" %}</th>
+                    <th>{% trans "Ideoita" %}</th>
+                    <th>{% trans "Kysymyksiä" %}</th>
+                    <th>
+                        {% if order_by == "organisaatio" %}
+                        <span class="glyphicon glyphicon-arrow-down"></span>
+                        {% endif %}
+                        <a href="{% url 'nkadmin:users' filter=filter %}?jarjestys=organisaatio{{ query_string.get_without_order }}">
+                            {% trans "Organisaatiot" %}
+                        </a>
+                    </th>
+                    <th>{% trans "Käyttäjäryhmä" %}</th>
+                    <th>
+                        {% if order_by == "kotikunta" %}
+                        <span class="glyphicon glyphicon-arrow-down"></span>
+                        {% endif %}
+                        <a href="{% url 'nkadmin:users' filter=filter %}?jarjestys=kotikunta{{ query_string.get_without_order }}">
+                            {% trans "Kotikunta" %}
+                        </a>
+                    </th>
+                    <th style="width: 10px"></th>
+                    <th style="width: 10px"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a_user in users %}
+                <tr>
+                    <td>{{ a_user.get_full_name }}</td>
+                    <td>@{{ a_user.username }}</td>
+                    <td>{{ a_user.get_initiative_count }}</td>
+                    <td>{{ a_user.get_contacts_made_count }}</td>
+                    <td>{% include "nkadmin/organizations_joined.html" with organizations=a_user.organizations.all %}</td>
+                    <td>{{ a_user.get_groups_joined }}</td>
+                    <td>{{ a_user.settings.municipality.name }}</td>
+                    <td><a href="{% url 'account:profile' a_user.id %}" class="btn btn-default" title="{% trans "Käyttäjän julkinen profiili" %}"><span class="glyphicon glyphicon-user"></span></a></td>
+                    <td>
+                        {% if a_user in perm.nkadmin.CanEditUser %}
+                        <div class="dropdown">
+                            <a id="dd_{{ a_user.id }}" class="btn btn-default" data-toggle="dropdown" href="#" role="button" title="{% trans "Toiminnot" %}">
+                                <span class="glyphicon glyphicon-pencil"></span>
+                            </a>
+                            <ul id="menu_{{ a_user.id }}" class="dropdown-menu" aria-labelledby="dd_{{ a_user.id }}" role="menu">
+                                <li role="presentation">
+                                    <a href="{% url 'nkadmin:users_edit' a_user.id %}" role="menuitem">{% trans "Muokkaa tietoja" %}</a>
+                                </li>
+                                <li role="presentation">
+                                    <a href="{% url 'nkadmin:change_password' a_user.id %}" role="menuitem">{% trans "Vaihda salasana" %}</a>
+                                </li>
+                                <li class="divider"></li>
+                                <li role="presentation" class="disabled">
+                                    <a href="#" role="menuitem">{% trans "Lähetä viesti" %}</a>
+                                </li>
+                                {% comment %}{% if a_user in perm.nkadmin.CanCloseAccount %}
+                                <li role="presentation" class="divider"></li>
+                                <li role="presentation">
+                                    <form id="close-account-{{ a_user.pk }}" action="{% url 'nkadmin:close_account' a_user.pk %}" method="post">{% csrf_token %}</form>
+                                    <a role="menuitem" onclick="$('form#close-account-' + '{{ a_user.pk }}').submit()">
+                                        {% trans "Sulje käyttäjätili" %}
+                                    </a>
+                                </li>
+                                {% endif %}
+                                {% endcomment %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div style="text-align: center">
+        <ul class="pagination">
+            {% if users.has_previous %}
+            <li>
+                <a href="{% url 'nkadmin:users' filter=filter %}{{ query_string.get_previous_page }}">&laquo;</a>
+            </li>
+            {% else %}
+            <li class="disabled">
+                <a href="#">&laquo;</a>
+            </li>
+            {% endif %}
+
+            {% for i in users.paginator.page_range %}
+            {% if i == users.number %}
+            <li class="active">
+            {% else %}
+            <li>
+            {% endif %}
+                <a href="{% url 'nkadmin:users' filter=filter %}?sivu={{ i }}{{ query_string.get_without_page }}">{{ i }}</a>
+            </li>
+            {% endfor %}
+
+            {% if users.has_next %}
+            <li><a href="{% url 'nkadmin:users' filter=filter %}{{ query_string.get_next_page }}">&raquo;</a></li>
+            {% else %}
+            <li class="disabled"><a href="#">&raquo;</a></li>
+            {% endif %}
+        </ul>
+    </div>
+{% endblock list_content %}

@@ -1,0 +1,13 @@
+{% extends 'nuka/base.html' %}
+
+{% load i18n bootstrap3 %}
+
+{% block content %}
+
+    <div class="well">
+        <h1>{% trans "Kiitos rekisteröitymisestä" %}</h1>
+        <p>{% trans "Rekisteröityminen Nuortenideat.fi-palveluun on valmis." %}</p>
+        <a class="btn btn-default" href="{% url 'account:profile' object.pk %}">{% trans "Oma sivu" %}</a>
+    </div>
+
+{% endblock content %}

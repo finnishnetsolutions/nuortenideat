@@ -1,0 +1,8 @@
+{% for topic in topics %}
+    <div class="row">
+        <div class="col-md-12">
+            <span class="badge" style="padding-right:4px;">{{ topic.date|date:"d.m.Y" }}</span>
+            <a href="{{ topic.get_absolute_url }}">{{ topic.title }}</a>
+        </div>
+    </div>
+{% endfor %}

@@ -1,0 +1,9 @@
+<div class="chat-body clearfix{{#ownMessage}} own{{/ownMessage}} {{ type }}">
+    <div class="header clearfix">
+        <strong class="username primary-font">{{ name }}</strong>
+        <small class="timestamp text-muted">
+            <span class="glyphicon glyphicon-time"></span>{{ timestamp }}
+        </small>
+    </div>
+    <p class="clearfix">{{ message }} {{# deletion }}<a href="#" class="delete-message pull-right" data-toggle="tooltip" title="{{#_}}Poista viesti{{/_}}"><i class="fa fa-remove"></i></a>{{/ deletion }}</p>
+</div>

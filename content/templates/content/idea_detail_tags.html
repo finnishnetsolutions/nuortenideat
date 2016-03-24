@@ -1,0 +1,3 @@
+{% load i18n %}
+{% include "content/tag_list.html" with tags=object.tags.all %}
+{% include "content/idea_fragment_edit_link.html" with fragment='tags' title=_("Muokaa aiheita") no_pull=True %}

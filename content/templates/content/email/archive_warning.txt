@@ -1,0 +1,1 @@
+{% extends "nuka/email/base.txt" %}{% load i18n %}{% block content %}{% blocktrans with title=object.title %}Nuortenideat.fi idea '{{ title }}' on ollut koskematon {{ idle_days }} päivää ja arkistoidaan {{ days_to_archive }} päivän kuluttua.{% endblocktrans %}{% endblock content %}

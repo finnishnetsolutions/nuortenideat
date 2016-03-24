@@ -1,0 +1,26 @@
+{{# users }}
+    {{# respondent.length }}
+        <li class="title respondent">{{#_}}Vastaajat{{/_}}</li>
+        {{# respondent }}
+            <li class="respondent">{{> room-user }}</li>
+        {{/ respondent }}
+    {{/ respondent.length }}
+    {{# moderator.length }}
+        <li class="title moderator">{{#_}}Moderaattorit{{/_}}</li>
+        {{# moderator }}
+            <li class="moderator">{{> room-user }}</li>
+        {{/ moderator }}
+    {{/ moderator.length }}
+    {{# participant.length }}
+        <li class="title">{{#_}}Osallistujat{{/_}}</li>
+        {{# participant }}
+            <li class="visitor">{{> room-user }}</li>
+        {{/ participant }}
+    {{/ participant.length }}
+    {{# visitor.length }}
+        <li class="title">{{#_}}Vierailijat{{/_}}</li>
+        {{# visitor }}
+            <li class="visitor">{{> room-user }}</li>
+        {{/ visitor }}
+    {{/ visitor.length }}
+{{/ users }}

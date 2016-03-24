@@ -1,0 +1,2 @@
+{% extends "nuka/email/base.txt" %}{% load i18n %}{% block content %}{% blocktrans with groups=target_user.groups.all|join:", " %}Käyttäjätilisi käyttöoikeuksia on muokattu.
+Uudet käyttöoikeudet: {{ groups }}{% endblocktrans %}{% endblock content %}

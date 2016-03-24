@@ -1,0 +1,8 @@
+{% load fontawesome staticfiles %}
+<div class="organization-picture-wrap">
+    {% if object.picture %}
+        <img class="img-responsive{{ img_class|yesno:" ," }}{{ img_class }}" src="{{ object.picture_medium.url }}" alt="{{ object.name }}">
+    {% else %}
+        <img class="img-responsive{{ img_class|yesno:" ," }}{{ img_class }}" src="{% static 'nuka/img/organisaatio_placeholder200x200.png' %}" alt="{{ object.name }}">
+    {% endif %}
+</div>

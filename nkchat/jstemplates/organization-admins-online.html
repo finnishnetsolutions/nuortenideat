@@ -1,0 +1,6 @@
+{{ #organizationAdmins }}
+    <li class="organization-admin"><a href="#" class="open-private-chat" data-uid="{{ id }}" data-name="{{ name }}">{{ name }} / {{ organizationName }}</a></li>
+{{ /organizationAdmins }}
+{{ ^organizationAdmins }}
+    <li class="organization-admin"><a href="#">{{#_}}Ei yhteyshenkilöitä online-tilassa.{{/_}}</a></li>
+{{ /organizationAdmins }}

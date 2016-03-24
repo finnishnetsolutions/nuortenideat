@@ -1,0 +1,5 @@
+{% extends 'notifications/email/base.txt' %}{% load i18n configs %}
+{% block subject %}{% blocktrans %}Uusi organisaatio odottaa hyväksyntää{% endblocktrans %}{% endblock subject %}
+
+{% block content %}{% blocktrans with name=object.content_object %}Uusi organisaatio "{{ name }} odottaa hyväksyntää"{% endblocktrans %}{% endblock content %}
+{% block link %}{% trans "Katso" %} {% base_url as base_url %}{% trans base_url %}{{ object.content_object.get_absolute_url }} {% endblock link %}

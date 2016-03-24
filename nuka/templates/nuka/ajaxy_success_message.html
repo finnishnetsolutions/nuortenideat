@@ -1,0 +1,14 @@
+{% load i18n bootstrap3 fontawesome %}
+<p class="bg-success {{ msg_elem|default:'ajaxy-success-msg' }}" style="display:none; padding:15px;">
+    {% trans 'Tallennettu.' %}
+
+    <span style="cursor:pointer;" class="pull-right ajaxy-success-msg-remove">{% fa_icon "remove" %}</span>
+</p>
+
+<script type="text/javascript">
+    $(function() {
+       $('.ajaxy-success-msg-remove').on('click', function() {
+          $(this).parent().hide();
+       });
+    });
+</script>

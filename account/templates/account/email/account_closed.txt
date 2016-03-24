@@ -1,0 +1,1 @@
+{% extends "nuka/email/base.txt" %}{% load i18n %}{% block content %}{% blocktrans %}Nuortenideat.fi käyttäjätilisi käyttäjätunnuksella {{ user }} on suljettu.{% endblocktrans %}{% endblock content %}

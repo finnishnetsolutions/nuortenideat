@@ -1,0 +1,9 @@
+{% load i18n %}
+
+<div class="tags-list">
+{% if tags.all %}
+    {{ tags.all|join:", " }}
+{% else %}
+    {% trans "Ei aiheita" %}
+{% endif %}
+</div>

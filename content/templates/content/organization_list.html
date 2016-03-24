@@ -1,0 +1,8 @@
+{% load i18n %}
+<ul class="organization-list">
+    {% for org in orgs %}
+        <li>{% if org.is_active %}<a href="{{ org.get_absolute_url }}">{{ org }}</a>{% else %}{{ org }}{% endif %}</li>
+        {% empty %}
+            <li>{% trans "Ei organisaatioita" %}</li>
+    {% endfor %}
+</ul>

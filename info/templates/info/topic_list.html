@@ -1,0 +1,31 @@
+{% extends 'nuka/base.html' %}
+{% load i18n bootstrap3 static %}
+
+
+{% block meta_extra %}
+    {% include 'nuka/meta_og_tags.html' with title=selected_topic.title description=selected_topic.description_plaintext %}
+{% endblock meta_extra %}
+
+{% block title %}{% trans "Ajankohtaista" %} - {{ block.super }}{% endblock title %}
+
+{% block content %}
+    <article class="row initiative">
+        <div class="col-md-4 side">
+            <div class="well" style="min-height:400px;">
+                <h1 class="h3-style">{% trans "Ajankohtaista" %}</h1>
+                <ul style="list-style-type:none; padding-left:15px;">
+                    {% for object in object_list %}
+                        <li>
+                            <a href="{{ object.get_absolute_url }}">{{ object.date|date:"SHORT_DATE_FORMAT" }} {{ object.title }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-8 main">
+            <div class="well" style="min-height:400px;">
+                {% include "info/topic_detail.html" with object=selected_topic %}
+            </div>
+        </div>
+    </article>
+{% endblock content %}

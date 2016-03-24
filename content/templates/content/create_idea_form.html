@@ -1,0 +1,51 @@
+{% extends 'nuka/base.html' %}
+
+{% load i18n bootstrap3 %}
+
+{% block title %}{% trans "Ideat" %}: {% trans "Uusi Idea" %} - {{ block.super }}{% endblock title %}
+
+{% block js_extra %}
+    <script type="text/javascript">
+        $(function () {
+            $('input[name="target_type"]').on('change', function () {
+                if($(this).prop('checked')) {
+                    $('#id_target_organizations_wrap').toggle($(this).val() === '{{ form.TARGET_TYPE_ORGANIZATION }}');
+                }
+            });
+            $('input[name="target_type"]:checked').trigger('change');
+        });
+
+        // "Write as" scripts.
+        $(function() {
+            $('input[name="write_as"]').change(function() {
+                if ($(this).val() == {{ form.WRITE_AS_USER }})
+                {
+                    $("#id_initiator_organization_wrap").hide();
+                    $("#id_owners_wrap").show();
+                }
+                else if ($(this).val() == {{ form.WRITE_AS_ORGANIZATION }})
+                {
+                    $("#id_initiator_organization_wrap").show();
+                    $("#id_owners_wrap").hide();
+                }
+            });
+            $('input[name="write_as"]:checked').trigger('change');
+        });
+    </script>
+{% endblock js_extra %}
+
+{% block content %}
+    <article class="well">
+        <h1>{% trans "Uusi idea 1/2" %}</h1>
+        <div class="alert alert-info">
+            {% trans "Täytä idean perustiedot: otsikko, aihe, idean omistajat, mitä kuntaa tai organisaatiota idea koskee ja kuka saa ottaa kantaa." %}
+            {% trans "Seuraavassa vaiheessa voit lisätä idealle mm. kuvaustekstin ja kuvia, sekä gallupin." %}
+        </div>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            <button type="submit" class="btn btn-default">{% trans "Jatka seuraavaan vaiheeseen" %}</button>
+        </form>
+    </article>
+{% endblock content %}

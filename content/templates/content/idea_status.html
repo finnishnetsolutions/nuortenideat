@@ -1,0 +1,44 @@
+{% load i18n bootstrap3 fontawesome %}
+
+<ul class="status">
+    {% for s in object.get_status_list %}
+        <li class="{% if not forloop.last %} text-grey {% endif %}">{{ s.1 }} {{ s.0|date:"SHORT_DATE_FORMAT" }}</li>
+    {% endfor %}
+</ul>
+
+{% if object.kua_initiative %}
+    {% if object.kua_initiative.is_editable and object.kua_initiative.created_by_id == user.pk %}
+        <hr>
+        <a href="{{ object.kua_initiative.management_url }}" class="btn btn-primary">
+            {% fa_icon "edit" %} {% trans "Muokkaa kuntalaisaloitetta" %}
+        </a>
+    {% elif object.kua_initiative.is_public %}
+        <hr>
+        <a href="{{ object.kua_initiative.get_absolute_url }}" class="btn btn-primary">
+            {% fa_icon "eye" %} {% trans "Näytä kuntalaisaloite" %}
+        </a>
+    {% endif %}
+{% endif %}
+
+{% if object.visibility != object.VISIBILITY_ARCHIVED and not hide_actions %}
+    {% if object in perm.content.CanPublishIdea %}
+        <hr>
+
+        <div id="actions">
+            <form method="post" action="{% url 'content:publish_idea' initiative_id=object.pk %}">
+                {% csrf_token %}
+                <button class="btn btn-default btn-green">{% bootstrap_icon "share" %} {% trans "Julkaise idea" %}</button>
+            </form>
+        </div>
+    {% elif object in perm.content.CanTransferIdeaForward %}
+        <hr>
+        <a href="{% url 'content:transfer_idea' initiative_id=object.pk %}" class="btn btn-default btn-green ajaxy-link" data-toggle="ajaxy-modal">
+            {% trans "Vie eteenpäin" %}&hellip;
+        </a>
+    {% elif object in perm.content.CanPublishIdeaDecision %}
+        <hr>
+        <a href="{% url 'content:publish_idea_decision' initiative_id=object.pk %}" class="btn btn-default btn-green ajaxy-link" data-toggle="ajaxy-modal">
+            {% trans "Kirjaa päätös" %}&hellip;
+        </a>
+    {% endif %}
+{% endif %}

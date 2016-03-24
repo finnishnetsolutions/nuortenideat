@@ -1,0 +1,19 @@
+{% load i18n bootstrap3 %}
+
+<h3>{% trans "Omat tiedot" %}</h3>
+
+{% block before_form %}
+{% endblock %}
+<form action="{{ request.path }}" method="post" class="ajaxy-form" novalidate>
+    {% block form_body %}
+        {% bootstrap_form forms.user %}
+        {% bootstrap_form forms.usersettings %}
+    {% endblock form_body %}
+    {% block form_actions %}
+        <button class="btn btn-default" type="submit">{% bootstrap_icon "ok" %} {% trans "Tallenna" %}</button>
+        <div class="clearfix"></div>
+    {% endblock form_actions %}
+</form>
+{% block after_form %}
+{% endblock %}
+

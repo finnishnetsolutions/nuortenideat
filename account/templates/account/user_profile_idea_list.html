@@ -1,0 +1,8 @@
+{% load favorites %}
+
+{% if ct_natural_key %}
+    {% fav_get_ct_id ct_natural_key as ct_id %}
+    {% fav_list ct_id object True as obj_list %}
+{% endif %}
+
+{% include "content/initiative_boxes_list.html" with initiatives=obj_list %}

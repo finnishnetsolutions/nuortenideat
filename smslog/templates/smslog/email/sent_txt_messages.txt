@@ -1,0 +1,7 @@
+{% extends 'notifications/email/base.txt' %}{% load i18n %}
+
+{% block subject %}{% trans "Lähetetyt tekstiviestit -raportti" %}{% endblock subject %}
+
+{% block content %}{% trans "Aikaväli" %}: {{ start_date|date:"SHORT_DATE_FORMAT" }} - {{ end_date|date:"SHORT_DATE_FORMAT" }}
+
+{% trans "Lähetetyt tekstiviestit" %}: {{ count }} {% trans "kpl" %}{% endblock content %}

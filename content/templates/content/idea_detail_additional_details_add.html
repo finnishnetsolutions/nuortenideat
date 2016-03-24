@@ -1,0 +1,7 @@
+{% load i18n bootstrap3 %}
+
+<form class="ajaxy-form" data-ajaxy-success-wrap="#list_details" novalidate method="post" action="{% if detail_update %}{% url 'content:edit_detail' initiative_id=form.instance.idea.pk additional_detail_id=form.instance.pk %}{% else %}{% url 'content:add_detail' initiative_id=form.instance.idea.pk %}{% endif %}">
+    {% csrf_token %}
+    {% bootstrap_form form %}
+    <button type="submit" class="btn btn-default">{% trans "Tallenna" %}</button>
+</form>

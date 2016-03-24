@@ -1,0 +1,139 @@
+{% extends "nuka/base.html" %}
+
+{% load staticfiles i18n topics cache %}
+
+{% block precontent %}
+    <div class="container visible-xs picture-carousel-sm">
+        <img src="{{ carousel.picture_small }}" class="img-responsive" alt="{{ carousel.picture_alt }}">
+    </div>
+    <div class="container visible-sm picture-carousel-sm">
+        <img src="{{ carousel.picture_small }}" class="img-responsive" alt="{{ carousel.picture_alt }}">
+    </div>
+    <div class="visible-md img-responsive picture-carousel-lg" style="background-image: url('{{ carousel.picture_medium }}')" title="{{ carousel.picture_alt }}"></div>
+    <div class="visible-lg img-responsive picture-carousel-lg" style="background-image: url('{{ carousel.picture_large }}')" title="{{ carousel.picture_alt }}"></div>
+{% endblock precontent %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-6">
+            <section class="well well-headered">
+                <header>
+                    <h1 class="h4-style">{% trans "Nuortenideat.fi" %}</h1>
+                </header>
+                <div class="body">
+                    <p>{% trans "Nuortenideat.fi on valtakunnallinen nuorten vaikuttamispalvelu, jonka avulla nuoret voivat helposti tehdä ehdotuksia, osallistua ja vaikuttaa heitä koskeviin asioihin. Oman idean kirjoittaminen edellyttää sisäänkirjautumista, mutta ideoita voi selata, kommentoida ja kannattaa kirjautumatta." %}</p>
+
+                    <p>{% trans "Kunnat, koulut, järjestöt ja nuorten vaikuttajaryhmät voivat ottaa maksutta palvelun käyttöönsä." %} <a href="{% url 'help:instruction_detail' 7 %}">{% trans "Kysy lisää" %}</a></p>
+
+                    <div class="intro-btns-md">
+                        <a href="{% url 'account:signup_choices' %}" class="btn btn-lg btn-magenta intro-register-btn">
+                            <img src="{% static 'nuka/img/add-user.png' %}" alt=""> {% trans "Rekisteröidy" %}
+                        </a>
+                        <a href="{% url 'content:create_idea' %}" class="btn btn-lg btn-green intro-write-idea-btn">
+                            <img src="{% static 'nuka/img/btn_icon_lamp_small.png' %}" alt=""> {% trans "Kirjoita idea" %}
+                        </a>
+                    </div>
+                    <div class="intro-btns-xxs">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <a href="{% url 'account:signup_choices' %}" class="btn btn-lg btn-magenta intro-register-btn">
+                                    <img src="{% static 'nuka/img/add-user.png' %}" alt=""> {% trans "Rekisteröidy" %}
+                                </a>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <a href="{% url 'content:create_idea' %}" class="btn btn-lg btn-green intro-write-idea-btn">
+                                    <img src="{% static 'nuka/img/btn_icon_lamp_small.png' %}" alt=""> {% trans "Kirjoita idea" %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <div class="col-md-6">
+            <section class="well well-headered new-topics-wrap">
+                <header>
+                    <h2 class="h4-style">{% trans "Ajankohtaista" %} | <a href="{% url "info:topic_list" %}" style="text-transform: none; font-size: 16px;">{% trans "Näytä kaikki" %}</a></h2>
+                </header>
+                <div class="body">
+                    {% latest_topics %}
+                </div>
+            </section>
+            <section class="well well-headered">
+                <header>
+                    <h2 class="h4-style">{% trans "Suosituimmat aiheet" %}</h2>
+                </header>
+                <div class="row popular-tags-wrap">
+                    {% cache 10000 "top-tags" request.LANGUAGE_CODE %}
+                        {% load popular_tags %}
+                        {% popular_tags as top_tags %}
+                        {% for tag in top_tags %}
+                            <div class="col-lg-4 col-md-4 col-sm-4 col-xs-12 vertical-aligned">
+                                <span class="tag-{{ tag.size }}"><a href="{% url 'content:initiative_list' %}?tags={{ tag.pk }}">{{ tag }}</a></span>
+                            </div>
+                            {% if forloop.counter == 3 %}
+                                <div class="clearfix hidden-xs"></div>
+                            {% endif %}
+                        {% endfor %}
+                    {% endcache %}
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        $(function() {
+           $(".sort-published-btn").click(function() {
+               $(".sort-published-btn").addClass("active");
+               $(".sort-popularity-btn").removeClass("active");
+           });
+           $(".sort-popularity-btn").click(function() {
+               $(".sort-popularity-btn").addClass("active");
+               $(".sort-published-btn").removeClass("active");
+           });
+        });
+    </script>
+    <div class="row hidden-xs">
+        <div class="col-xs-6">
+            <div class="btn-group btn-group-lg idea-sort-buttons" role="group">
+                <a href="{% url 'content:initiative_boxes' %}?jarjestys=uusin&amp;maara={{ initiatives_count }}" class="btn btn-default ajaxy-link active sort-published-btn" data-ajaxy-target=".initiative-boxes-wrap">
+                    {% trans "Uusimmat" %}
+                </a>
+                <a href="{% url 'content:initiative_boxes' %}?jarjestys=suosituin&amp;maara={{ initiatives_count }}" class="btn btn-default ajaxy-link sort-popularity-btn" data-ajaxy-target=".initiative-boxes-wrap">
+                    {% trans "Suosituimmat" %}
+                </a>
+            </div>
+        </div>
+        <div class="col-xs-6 text-right">
+            <a href="{% url 'content:initiative_list' %}" class="btn btn-default btn-lg">{% trans "Hae ideoita" %}</a>
+        </div>
+    </div>
+    <div class="row visible-xs">
+        <div class="col-xs-12 text-center">
+            <div class="btn-group btn-group-lg idea-sort-buttons" role="group">
+                <a href="{% url 'content:initiative_boxes' %}?jarjestys=uusin&amp;maara={{ initiatives_count }}" class="btn btn-default ajaxy-link active sort-published-btn" data-ajaxy-target=".initiative-boxes-wrap">
+                    {% trans "Uusimmat" %}
+                </a>
+                <a href="{% url 'content:initiative_boxes' %}?jarjestys=suosituin&amp;maara={{ initiatives_count }}" class="btn btn-default ajaxy-link sort-popularity-btn" data-ajaxy-target=".initiative-boxes-wrap">
+                    {% trans "Suosituimmat" %}
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="row visible-xs">
+        <div class="col-xs-12 frontpage-top-browse-ideas-btn-wrap-xs">
+            <a href="{% url 'content:initiative_list' %}" class="btn btn-default btn-lg browse-ideas-btn">{% trans "Hae ideoita" %}</a>
+        </div>
+    </div>
+
+    <div class="initiative-boxes-wrap">
+        {% include "content/initiative_boxes.html" with initiatives=object_list %}
+    </div>
+
+    <div class="frontpage-bottom-browse-ideas-btn-wrap">
+        <a href="{% url 'content:initiative_list' %}" class="btn btn-default btn-lg">{% trans "Hae ideoita" %}</a>
+    </div>
+
+{% endblock content %}

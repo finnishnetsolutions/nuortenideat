@@ -1,0 +1,20 @@
+{% load custom_comments %}
+
+<ul class="list-unstyled">
+    {% for comment in comments %}
+        <li id="c{{ comment.pk }}" class="comment ajaxy-wrap">
+            <div class="row">
+                {% if pdf_preview_mode %}
+                    <div class="col-md-1">
+                        <input type="checkbox" class="comment-checkbox" checked="checked" data-comment-pk="{{ comment.pk }}">
+                    </div>
+                {% endif %}
+
+                <div class="{{ pdf_preview_mode|yesno:'col-md-11,col-md-12' }} ajaxy-wrap">
+                    {% include 'nkcomments/comment_list_item.html' with deleted=comment.is_deleted comment_vote=comment|get_comment_vote:comment_votes highlight=comment.highlight %}
+                </div>
+            </div>
+            <div class="clearfix"></div>
+      </li>
+    {% endfor %}
+</ul>

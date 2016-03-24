@@ -1,0 +1,31 @@
+{% load staticfiles i18n %}
+
+{% if object.interaction == object.INTERACTION_REGISTERED_USERS and not request.user.is_authenticated %}
+    <div class="alert alert-info">Tämän idean kannatus ja kommentointi vaatii sisäänkirjautumisen.</div>
+{% endif %}
+
+<form action="{% url 'content:support_idea' initiative_id=object.pk %}" method="post" style="display: inline">
+    {% csrf_token %}
+    {% if vote and vote.choice == vote.VOTE_DOWN %}
+        <button type="submit" id="vote-support-idea" class="btn btn-lg btn-white disabled">
+            <i class="ni-icon ni-icon-thumbs-up-small-grey"><span class="sr-only">{% trans "Kannatan" %}</span></i> {% trans "Kannatan" %}
+        </button>
+    {% else %}
+        <button type="submit" id="vote-support-idea" class="btn btn-lg btn-green {% if not object in perm.content.CanVoteIdea %}disabled{% endif %}">
+            <i class="ni-icon ni-icon-thumbs-up-small"><span class="sr-only">{% trans "Kannatan" %}</span></i> {% trans "Kannatan" %}
+        </button>
+    {% endif %}
+</form>
+
+<form action="{% url 'content:oppose_idea' initiative_id=object.pk %}" method="post" style="display: inline">
+    {% csrf_token %}
+    {% if vote and vote.choice == vote.VOTE_UP %}
+        <button type="submit" id="vote-oppose-idea" class="btn btn-lg btn-white disabled" style="margin-right:20px;">
+            <i class="ni-icon ni-icon-thumbs-down-small-grey"><span class="sr-only">{% trans "En kannata" %}</span></i> {% trans "En kannata" %}
+        </button>
+    {% else %}
+        <button type="submit" id="vote-oppose-idea" class="btn btn-lg btn-magenta {% if not object in perm.content.CanVoteIdea %}disabled{% endif %}" style="margin-right:20px;">
+            <i class="ni-icon ni-icon-thumbs-down-small"><span class="sr-only">{% trans "En kannata" %}</span></i> {% trans "En kannata" %}
+        </button>
+    {% endif %}
+</form>

@@ -1,0 +1,7 @@
+{% load i18n configs %}
+{% block subject %}{% endblock subject %}
+{% block content %}{% endblock content %}
+
+{% block footer %}--------------
+{% blocktrans %}Tämä on Nuortenideat.fi-palvelun automaattisesti lähettämä ilmoitus. Älä vastaa tähän viestiin.{% endblocktrans %}
+{% block link %}{% endblock link %}{% practice_environment as practice %}{%if practice %}({% trans 'Harjoittelu' %}){% endif %}{% endblock footer %}

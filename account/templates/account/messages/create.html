@@ -1,0 +1,17 @@
+{% extends 'account/profile_base.html' %}
+
+{% load i18n bootstrap3 %}
+
+{% block subcontent %}
+    <a name="sisalto"></a>
+    <div class="well">
+        <form method="post" action="{{ form_action }}" novalidate>
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            {% buttons %}
+                <button class="btn btn-default btn-lg" type="submit">{% trans "Lähetä" %}</button>
+                <a class="btn btn-default btn-lg pull-right" href="{% url 'account:messages' object.pk %}#sisalto">{% trans "Peruuta" %}</a>
+            {% endbuttons %}
+        </form>
+    </div>
+{% endblock subcontent %}

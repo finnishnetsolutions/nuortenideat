@@ -1,0 +1,7 @@
+{% load fontawesome %}
+{% if object in perm.content.CanEditInitiative %}
+    {% with url_name='content:edit_idea_'|add:fragment %}
+        <a href="{% url url_name initiative_id=object.pk %}" class="btn btn-default ajaxy-link edit-link {% if not no_pull %}pull-right{% endif %}">{% fa_icon "edit" %} {% if title %}{{ title }}{% endif %}</a>
+        <div class="clearfix"></div>
+    {% endwith %}
+{% endif %}

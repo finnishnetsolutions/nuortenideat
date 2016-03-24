@@ -1,0 +1,33 @@
+{% load i18n fontawesome favorites bootstrap3 %}
+
+<style>
+    #favorites_list li.tag {
+        background-color: #e5e5e5;
+        padding: 0 12px;
+        margin-bottom: 5px;
+        margin-right: 5px;
+        border-radius: 15px;
+    }
+</style>
+
+<ul id="favorites_list" class="list-inline" style="display:inline;">
+    {% fav_list ct_id user as obj_list %}
+    {% for item in obj_list %}
+        <li class="tag">
+            {% if item.get_absolute_url %}
+                <a href="{{ item.get_absolute_url }}">{{ item }}</a>
+            {% else %}
+                {{ item }}
+            {% endif %}
+        </li>
+    {% empty %}
+        <li class="empty">{{ empty_text|default:_("ei seurattuja") }}</li>
+    {% endfor %}
+</ul>
+
+{% if user in perm.account.CanEditUser and not no_edit %}
+    <a href="{% url 'favorite:favorite_edit' user_id=user.pk ct_id=ct_id %}" class="btn btn-default ajaxy-link edit-link">
+        {% fa_icon "edit" %} {% if title %}<span style="margin-left: 5px">{{ title }}</span>{% endif %}
+    </a>
+    <div class="clearfix"></div>
+{% endif %}

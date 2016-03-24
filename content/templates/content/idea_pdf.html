@@ -1,0 +1,258 @@
+{% extends 'content/content_base.html' %}
+
+{% load i18n bootstrap3 fontawesome static bleach_tags comments %}
+
+{% block js %}
+    {% if pdf_preview_mode %}
+        <script type="text/javascript" src="{% static "bower_components/jquery/dist/jquery.js" %}"></script>
+        <script type="text/javascript" src="{% static "bower_components/select2/select2.js" %}"></script>
+        <script type="text/javascript" src="{% static "bower_components/select2/select2_locale_fi.js" %}"></script>
+        <script type="text/javascript" src="{% static "nuka/js/jquery.csrf.js" %}"></script>
+        <script type="text/javascript" src="{% static "bower_components/jquery-form/jquery.form.js" %}"></script>
+        <script type="text/javascript">
+
+            $(function() {
+                'use strict';
+
+                $('.email-field').parents('.form-group').hide();
+
+                $('input[name="output_method"]').on('change', function() {
+                    $('.email-field').parents('.form-group').toggle($(this).val() == '{{ form.OUTPUT_METHOD_EMAIL }}');
+
+                    if ($(this).val() !== '{{ form.OUTPUT_METHOD_EMAIL }}') {
+                        $('.email-field').parents('.form-group').hide();
+                        $('#id_additional_detail_wrap').show();
+                    } else {
+                        $('#id_additional_detail_wrap').hide();
+                        $('input[name="email_receiver_type"]:checked').trigger('change');
+                    }
+                });
+                $('input[name="output_method"]:checked').trigger('change');
+
+                $('input[name="email_receiver_type"]').on('change', function() {
+                    console.log($(this).val());
+                    $('#id_email_recipient_organization_wrap').toggle($(this).val() == '{{ form.EMAIL_RECEIVER_TYPE_INTERNAL }}')
+                    $('#id_email_recipient_wrap, #id_email_recipient_name_wrap').toggle($(this).val() == '{{ form.EMAIL_RECEIVER_TYPE_EXTERNAL }}')
+                })
+                $('input[name="email_receiver_type"]:checked').trigger('change');
+
+
+                $('#id_included_comments').on('change', function() {
+                    $('.comment-checkbox').prop('checked', false);
+                    $.each($(this).val(), function(i, pk) {
+                        var sel = 'input[data-comment-pk="'+pk+'"]';
+                        $(sel).prop('checked', true);
+                    });
+                });
+
+                $('.comment-checkbox').on('change', function() {
+                    var pk = $(this).attr('data-comment-pk');
+                    var is_selected = $(this).prop('checked');
+                    $('#id_included_comments option[value="'+pk+'"]').
+                            prop('selected', is_selected);
+                });
+
+                if ('{{ form.errors }}') {
+                    $('#id_included_comments').trigger('change');
+                } else {
+                    $('.comment-checkbox').trigger('change');
+                }
+
+                $('.ajaxy-link').on('click', function() {
+                    return false;
+                });
+
+                $('.close-window').on('click', function() {
+                    window.close();
+                });
+
+                $('#extra-submit').on('click', function() {
+                    $('#form-submit').trigger('click');
+                });
+
+                $('#form-element').on('submit', function() {
+
+                    if ($('input[name="output_method"]:checked').val() !== '{{ form.OUTPUT_METHOD_EMAIL }}') {
+                        $(this).attr('target', '_blank');
+                        window.setTimeout(function() {
+                            window.location = '{{ object.get_absolute_url }}';
+                        }, 1000);
+                    }
+                    return true;
+                });
+            });
+        </script>
+    {% endif %}
+{% endblock js %}
+
+{% block precontent %}
+    {# TODO: move styles to a file #}
+    <style>
+        .fixed-write-idea, #id_included_comments_wrap {
+            display: none;
+        }
+        .container {
+            margin-bottom: 15px;
+        }
+        .pdf-fake-header {
+            background-color: #fff;
+            padding: 10px;
+        }
+        .small-p-margin > .btn {
+            display: none;
+        }
+        #pdf-form {
+            margin-bottom: 50px;
+        }
+        {% if pdf_mode %}
+            body > header, body > footer {
+                display: none;
+            }
+            .btn, .pdf-hide, #pdf-form {
+                display: none;
+            }
+            body, .container {
+                background-color: #fff !important;
+                margin-bottom: 0;
+            }
+        {% elif pdf_preview_mode %}
+            .pdf-preview-hide, .delete-comment {
+                display: none;
+            }
+            .ajaxy-link {
+                cursor: initial;
+            }
+        {% endif %}
+    </style>
+
+    {# TODO: muuta käyttämään nuka/pdf/header-templatea #}
+    <div class="pdf-fake-header pdf-preview-hide">
+        <div class="container">
+            {% include 'nuka/logo.html' %}
+            <div class="pull-right">
+                <span class="pull-right">{% trans "Tämä idea on luotu Nuortenideat.fi-vaikuttamispalvelussa." %}</span>
+                <br>
+                <a href="{{ BASE_URL }}{{ object.get_absolute_url }}" target="_blank">{{ BASE_URL }}{{ object.get_absolute_url }}</a>
+                <br>
+                {{ name }}
+                <br>
+                {{ contacts|linebreaksbr }}
+            </div>
+        </div>
+    </div>
+{% endblock precontent %}
+
+{% block content %}
+
+    <h1 class="pdf-hide">
+        {% trans "Vie idea eteenpäin" %}
+    </h1>
+
+    {% if not pdf_mode %}
+        <div id="pdf-form">
+            <a name="submit-pdf-form"></a>
+            <form id="form-element" action="{% url "content:idea_to_pdf" initiative_id=object.pk %}#submit-pdf-form" method="post" novalidate>
+                {% csrf_token %}
+                {% bootstrap_form form %}
+                <input id="form-submit" type="submit" name="submit" class="btn btn-default" value="{% trans "OK" %}">
+                <a class="btn btn-default" href="{{ object.get_absolute_url }}">{% trans "Peruuta" %}</a>
+            </form>
+        </div>
+    {% endif %}
+
+    <h2 class="pdf-hide">{% trans "Esikatselu" %}</h2>
+    <div class="alert alert-info pdf-hide">{% trans "Tämä on PDF-luonnin esikatselu. Voit vielä piilottaa kommentteja ennen tulostusta." %}</div>
+
+    {{ block.super }}
+
+    <button id="extra-submit" class="btn btn-default">{% trans "OK" %}</button>
+{% endblock content %}
+
+{% block idea_main %}
+    {% if object.picture %}
+        {% include 'content/idea_main_picture.html' %}
+    {% endif %}
+
+    <div class="title ajaxy-wrap editable-wrap">
+        <h1 class="h2-style">{{ object.title }}</h1>
+    </div>
+
+    {{ block.super }}
+
+    <div class="well">
+
+        <div class="unsafe description">
+            {% if object.html_allowed %}
+                {{ object.description|bleach }}
+            {% else %}
+                {{ object.description|linebreaksbr }}
+            {% endif %}
+        </div>
+
+        {% if object.details.count %}
+            <h3 class="h4-style">{% trans "Lisätietoa" %}</h3>
+            <div id="additional-details">
+               {% include "content/additional_detail_list.html" with details=object.details.all %}
+            </div>
+        {% endif %}
+    </div>
+{% endblock idea_main %}
+
+{% block idea_comments %}
+    <article class="well" id="comments">
+        {% if pdf_comments_hidden %}
+            <div class="alert alert-info">
+                {% trans "Huom. osa kommenteista on poistettu." %}
+            </div>
+        {% endif %}
+        <header>
+            <h3 class="h4-style">{% trans "Kommentit" %} ({{ comments.count }})</h3>
+        </header>
+        <div class="content">
+            {% include 'nkcomments/comment_list.html' with comments=comments.all %}
+        </div>
+    </article>
+{% endblock idea_comments %}
+
+{% block idea_side_1 %}
+
+    <div id="owners">
+        <div class="ajaxy-wrap editable-wrap">
+            {% include "content/owner_list.html" with owners=object.owners.all %}
+        </div>
+    </div>
+    <div id="votes-comments">
+        {% include "content/initiative_stats.html" %}
+    </div>
+    <hr>
+    {% include "content/idea_status.html" with hide_actions=True %}
+
+    <hr>
+    <div id="organizations">
+        <h4 class="h5-style">{% trans "Organisaatiot" %}</h4>
+        <div class="ajaxy-wrap editable-wrap">
+            {% include "content/organization_list.html" with orgs=object.target_organizations.all %}
+        </div>
+    </div>
+
+    <hr>
+
+    <div id="subjects">
+        <h4 class="h5-style">{% trans "Aiheet" %}</h4>
+        <div class="ajaxy-wrap editable-wrap">
+            {% include "content/tag_list.html" with tags=object.tags.all %}
+        </div>
+    </div>
+
+{% endblock idea_side_1 %}
+
+{% block idea_share_buttons %}{% endblock idea_share_buttons %}
+
+{% block idea_gallup %}
+    {% for gallup in object.gallup_set.all %}
+        <aside class="ajaxy-wrap">
+            {% include "gallup/well.html" with show_results=True disabled=True %}
+        </aside>
+    {% endfor %}
+{% endblock idea_gallup %}
+

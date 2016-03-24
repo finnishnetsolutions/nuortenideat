@@ -1,0 +1,2 @@
+{% extends "nuka/email/base.txt" %}{% load i18n %}{% block content %}{% blocktrans with idea=idea owners=idea.owners.all|join:", " %}Idean '{{ idea }}' omistajia on muutettu.
+Uudet omistajat ovat: {{ owners }}{% endblocktrans %}{% endblock content %}

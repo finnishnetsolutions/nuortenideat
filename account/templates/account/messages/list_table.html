@@ -1,0 +1,37 @@
+{% load i18n bootstrap3 %}
+
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>{% trans "Aihe" %}</th>
+                <th>{% trans "Lähettäjä" %}</th>
+                <th>{% trans "Päiväys" %}</th>
+                <th>{% trans "Vastaanottaja" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for message in object_list %}
+            <tr>
+                <td>
+                    {% include "account/messages/subject.html" %}
+                </td>
+                <td>{% include 'account/messages/sender.html' %}</td>
+                <td>
+                    <span style="margin-right: 10px">{{ message.sent|date:"d.m.Y" }}</span>
+                    <span>{{ message.sent|date:"H.i" }}</span>
+                </td>
+                <td>
+                    {% include "account/messages/receivers.html" %}
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td>{% trans "Ei viestejä." %}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if is_paginated %}
+    <div class="text-center">{% bootstrap_pagination page=page_obj url=pager_path|default:request.path %}</div>
+{% endif %}

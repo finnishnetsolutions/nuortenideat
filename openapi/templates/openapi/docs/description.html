@@ -1,0 +1,50 @@
+{% load openapi %}
+<p>
+    This REST API provides programmatic access to most of the public data available using
+    the web interface of <a href="/">Nuortenideat.fi</a>.
+</p>
+<p>
+    {% openapi_version as api_version %}
+    The data can be retrieved in JSON- and XML-formats. You can specify the output format
+    by setting the HTTP request's <b>Accept</b>-header to <b>application/json</b> or
+    <b>application/xml</b>. Alternatively, you can specify the output format by adding
+    GET-parameter <b>format</b> to the querystring of an API url with value <b>json</b>
+    or <b>xml</b>. E.g.
+    <a href="/api/open/{{ api_version }}/ideas/?format=xml">
+        /api/open/{{ api_version }}/ideas/?format=xml
+    </a>.
+</p>
+
+<p>
+    You can find all the available API endpoints and their implementation details
+    listed below. There is also a
+    <a href="/api/open/">browsable version of the API</a> available.
+</p>
+
+<h2>Implementation Notes</h2>
+<ul>
+    <li>
+        Some text content, such as idea title and description, may be available in
+        multiple languages. These fields have type MultilingualTextField. In JSON format,
+        these fields are serialized as key-value pairs, where key is the language code and
+        value is the text content in that language. E.g.:
+        <pre>{"title": {"fi": "Suomeksi", "sv": "På svenska"}}</pre>
+        In XML format, the same data gets serialized as a list of
+        languageVersion-elements as follows: {# HACK...Django doesn't have block tag for this? #}
+        <pre>{{ '<title>'|force_escape }}
+    {{ '<languageVersion code="fi">Suomeksi</languageVersion>'|force_escape }}
+    {{ '<languageVersion code="sv">På svenska</languageVersion>'|force_escape }}
+{{ '</title>'|force_escape }}</pre>
+        If a field does not have a particular language version available, its language
+        code won't exist in the serialized data. All applications should be prepared for
+        this and consider using an existing language version (if any) as a fallback.
+    </li>
+    <li>
+        Fields referring to browser accessible URLs have type MultilingualUrlField. These
+        fields always contain separate urls for each language version of the site, in a
+        similar fashion as MultilingualTextFields.
+    </li>
+    <li>
+        All paginated lists return 50 results per page.
+    </li>
+</ul>

@@ -1,0 +1,7 @@
+{% load fontawesome %}
+{% if object in perm.organization.CanEditOrganization %}
+    {% with url_name='organization:edit_organization_'|add:fragment %}
+        <a href="{% url url_name pk=object.pk %}" class="btn btn-default pull-right ajaxy-link edit-link" {% if title %}title="{{ title }}"{% endif %}>{% fa_icon "edit" %}</a>
+        <div class="clearfix"></div>
+    {% endwith %}
+{% endif %}

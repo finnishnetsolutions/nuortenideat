@@ -1,0 +1,11 @@
+<!-- Use inside meta_extra block -->
+{% load staticfiles %}
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:site" content="{{ SITE_NAME }}" />
+<meta property="og:title" content="{{ SITE_NAME }}: {{ title }}" />
+<meta property="og:description" content="{{ description|truncatechars:400|default:"&nbsp;" }}" />
+<meta property="og:url" content="{{ ABSOLUTE_URI|iriencode }}" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="{{ SITE_NAME }}" />
+<meta property="og:image" content="{{ picture_url|default:FB_NK_LOGO_URL }}" />

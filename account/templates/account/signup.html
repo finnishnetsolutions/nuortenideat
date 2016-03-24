@@ -1,0 +1,55 @@
+{% extends 'nuka/base.html' %}
+
+{% load i18n bootstrap3 %}
+
+{% block content %}
+    <div class="well">
+        <h1>{% trans "Rekisteröityminen" %}</h1>
+        <p>{% trans 'Täytä alla olevat tiedot viedäksesi rekisteröitymisen loppuun. Kaikki kohdat ovat pakollisia.' %}</p>
+        <hr />
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% if facebook %}
+            <div class="facebook-profile-pic-wrap">
+                <img src="http://graph.facebook.com/{{ facebook_id }}/picture?type=large" alt="{% trans 'Facebook profiilikuva' %}" /><br />
+                <p>{% trans "Käytetäänkö Facebookin profiilikuvaa?" %}</p>
+                <div class="radio">
+                    <label>
+                        <input type="radio" name="facebook_pic" value="yes" checked />
+                        {% trans 'Kyllä' %}
+                    </label>
+                </div>
+                <div class="radio">
+                    <label>
+                        <input type="radio" name="facebook_pic" value="no" />
+                        {% trans 'Ei' %}
+                    </label>
+                </div>
+            </div>
+            {% endif %}
+            {% bootstrap_form forms.user %}
+            {% bootstrap_form forms.usersettings %}
+            {% buttons %}
+                <button type="submit" class="btn btn-primary">
+                    {% bootstrap_icon "share" %} {% trans "Rekisteröidy" %}
+                </button>
+            {% endbuttons %}
+        </form>
+    </div>
+
+{% endblock content %}
+
+{% block js_extra %}
+
+    <script type="text/javascript">
+        $(function() {
+
+            $('input[name="usersettings-confirmation_method"]').on('change', function() {
+                $('#id_usersettings-phone_number_wrap').toggle($(this).val() == '{{ forms.usersettings.CONFIRMATION_CHOICE_SMS }}');
+            });
+            $('input[name="usersettings-confirmation_method"]:checked').trigger('change');
+        });
+    </script>
+
+{% endblock js_extra %}

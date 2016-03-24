@@ -1,0 +1,3 @@
+{% extends "nuka/email/base.txt" %}{% load i18n configs %}{% block content %}{% blocktrans %}Nuortenideat.fi-palvelun moderaattori on käsitellyt kirjoittamaasi ideaa, kysymystä tai kommenttia.
+Moderaattorin viesti: "{{ reason }}"{% endblocktrans %}.
+{% trans "Linkki sisältöön:" %} {% base_url as url %}{{ url }}{{ link }}.{% endblock content %}

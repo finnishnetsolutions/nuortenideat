@@ -1,0 +1,31 @@
+{% load fontawesome i18n staticfiles %}
+
+<div class="up-vote">
+    {% if comment in perm.nkcomments.CanVoteComment %}
+        <a href="{% url 'nkcomments:support_comment' comment.pk %}" class="ajaxy-link" data-ajaxy-method="POST" title="{% trans 'Kannata' %}">
+            <i class="ni-icon ni-icon-thumbs-up"><span class="sr-only">{% trans "Kannatan" %}</span></i>
+        </a>
+    {% else %}
+        {% if comment_vote.choice and comment_vote.choice == comment_vote.VOTE_UP %}
+            <i class="ni-icon ni-icon-thumbs-up-comment-voted"><span class="sr-only">{% trans "Kannatan" %}</span></i>
+        {% else %}
+            <i class="ni-icon ni-icon-thumbs-up-comment"><span class="sr-only">{% trans "Kannatan" %}</span></i>
+        {% endif %}
+    {% endif %}
+    <span class="vote-count">{{ comment.votes.up.count }}</span>
+</div>
+
+<div class="down-vote">
+    {% if comment in perm.nkcomments.CanVoteComment %}
+        <a href="{% url 'nkcomments:oppose_comment' comment.pk %}" class="ajaxy-link" data-ajaxy-method="POST" title="{% trans 'Vastusta' %}">
+            <i class="ni-icon ni-icon-thumbs-down"><span class="sr-only">{% trans "En kannata" %}</span></i>
+        </a>
+    {% else %}
+        {% if comment_vote.choice and comment_vote.choice == comment_vote.VOTE_DOWN %}
+            <i class="ni-icon ni-icon-thumbs-down-comment-voted"><span class="sr-only">{% trans "En kannata" %}</span></i>
+        {% else %}
+            <i class="ni-icon ni-icon-thumbs-down-comment"><span class="sr-only">{% trans "En kannata" %}</span></i>
+        {% endif %}
+    {% endif %}
+    <span class="vote-count">{{ comment.votes.down.count }}</span>
+</div>

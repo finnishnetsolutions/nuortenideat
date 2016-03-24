@@ -1,0 +1,22 @@
+{% extends "nkadmin/base.html" %}
+
+{% load i18n bootstrap3 staticfiles %}
+
+{% block subtitle %}{% trans "Muokkaa käyttäjän tietoja" %}{% endblock subtitle %}
+
+{% block content %}
+    {{ block.super }}
+
+    <div class="well" style="margin-bottom: 110px">
+        <form role="form" method="post">
+            {% csrf_token %}
+            {% bootstrap_form forms.user %}
+            {% bootstrap_form forms.usersettings %}
+            {% buttons %}
+                <button type="submit" class="btn btn-primary">
+                    {% bootstrap_icon "save" %} {% trans "Tallenna" %}
+                </button>
+            {% endbuttons %}
+        </form>
+    </div>
+{% endblock %}

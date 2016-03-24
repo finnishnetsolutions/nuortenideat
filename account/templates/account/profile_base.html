@@ -1,0 +1,70 @@
+{% extends 'nuka/base.html' %}
+
+{% load i18n active_class fontawesome staticfiles favorites %}
+
+{% block title %}{% trans "Oma sivu" %} - {{ block.super }}{% endblock title %}
+
+{% block js_extra %}
+    <script type="text/javascript" src="{% static "nuka/js/jquery.buttonselect.js" %}"></script>
+{% endblock js_extra %}
+
+{% block content %}
+    <header class="detail-page-header well">
+        <h1>
+            <i class="ni-icon ni-icon-profile"><span class="sr-only">{% trans "Oma sivu" %}</span></i>
+            {% if user == object %}
+                {% trans 'Oma sivu' %}
+            {% else %}
+                {% trans 'Julkinen profiili' %}
+            {% endif %}
+        </h1>
+        <ul class="nav nav-tabs nuka-nav-tabs" role="tablist">
+            {% if object in perm.account.CanEditUser %}
+                <li {% class_active_if_url "account:profile" %}><a href="{% url 'account:profile' object.pk %}">{% trans "Yhteenveto" %}</a></li>
+                <li {% class_active_if_url "account:messages" %}{% class_active_if_url "account:show_message" %}{% class_active_if_url "account:create_message" %}>
+                    <a href="{% url 'account:messages' object.pk %}">{% trans "Viestit" %}</a>
+                </li>
+                <li {% class_active_if_url "account:settings" %}><a href="{% url 'account:settings' object.pk %}">{% trans "Omat tiedot ja asetukset" %}</a></li>
+                <li {% class_active_if_url "account:password" %}><a href="{% url 'account:password' object.pk %}">{% trans "Vaihda salasana" %}</a></li>
+            {% endif %}
+        </ul>
+        {% if summary %}
+        <div class="row" style="margin-top: 30px;">
+            <div class="col-md-3" style="padding-bottom:10px;">
+                {% include "account/profile_picture.html" with user=object no_link=True %}
+            </div>
+            <div class="col-md-6">
+                <h2 class="h3-style">{{ object }} {% if object in perm.account.CanEditUser %}<a class="btn btn-default" href="{% url 'account:settings' object.pk %}">{% fa_icon "edit" %}</a>{% endif %}</h2>
+                <ul class="stats">
+                    <li>{% trans "Ideoita" %}: {{ ideas_count }}</li>
+                    <li>{% trans "Kysymyksiä" %}: {{ questions_count }}</li>
+                    <li>{% trans "Kommentteja" %}: {{ comments_count }}</li>
+                    {% with organizations=object.organizations.all %}
+                        {% if organizations %}
+                            <li>{% trans "Yhteyshenkilönä organisaatioissa" %}: {% include "nuka/object_links.html" with objects=organizations %}</li>
+                        {% endif %}
+                    {% endwith %}
+                    <li>{% trans "Seuratut aiheet" %}: &nbsp;
+                        {% fav_get_ct_id 'tagging.tag' as ct_id %}
+                        {% include "favorite/favorite_detail.html" with user=object ct_id=ct_id no_edit=True %}
+                    </li>
+                    <li>{% trans "Seuratut organisaatiot" %}: &nbsp;
+                        {% fav_get_ct_id 'organization.organization' as ct_id %}
+                        {% include "favorite/favorite_detail.html" with user=object ct_id=ct_id no_edit=True %}
+                    </li>
+                </ul>
+            </div>
+            <div class="col-md-3">
+                 {% if object in perm.account.CanEditUser %}
+                    <a class="btn btn-default btn-lg btn-green pull-right" href="{% url 'content:create_idea' %}">
+                        <img src="{% static 'nuka/img/ikoni_lamppu_valkoinen.png' %}" alt=""> {% trans "Kirjoita idea" %}
+                    </a>
+                 {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </header>
+
+    {% block subcontent %}
+    {% endblock subcontent %}
+{% endblock content %}

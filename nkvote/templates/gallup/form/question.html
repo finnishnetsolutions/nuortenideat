@@ -1,0 +1,21 @@
+{% load i18n lang %}
+<div class="well" id="wrapper_q-{{ question_seq }}">
+    <div class="multilingo-field">
+        {% for code, label in languages %}
+            {% include_translated "gallup/form/question_input.html" code %}
+        {% endfor %}
+    </div>
+    <hr />
+    <div id="options_q-{{ question_seq }}">
+        {% if options %}
+            {% for option in options %}
+                {% include "gallup/form/option.html" with option_id=option.id option_text=option.text option_seq=option.seq_number %}
+            {% endfor %}
+        {% else %}
+            {% include "gallup/form/option.html" with option_seq=1 %}
+            {% include "gallup/form/option.html" with option_seq=2 %}
+        {% endif %}
+    </div>
+    <a class="add-option btn btn-default" data-question-seq="{{ question_seq }}" href="{% url 'content:gallup:get_option' initiative_id %}">{% trans 'Lisää vastausvaihtoehto' %}</a>
+    <a class="delete-option btn btn-default" data-question-seq="{{ question_seq }}">{% trans 'Poista vastausvaihtoehto' %}</a>
+</div>

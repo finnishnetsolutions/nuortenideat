@@ -1,0 +1,19 @@
+.api-information {
+    position: relative;
+    margin-top: 120px;
+    display: block;
+}
+
+
+body {
+    background-image: none;
+    background-color: #f0f0f0;
+}
+
+
+.navbar {
+    background-color: #fff;
+    color: #000;
+    border: 0;
+    height: 107px;
+}

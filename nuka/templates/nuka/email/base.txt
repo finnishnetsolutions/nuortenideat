@@ -1,0 +1,6 @@
+{% load i18n configs %}{% block content %}{% endblock content %}
+{% block footer %}
+{% blocktrans %}Terveisin,
+Nuortenideat.fi{% endblocktrans %}{% practice_environment as practice %}{%if practice %} ({% trans 'Harjoittelu' %}){% endif %}
+{% base_url as url %}{% trans url %}
+{% endblock footer %}

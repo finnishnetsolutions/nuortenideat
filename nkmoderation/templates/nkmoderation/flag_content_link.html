@@ -1,0 +1,4 @@
+{% load i18n bootstrap3 %}
+<div class="flag-content {{ extraclass }}">
+    <a href="{% url 'nkmoderation:flag_content' content_type_id=ct.pk object_id=obj.pk %}" class="ajaxy-link" data-toggle="ajaxy-modal">{% bootstrap_icon "flag" %} {{ label }}</a>
+</div>

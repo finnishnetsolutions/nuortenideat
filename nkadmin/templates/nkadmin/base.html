@@ -1,0 +1,18 @@
+{% extends 'nuka/base.html' %}
+
+{% load i18n staticfiles active_class %}
+
+{% block title %}{% trans "Hallinta" %} - {{ block.super }}{% endblock title %}
+
+{% block content %}
+    <header class="well">
+        <h1 style="margin-bottom: 30px;">{% trans "Hallinta" %}</h1>
+
+        <ul class="nav nav-tabs nuka-nav-tabs" role="tablist">
+            <li {% class_active_if_url 'nkadmin:moderation_queue' %}><a href="{% url 'nkadmin:moderation_queue' %}">{% trans "Moderointi" %}</a></li>
+            <li {% class_active_if_url 'nkadmin:users' 'nkadmin:users_edit' %}><a href="{% url 'nkadmin:users' %}">{% trans "Käyttäjät" %}</a></li>
+        </ul>
+    </header>
+
+    {% block subcontent %}{% endblock subcontent %}
+{% endblock content %}

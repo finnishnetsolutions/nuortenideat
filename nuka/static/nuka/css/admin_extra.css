@@ -1,0 +1,10 @@
+
+.multilingo-field:before {
+    content: "\A\A";
+    white-space: pre;
+}
+
+.multilingo-language-version {
+    padding-top: 20px;
+    clear: both;
+}

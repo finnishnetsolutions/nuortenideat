@@ -1,0 +1,24 @@
+{% extends "rest_framework/base.html" %}
+
+{% load static openapi %}
+
+{% block title %}nuortenideat.fi API{% endblock %}
+
+{% block style %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static "openapi/css/browsable.css" %}"/>
+{% endblock %}
+
+{% block branding %}
+    {% openapi_version as api_version %}
+    {% openapi_url as api_url %}
+    <a class='navbar-brand' rel="nofollow" href='{{ api_url }}'>
+        <img src="{% static "nuka/img/nuorten_ideat_logo_fi.png" %}" alt="Nuortenideat.fi"> API <span class="version">{{ api_version }}</span>
+    </a>
+{% endblock %}
+
+{% block breadcrumbs %}
+    {% openapi_docs_url as api_docs_url %}
+    <div class="api-information">You are looking at the browsable version of the <a href="/">Nuortenideat.fi</a> Open Data API. See the <a href="{{ api_docs_url }}">API documentation</a> for more information.</div>
+    {{ block.super }}
+{% endblock %}

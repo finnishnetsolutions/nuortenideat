@@ -1,0 +1,20 @@
+{% extends 'nuka/base.html' %}
+
+{% load i18n bootstrap3 %}
+
+{% block title %}{% trans "Kysymykset" %}: {% trans "Kysy organisaatiolta" %} - {{ block.super }}{% endblock title %}
+
+{% block content %}
+    <article class="well">
+        <h1>{% trans "Kysy organisaatiolta" %}</h1>
+        <p>{% trans 'Kirjoittamasi kysymys näkyy julkisesti organisaation omalla sivulla.' %}</p>
+
+        <p><strong>Vastaanottaja</strong><br>{{ target_organization }}</p>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            <button type="submit" class="btn btn-default">{% trans "Lähetä kysymys" %}</button>
+        </form>
+    </article>
+{% endblock content %}

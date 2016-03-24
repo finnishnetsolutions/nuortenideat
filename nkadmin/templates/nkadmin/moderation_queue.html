@@ -1,0 +1,18 @@
+{% extends 'nkadmin/base.html' %}
+
+{% load i18n bootstrap3 %}
+
+{% block subcontent %}
+    <div class="well">
+        {% for moderated_object in object_list %}
+            {% include "nkmoderation/moderated_object.html" with object=moderated_object.content_object content_type=moderated_object.content_type %}
+        {% endfor %}
+        {% if not object_list %}
+                {% trans "Ei moderoitavaa sisältöä." %}
+            </div>
+        {% endif %}
+
+        <div class="text-center">{% bootstrap_pagination page_obj %}</div>
+        <div class="clearfix"></div>
+    </div>
+{% endblock subcontent %}

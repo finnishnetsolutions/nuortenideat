@@ -1,0 +1,7 @@
+{% extends 'notifications/email/base.txt' %}{% load i18n configs %}
+{% block subject %}{% blocktrans %}Sisältöä on ilmoitettu asiattomaksi{% endblocktrans %}{% endblock subject %}
+
+{% block content %}{% trans "Sisältöä on ilmoitettu asiattomaksi" %}.
+{% trans "Syy" %}: {{ object.content_object.reason }}
+{% trans "Sisältö" %}: {{ object.content_object.content_object }}{% endblock content %}
+{% block link %}{% trans "Katso" %} {% base_url as base_url %}{% trans base_url %}{% url 'nkadmin:moderation_queue' %} {% endblock link %}

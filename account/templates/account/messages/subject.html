@@ -1,0 +1,21 @@
+{% load i18n %}
+
+{% spaceless %}
+    {% if message.warning %}
+        <span class="glyphicon glyphicon-exclamation-sign" style="margin-right: 5px"></span>
+    {% endif %}
+
+    {% if not no_link %}
+        <a href="{% url 'account:show_message' object.pk message.pk %}#sisalto">
+    {% endif %}
+
+    {% if object not in message.read_by.all and highlight_unread %}
+        <b>{{ message.subject }}</b>
+    {% else %}
+        {{ message.subject }}
+    {% endif %}
+
+    {% if link %}
+        </a>
+    {% endif %}
+{% endspaceless %}

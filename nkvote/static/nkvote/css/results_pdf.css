@@ -1,0 +1,20 @@
+.fixed-write-idea {
+    display: none;
+}
+.container {
+    margin-bottom: 15px;
+}
+.pdf-fake-header {
+    background-color: #fff;
+    padding: 10px;
+}
+body > header, body > footer {
+    display: none;
+}
+.btn {
+    display: none;
+}
+body, .container {
+    background-color: #fff !important;
+    margin-bottom: 0;
+}

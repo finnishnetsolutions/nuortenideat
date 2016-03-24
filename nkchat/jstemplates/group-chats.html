@@ -1,0 +1,19 @@
+<li role="presentation" class="dropdown-header moderators-header">{{#_}}Aktiiviset ryhmä-chatit{{/_}}</li>
+{{ #rooms }}
+    <li class="group-chat">
+        <a href="#" class="open-group-chat" data-name="{{ name }}" data-room-id="{{ id }}">
+            {{ name }}
+        </a>
+    </li>
+{{ /rooms }}
+
+{{ ^rooms }}
+    <li class="group-chat"><a href="#">{{#_}}Ei keskusteluja käynnissä.{{/_}}</a></li>
+{{ /rooms }}
+
+{{ #creation }}
+    <li role="presentation" class="divider"></li>
+    <li>
+        <a href="#" class="create-group-chat"><i class="glyphicon glyphicon-plus"></i> {{#_}}Luo uusi keskustelu{{/_}}</a>
+    </li>
+{{ /creation }}

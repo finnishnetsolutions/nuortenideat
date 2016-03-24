@@ -1,0 +1,28 @@
+<div class="tabbable tabs-below">
+    <div class="nkchat-tab-content tab-content">
+    </div>
+
+    <ul class="nkchat-tabs nav nav-tabs fixed-to-bottom" role="tablist">
+
+        <li class="dropup">
+            <ul class="dropdown-menu dropdown-menu-right support-personnel" role="menu">
+                <li role="presentation" class="dropdown-header moderators-header">{{#_}}Tarvitsetko apua? Kysy moderaattoreilta.{{/_}}</li>
+                {{> moderators-online }}
+            </ul>
+            <a href="#" class="btn btn-default" data-toggle="dropdown">
+                <i class="fa fa-support"></i> {{#_}}Tuki{{/_}} <span class="caret"></span>
+            </a>
+        </li>
+
+        <li class="dropup group-chats-button" style="display: none">
+            <ul class="dropdown-menu dropdown-menu-right group-chats" role="menu">
+                {{> group-chats }}
+            </ul>
+            <a href="#" class="btn btn-default pull-right" data-toggle="dropdown">
+                <i class="fa fa-group"></i> {{#_}}Chat{{/_}} <span class="caret"></span>
+            </a>
+        </li>
+
+    </ul>
+
+</div>

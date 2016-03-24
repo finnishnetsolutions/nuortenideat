@@ -1,0 +1,8 @@
+{% load i18n %}
+<div class="multilingo-language-version" data-language-code="{{ code }}">
+    <div id="wrapper_q-{{ question_seq }}_o-{{ option_seq }}-{{ code }}" class="form-group">
+        <label for="q-{{ question_seq }}_o-{{ option_seq }}-{{ code }}">{% trans 'Vastausvaihtoehto' %} <span class="option_seq_number">{{ option_seq }}</span>.</label>
+        <input type="text" id="q-{{ question_seq }}_o-{{ option_seq }}-{{ code }}" name="q-{{ question_seq }}_o-{{ option_seq }}-{{ code }}" placeholder="{% trans 'Anna vastausvaihtoehto' %}" value="{% if code in question_text %}{{ option_text }}{% endif %}" class="form-control multilingo-input" maxlength="150" data-language-code="{{ code }}" />
+        <input type="hidden" name="db_id_q-{{ question_seq }}_o-{{ option_seq }}" value="{{ option_id }}">
+    </div>
+</div>

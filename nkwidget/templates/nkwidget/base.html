@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load i18n compress staticfiles %}
+<head>
+    <meta charset="utf-8">
+
+    <title>Nuortenideat.fi-widget</title>
+
+    <link href='//fonts.googleapis.com/css?family=Source+Sans+Pro:400,700' rel='stylesheet' type='text/css'>
+
+    {% block css %}
+        {% compress css %}
+            <link rel="stylesheet" href="{% static "nuka/scss/nuka.scss" %}" type="text/x-scss">
+        {% endcompress %}
+    {% endblock css %}
+
+</head>
+<body style="background-color: white;">
+    <main id="widget" class="widget-{{ color|default:"magenta" }}">
+        <header>
+            {% if color == "white" %}
+                <img src="{% static 'nuka/img/nuorten_ideat_logo_'|add:language|add:'.png' %}" alt="{% trans "Nuortenideat.fi" %}">
+            {% else %}
+                <img src="{% static 'nuka/img/nuorten_ideat_logo_white_'|add:language|add:'.png' %}" alt="{% trans "Nuortenideat.fi" %}">
+            {% endif %}
+        </header>
+
+        {% block content %}
+        {% endblock content %}
+    </main>
+</body>
+</html>

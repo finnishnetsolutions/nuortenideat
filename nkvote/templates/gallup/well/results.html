@@ -1,0 +1,36 @@
+{% load i18n %}
+{# This file is deprecated. Merged progress into questions. #}
+
+<form method="post" id="gallup-{{ gallup.pk }}_form" action="/ideat/{{ gallup.idea_id }}/gallup/{{ gallup.pk }}/vastaa/" class="ajaxy-form">
+    {% csrf_token %}
+    {% for question in gallup.question_set.all %}
+    <section class="question">
+        <h4>{{ question.seq_number }}. {{ question.text }}</h4>
+        {% for option in question.option_set.all %}
+        <div class="choice">
+            <div class="radio">
+                <label>
+                    <input name="question-{{ question.id }}_option" value="{{ option.id }}" type="radio" required
+                        {% if gallup in answered_gallups or disabled %}disabled{% endif %}
+                        {% if option in answered_options %}checked{% endif %}>
+
+                    {{ option.text }}
+                </label>
+            </div>
+            <div class="progress">
+                <div class="progress-bar progress-bar-info" role="progressbar" aria-valuemin="0" aria-valuenow="{{ option.answers_count }}" aria-valuemax="{{ question.total_answers_count }}" style="width: {{ option.percentage_of_question }}%">
+                    <table style="width: 100%; height: 100%;">
+                        <tr><td valign="center">{{ option.answers_count }}</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </section>
+    {% endfor %}
+    {% if not disabled and gallup.is_open %}
+    <footer>
+        <button class="btn btn-default btn-lg ajaxy-button">{% trans "Vastaa" %}</button>
+    </footer>
+    {% endif %}
+</form>

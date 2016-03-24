@@ -1,0 +1,2 @@
+{% extends "nuka/email/base.txt" %}{% load i18n %}{% block content %}{% blocktrans with organization=organization.name admins=organization.admins.all|join:", " %}Organisaation {{ organization }} yhteyshenkilöitä on muokattu.
+Uudet yhteyshenkilöt ovat: {{ admins }}{% endblocktrans %}{% endblock content %}

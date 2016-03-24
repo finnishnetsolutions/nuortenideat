@@ -1,0 +1,56 @@
+{% load static i18n favorites %}
+
+<div class="well table-responsive">
+    <table class="table">
+        <thead class="sr-only">
+            <tr>
+                <th>{% trans "Tyyppi" %}</th>
+                <th>{% trans "Otsikko" %}</th>
+                <th>{% trans "Organisaatiot" %}</th>
+                <th>{% trans "Aiheet" %}</th>
+                <th>{% trans "Tila" %}</th>
+                <th>{% trans "Vaikuttamiset" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for object in initiatives %}
+                <tr>
+                    <td>
+                        <i class="ni-icon {{ object.is_idea|yesno:'ni-icon-idea,ni-icon-question' }}"></i>
+                    </td>
+                    <td>
+                        <a href="{{ object.get_absolute_url }}">{{ object.title }}</a>
+                        <br>
+                        {% if object.initiator_organization %}
+                            {% include "content/owner_links.html" with initiator_organization=object.initiator_organization %}
+                        {% else %}
+                            {% include "content/owner_links.html" with owners=object.owners.all|slice:":2" comma_separated=True %}{% if object.owners.all|length > 2 %}, &hellip;{% endif %}
+                        {% endif %}
+                        <br>
+                        <i class="small">
+                            {% if object.published %}
+                                {{ object.published|date:"d.m.Y" }} klo {{ object.published|date:"H.i" }}
+                            {% else %}
+                                {{ object.created|date:"d.m.Y" }} klo {{ object.created|date:"H.i" }}
+                            {% endif %}
+                        </i>
+                    </td>
+                    <td>
+                        {% include "nuka/object_links.html" with objects=object.target_organizations.all|slice:":2" %}{% if object.target_organizations.all|length > 2 %}, &hellip;{% endif %}
+                    </td>
+                    <td>
+                        {% autoescape off %}
+                            {{ object.tags.all|slice:":2"|join:", "}}{% if object.tags.all|length > 2 %}, &hellip;{% endif %}
+                        {% endautoescape %}
+                    </td>
+                    <td>
+                        {{ object.status_or_visibility }}
+                    </td>
+                    <td>{% include "content/initiative_stats.html" %}</td>
+                </tr>
+                {% empty %}
+                    <tr><td>{% trans "Ei ideoita" %}</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

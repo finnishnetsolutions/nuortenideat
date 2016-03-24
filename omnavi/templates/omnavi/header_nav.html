@@ -1,0 +1,34 @@
+<style>
+    #searchIframe {
+        width: 100%;
+        border: none;
+        height: 45px;
+        z-index: 999;
+        position:absolute;
+        top :0px;
+    }
+    .super-search-placeholder {
+        position:relative;
+        width: 100%;
+        height: 45px;
+    }
+
+</style>
+
+<script type="text/javascript">
+
+    window.onmessage = function(e){
+        if (e.origin === "https://haku.demokratia.fi") {
+            var newHeight = e.data;
+            if (newHeight) {
+                $("#searchIframe").height(newHeight);
+            }
+        }
+    };
+
+</script>
+
+<div class="super-search-placeholder">
+    <iframe id="searchIframe" src="https://haku.demokratia.fi/#/?lan={{ request.LANGUAGE_CODE }}&site=nuortenideat.fi" ></iframe>
+</div>
+

@@ -1,0 +1,20 @@
+{% load i18n %}
+
+<div class="pdf-fake-header pdf-preview-hide">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                {% include 'nuka/logo.html' %}
+            </div>
+            <div class="col-md-6">
+                <span class=""">{% trans "Tämä PDF-tiedosto on luotu Nuortenideat.fi-vaikuttamispalvelussa." %}</span>
+                <br>
+                <a href="{{ link }}" target="_blank">{{ link }}</a>
+                <br>
+                {{ name|default:"" }}
+                <br>
+                {{ contacts|linebreaksbr|default:"" }}
+            </div>
+        </div>
+    </div>
+</div>

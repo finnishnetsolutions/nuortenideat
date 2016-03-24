@@ -1,0 +1,18 @@
+{% load i18n %}
+
+{% for admin in object.admins.all %}
+    <div class="col-md-2 col-sm-4 col-xs-6">
+        {% include 'account/profile_picture.html' with user=admin img_class="img-responsive owner-picture" ph_class="img-responsive owner-picture" %}
+        <div class="organization-admin-name-wrap">
+            <a href="{{ admin.get_absolute_url }}">{{ admin.get_full_name|default:admin }}</a>
+        </div>
+        <a href="#" class="org-admin-online-status online-status" data-organization-id="{{ object.pk }}" data-username="{{ admin.username }}"></a>
+        {% if admin in perm.nkmessages.CanSendMessageTo %}
+            <a href="{% url 'account:create_message' user.pk %}?receivers={{ admin.pk }}" title="{% trans 'Lähetä yhteyshenkilölle viesti' %}">
+                <span class="organization-admin-message glyphicon glyphicon-envelope"></span>
+            </a>
+        {% endif %}
+    </div>
+{% endfor %}
+
+{% include "organization/organization_fragment_edit_link.html" with fragment='admins' title=_("Muokkaa yhteyshenkilöitä") %}

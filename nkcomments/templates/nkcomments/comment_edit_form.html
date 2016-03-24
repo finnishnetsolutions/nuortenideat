@@ -1,0 +1,7 @@
+{% load i18n static bootstrap3 %}
+
+<form class="ajaxy-form" novalidate action="{{ request.path }}" method="post">
+    {% csrf_token %}
+    {% bootstrap_form form %}
+    <button class="btn btn-default" type="submit">{% bootstrap_icon "ok" %} {% trans "Tallenna" %}</button>
+</form>

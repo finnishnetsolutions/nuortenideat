@@ -1,0 +1,40 @@
+{% load i18n bootstrap3 staticfiles %}
+
+{% block js_extra %}
+    <script type="text/javascript" src="{% static 'nkwidget/js/widget_preview.js' %}"></script>
+{% endblock js_extra %}
+
+<div class="modal fade" id="widget-modal" data-widget-url="{{ widget_url }}">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">{% trans "Widgetin luonti" %}</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    {% trans "Widget luodaan tämänhetkisistä hakuparametreistasi. Valitse vielä väri, kieli ja montako tulosta widgetissä näytetään. Alareunaan ilmestyy iframe-koodi, jonka voit upottaa verkkosivuillesi." %}
+                </p>
+
+                <div class="widget-modal-refreshers">
+                    {% bootstrap_field widget_form.color %}
+                    {% bootstrap_field widget_form.limit %}
+                    {% bootstrap_field widget_form.language %}
+                </div>
+
+                <label>{% trans "Esikatselu" %}</label>
+                <iframe src="" scrolling="no"></iframe>
+
+                <label style="width: 100%">{% trans "Koodi" %}<br />
+                    <textarea id="widget-modal-code"></textarea>
+                </label>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">{% trans "Sulje" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+

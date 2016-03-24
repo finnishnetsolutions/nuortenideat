@@ -1,0 +1,16 @@
+
+.multilingo-form .multilingo-field .multilingo-language-version {
+    display: none;
+}
+
+.multilingo-form .multilingo-field .multilingo-language-version .language-label {
+    display: none;
+}
+
+.multilingo-form.multiple-languages .multilingo-field .multilingo-language-version .language-label {
+    display: block;
+}
+
+.multilingo-form.languages-changed .multilingo-field .multilingo-language-version .language-label {
+    display: block;
+}

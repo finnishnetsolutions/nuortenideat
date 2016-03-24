@@ -1,0 +1,8 @@
+<li role="presentation" class="dropdown-header">{{#_}}Keskusteluoikeus{{/_}}</li>
+<li class="disabled"><a href="#"><i class="fa fa-check fa-fw"></i> {{#_}}Vastaajat ja moderaattorit{{/_}}</a></li>
+<li><a href="#" class="toggle-role-blocking" data-role="participant"><i class="fa {{^ blockedRoles.participant }}fa-check {{/ blockedRoles.participant }}fa-fw"></i> {{#_}}Osallistujat{{/_}}</a></li>
+<li><a href="#" class="toggle-role-blocking" data-role="visitor"><i class="fa {{^ blockedRoles.visitor }}fa-check {{/ blockedRoles.visitor }}fa-fw"></i> {{#_}}Vierailijat{{/_}}</a></li>
+<li class="divider"></li>
+<li><a href="#" class="delete-room" data-confirmation="{{#_}}Haluatko varmasti poistaa chatin ja sen keskusteluhistorian?{{/_}}">
+    <i class="fa fa-remove fa-fw"></i> {{#_}}Poista keskustelu{{/_}}
+</a></li>

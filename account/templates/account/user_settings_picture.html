@@ -1,0 +1,11 @@
+{% load i18n bootstrap3 fontawesome %}
+<div class="profile-picture-wrap">{% include "account/profile_picture.html" with user=object %}</div>
+<div class="cleafix"></div>
+<div class="btn-group">
+    {% if user.settings.picture %}
+        <a class="btn btn-default ajaxy-link" href="{% url 'account:edit_profile_picture' object.pk %}">{% bootstrap_icon "edit" %} {% trans "Vaihda" %}</a>
+        <a class="btn btn-default ajaxy-link" data-ajaxy-method="post" href="{% url 'account:delete_profile_picture' object.pk %}">{% bootstrap_icon "remove" %} {% trans "Poista" %}</a>
+    {% else %}
+        <a class="btn btn-default ajaxy-link" href="{% url 'account:edit_profile_picture' object.pk %}">{% bootstrap_icon "plus" %} {% trans "Lisää kuva" %}</a>
+    {% endif %}
+</div>

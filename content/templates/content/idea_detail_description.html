@@ -1,0 +1,11 @@
+{% load fontawesome bleach_tags %}
+
+<div class="unsafe">
+    {% if object.html_allowed %}
+        {{ object.description|bleach }}
+    {% else %}
+        {{ object.description|linebreaksbr }}
+    {% endif %}
+</div>
+
+{% include "content/idea_fragment_edit_link.html" with fragment='description' title=_("Muokkaa kuvausta") %}

@@ -1,0 +1,16 @@
+curl -X POST "https://testi.kuntalaisaloite.fi/services/nua/1.0/create" -H "Content-Type: application/json" -H "Accept: application/json" -d
+"{ \"municipality\": 91,
+   \"name\": \"Paulin testi resti\",
+   \"proposal\": \"Jotain random sisaltoa\",
+   \"extraInfo\": \"Lisatietoj\",
+   \"youthInitiativeId\": -100,
+   \"contactInfo\": { \"municipality\": 564, \"name\": \"Pauli\", \"email\": \"bafe@solita.fi\", \"phone\": \"04000\",     \"membership\":\"community\"},
+   \"locale\":\"sv\"  }”
+
+
+curl -X POST "https://testi.kuntalaisaloite.fi/services/nua/1.0/create" -H "Content-Type: application/json" -H "Accept: application/json" -d "{\"name\": \"Espooseen lis\u00e4\u00e4 lunta\", \"locale\": \"fi\", \"extraInfo\": null, \"municipality\": 49, \"youthInitiativeId\": 101, \"proposal\": \"Ainakin 10 000 kiloa tarvittaisiin.\", \"contactInfo\": {\"phone\": null, \"membership\": \"community\", \"municipality\": 837, \"name\": \"Samppa Lintula\", \"email\": \"samppa@fns.fi\"}}"
+
+
+
+
+ curl -X POST "https://testi.kuntalaisaloite.fi/services/nua/1.0/create" -H "Content-Type: application/json" -H "Accept: application/json" -d "{ \"municipality\": 91, \"name\": \"Paulin testi resti\", \"proposal\": \"Jotain random sisaltoa\", \"extraInfo\": \"Lisatietoj\", \"youthInitiativeId\": -100, \"contactInfo\": { \"municipality\": 564, \"name\": \"Pauli\", \"email\": \"bafe@solita.fi\", \"phone\": \"04000\", \"membership\":\"community\"}, \"locale\":\"sv\"  }”

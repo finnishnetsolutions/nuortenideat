@@ -1,0 +1,14 @@
+{% load i18n bleach_tags %}
+<ul class="list-unstyled">
+    {% for row in details %}
+        <li style="{% if row.type != row.TYPE_NONE %}background-color:{{ row.get_bgcolor }}; padding:8px;{% endif %}">
+            <strong>{% if row.type != row.TYPE_NONE %} {{ row.get_type_display }} {% endif %}{{ row.created|date:"SHORT_DATE_FORMAT" }}</strong>
+
+            <div class="clearfix"></div>
+            <div class="small-p-margin ajaxy-wrap">
+                {% include 'content/additional_detail_edit_link.html' %}
+                {{ row.detail|bleach|linebreaksbr }}
+            </div>
+        </li>
+    {% endfor %}
+</ul>

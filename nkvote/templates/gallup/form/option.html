@@ -1,0 +1,6 @@
+{% load i18n lang %}
+<div class="multilingo-field">
+    {% for code, label in languages %}
+        {% include_translated "gallup/form/option_input.html" code %}
+    {% endfor %}
+</div>
