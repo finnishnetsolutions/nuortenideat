@@ -347,28 +347,26 @@ CELERYBEAT_SCHEDULE = {
         'task': 'kuaapi.tasks.sync_kua_participants',
         'schedule': timedelta(hours=3),
     },
-    """
-        'warn-unpublished-ideas': {
+    'warn-unpublished-ideas': {
         'task': 'content.tasks.warn_unpublished',
         'schedule': crontab(hour=12, minute=10),
-        },
-        'archive-unpublished-ideas': {
+    },
+    'archive-unpublished-ideas': {
         'task': 'content.tasks.archive_unpublished',
         'schedule': crontab(hour=12, minute=20),
-        },
-        'remind-untransferred-ideas': {
+    },
+    'remind-untransferred-ideas': {
         'task': 'content.tasks.remind_untransferred',
         'schedule': crontab(hour=12, minute=30),
-        },
-        'warn-untransferred-ideas': {
+    },
+    'warn-untransferred-ideas': {
         'task': 'content.tasks.warn_untransferred',
         'schedule': crontab(hour=12, minute=40),
-        },
-        'archive-untransferred-ideas': {
+    },
+    'archive-untransferred-ideas': {
         'task': 'content.tasks.archive_untransferred',
         'schedule': crontab(hour=12, minute=50),
-        },
-        """
+    },
     'chat-users-cleanup': {
         'task': 'nkchat.tasks.cleanup_chat_users',
         'schedule': timedelta(minutes=3),

@@ -315,7 +315,7 @@ class GallupFormView(TemplateView):
             pass
         context["languages"] = settings.LANGUAGES
         context["active_language"] = self.request.LANGUAGE_CODE
-        lang_dict = [dict([("code", k), ("label", v)]) for k, v in LANGUAGES]
+        lang_dict = [dict([("code", k), ("label", v)]) for k, v in settings.LANGUAGES]
         context["languages_json"] = json.dumps(lang_dict, ensure_ascii=False)
         return context
 

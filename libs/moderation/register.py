@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from django.contrib.contenttypes.models import ContentType
 from django.utils.six import with_metaclass
 from .models import ModeratedObject, MODERATION_STATUS_PENDING,\
     MODERATION_STATUS_APPROVED, MODERATION_DRAFT_STATE
@@ -57,6 +58,8 @@ class ModerationManager(with_metaclass(ModerationManagerSingleton, object)):
                                  sender=model_class)
         signals.post_save.connect(self.post_save_handler,
                                   sender=model_class)
+        signals.post_delete.connect(self.post_delete_handler,
+                                    sender=model_class)
 
     def _add_moderated_object_to_class(self, model_class):
         if hasattr(model_class, '_relation_object'):
@@ -130,6 +133,7 @@ class ModerationManager(with_metaclass(ModerationManagerSingleton, object)):
 
         signals.pre_save.disconnect(self.pre_save_handler, model_class)
         signals.post_save.disconnect(self.post_save_handler, model_class)
+        signals.post_delete.disconnect(self.post_delete_handler(), model_class)
 
     def pre_save_handler(self, sender, instance, **kwargs):
         """
@@ -150,6 +154,15 @@ class ModerationManager(with_metaclass(ModerationManagerSingleton, object)):
                MODERATION_STATUS_APPROVED and \
                not moderator.bypass_moderation_after_approval:
                 moderated_obj.save()
+
+    def post_delete_handler(self, sender, instance, **kwargs):
+        """
+        Delete objects moderation objects and content flags
+        """
+        from nkmoderation.models import ContentFlag
+        ct = ContentType.objects.get_for_model(instance.__class__)
+        ModeratedObject.objects.filter(object_pk=instance.pk, content_type=ct).delete()
+        ContentFlag.objects.filter(object_id=instance.pk, content_type=ct).delete()
 
     def _get_unchanged_object(self, instance):
         if instance.pk is None:

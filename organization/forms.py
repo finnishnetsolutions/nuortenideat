@@ -5,22 +5,18 @@ from __future__ import unicode_literals
 from django import forms
 from django.core.urlresolvers import reverse
 from django.forms.models import ModelForm
-from django.utils.translation import ugettext, ugettext_lazy as _
-from libs.attachtor.forms.forms import RedactorAttachtorFormMixIn
+from django.utils.translation import ugettext, ugettext_lazy as _, override
 
-from libs.djcontrib.forms.forms import FieldReAttrMixIn
+from libs.attachtor.forms.forms import RedactorAttachtorFormMixIn
 from libs.fimunicipality.models import Municipality
-from libs.multilingo.forms.fields import MultiLingualField
 
 from nuka.forms.fields import ModelMultipleChoiceField, SaferRedactorField, MultilingualRedactorField
-
 from account.models import User
-
-from .models import Organization
 from nuka.forms.forms import HiddenLabelMixIn
 from nuka.forms.widgets import Select2Multiple, AutoSubmitButtonSelect
 from nuka.utils import send_email
 
+from .models import Organization
 
 class OrganizationAdminsField(ModelMultipleChoiceField):
     def __init__(self, *args, **kwargs):
@@ -188,6 +184,28 @@ class OrganizationBaseSearchForm(ModelForm):
         label=_("Valitse kunta"),
         required=False
     )
+
+    def __init__(self, *args, **kwargs):
+        super(OrganizationBaseSearchForm, self).__init__(*args, **kwargs)
+
+        # Set the result count to the status labels.
+        choices = []
+        for value, label in self.fields['type_or_activity'].choices:
+            if value:
+                if value is self.NOT_ACTIVE:
+                    qs = Organization._default_manager.filter(is_active=False)
+                else:
+                    qs = Organization.objects.filter(type=value)
+            else:
+                if self.NOT_ACTIVE in self.fields['type_or_activity'].choices:
+                    qs = Organization.objects.normal_and_inactive()
+                else:
+                    qs = Organization.objects.real()
+
+            label = "{} ({})".format(label, qs.count())
+            choices.append((value, label))
+
+        self.fields['type_or_activity'].choices = choices
 
     def filtrate(self, qs):
         organization_type = self.cleaned_data["type_or_activity"]
