@@ -64,8 +64,11 @@ def warn_unpublished(warn_date, archive_date):
 
 
 def archive_unpublished(archive_date):
-    ideas = Idea.objects.filter(status=Idea.STATUS_DRAFT,
-                                created__lt=archive_date + timedelta(days=1))
+    ideas = Idea.objects.filter(
+        status=Idea.STATUS_DRAFT, created__lt=archive_date + timedelta(days=1)
+    ).exclude(
+        visibility=Idea.VISIBILITY_ARCHIVED
+    )
 
     for idea in ideas:
         idea.visibility = Idea.VISIBILITY_ARCHIVED
