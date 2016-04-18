@@ -71,8 +71,12 @@ class Action(models.Model, ActionTypeMixin):
     def create_notifications(self):
         if hasattr(self.content_object, 'fill_notification_recipients'):
             self.content_object.fill_notification_recipients(self)
+
+        # remove duplicates from recipients
+        recipients = list(set(self.notification_recipients))
         objects = []
-        for role, recipient in self.notification_recipients:
+
+        for role, recipient in recipients:
             subscription_option_obj = self.user_is_subscribed(recipient, role)
             if subscription_option_obj:
                 obj = Notification(recipient=recipient, action=self, role=role)
