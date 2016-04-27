@@ -198,16 +198,23 @@ class IdeaDetailView(PreFetchedObjectMixIn, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(IdeaDetailView, self).get_context_data(**kwargs)
+        idea = self.get_object()
+
+        if self.request.user.is_authenticated() and self.request.user.is_moderator:
+            comments = idea.public_comments()
+        else:
+            comments = idea.public_comments().public()
+
+        context['comments'] = comments
         context["absolute_uri"] = self.request.build_absolute_uri()
         context["keksit"] = self.request.COOKIES
         context["answered_gallups"] = answered_gallups(self.request)
         context["answered_options"] = answered_options(self.request)
         context["idea_voteable"] = CanVoteIdea(
-            request=self.request, obj=self.get_object()
-        ).is_authorized()
+            request=self.request, obj=idea).is_authorized()
         context["vote"] = get_vote(self.request, Idea, self.kwargs["initiative_id"])
         context["comment_votes"] = get_votes(
-            self.request, CustomComment, self.get_object().public_comments()
+            self.request, CustomComment, comments
         )
         return context
 
@@ -237,13 +244,22 @@ class IdeaVoteView(RedirectView):
 
 
 class IdeaPartialEditView(PreFetchedObjectMixIn, UpdateView):
+
+    # not in use for now
+    no_moderation_reason_templates = (
+        # 'content/idea_edit_title_form.html',
+        # 'content/idea_edit_picture_form.html',
+        # 'content/idea_edit_description_form.html',
+    )
+
     def get_form_class(self):
+        template = self.kwargs['template_name']
         klass = self.kwargs['form_class']
 
-        if not perms.OwnsInitiative(
-            request=self.request,
-            obj=self.get_object()
-        ).is_authorized():
+        if template not in self.no_moderation_reason_templates and \
+                not perms.OwnsInitiative(
+                    request=self.request, obj=self.get_object()
+                ).is_authorized():
             # we are moderating another user's content, mix in ModReasoningMixIn
             return get_moderated_form_class(klass, self.request.user)
         return klass
@@ -458,9 +474,15 @@ class QuestionDetailView(PreFetchedObjectMixIn, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(QuestionDetailView, self).get_context_data(**kwargs)
-        context["comment_votes"] = get_votes(
-            self.request, CustomComment, self.get_object().public_comments()
-        )
+        question = self.get_object()
+
+        if self.request.user.is_authenticated() and self.request.user.is_moderator:
+            comments = question.public_comments()
+        else:
+            comments = question.public_comments().public()
+
+        context['comments'] = comments
+        context["comment_votes"] = get_votes(self.request, CustomComment, comments)
         context['absolute_uri'] = self.request.build_absolute_uri()
         return context
 
@@ -535,7 +557,7 @@ class IdeaToPdf(PDFTemplateView):
 
     def get_votes_for_comments(self):
         return get_votes(
-            self.request, CustomComment, self.get_object().public_comments()
+            self.request, CustomComment, self.get_object().public_comments().public()
         )
 
     def post(self, request, **kwargs):
@@ -552,7 +574,8 @@ class IdeaToPdf(PDFTemplateView):
             context['contacts'] = form.cleaned_data['contacts']
             context['pdf_mode'] = True
 
-            if form.cleaned_data['included_comments'].count() < obj.comments.count():
+            if form.cleaned_data['included_comments'].count() < \
+                    obj.public_comments().public().count():
                 context['pdf_comments_hidden'] = True
 
             resp = self.render_to_response(context)
@@ -583,23 +606,20 @@ class IdeaToPdf(PDFTemplateView):
         detail_obj.save()
 
     def create_details_text(self, cleaned_data):
-        orgs = cleaned_data.get('email_recipient_organization', False)
-        if orgs:
-            recipient_list = ['{} / {}'.format(a.name, a.admins_str()) for a in orgs]
-            return "\n".join(recipient_list)
+        org = cleaned_data.get('email_recipient_organization', False)
+        if org:
+            return "{} / {}".format(org.name, org.admins_str())
         else:
             return cleaned_data.get('email_recipient_name')
 
     def get_email_receivers(self, cleaned_data):
-        receivers = set()
         # field is deleted in form.clean if it is not needed
-        if cleaned_data.get('email_recipient_organization'):
-            for o in cleaned_data['email_recipient_organization']:
-                receivers |= (set(map(lambda u: u.email, o.admins.all())))
+        org = cleaned_data.get('email_recipient_organization', None)
+        if org:
+            receivers = set(map(lambda u: u.email, org.admins.all()))
         # field is deleted in form.clean if it is not needed
         if cleaned_data.get('email_recipient'):
             receivers.add(cleaned_data['email_recipient'])
-
         if cleaned_data['email_copy']:
             receivers.add(self.request.user.email)
         return receivers
@@ -620,7 +640,7 @@ class IdeaToPdf(PDFTemplateView):
             'object': obj,
             'pdf_preview_mode': False,
             'pdf_mode': True,
-            'comments': obj.comments,
+            'comments': obj.public_comments().public(),
             'comment_votes': self.get_votes_for_comments(),
         }
         return context

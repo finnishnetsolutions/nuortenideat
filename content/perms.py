@@ -206,6 +206,15 @@ class CanVoteInitiative(nuka.BasePermission):
         return self.obj.is_voteable()
 
 
+class IdeaIsDraft(nuka.BasePermission):
+    def __init__(self, **kwargs):
+        self.idea = kwargs['obj']
+        super(IdeaIsDraft, self).__init__(**kwargs)
+
+    def is_authorized(self):
+        return self.idea.status == Idea.STATUS_DRAFT
+
+
 CanModerateInitiative = perms.And(
     nuka.IsAuthenticated,
     perms.Or(nuka.IsModerator, UserIsInitiativeTargetOrganizationAdmin),
@@ -254,7 +263,8 @@ CanAddIdeaDetails = perms.And(
             perms.And(OwnsInitiative, perms.Not(IdeaIsEditable)),
             CanModerateIdea
         ),
-        InitiativeIsNotArchived
+        InitiativeIsNotArchived,
+        perms.Not(IdeaIsDraft)
     )
 )
 

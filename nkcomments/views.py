@@ -145,10 +145,17 @@ class CommentBlockView(TemplateView):
     pk_url_kwarg = 'pk'
 
     def get_context_data(self, **kwargs):
-        kwargs['object'] = get_object_or_404(self.model,
-                                             pk=self.kwargs[self.pk_url_kwarg])
+        initiative = get_object_or_404(self.model, pk=self.kwargs[self.pk_url_kwarg])
+
+        if self.request.user.is_authenticated() and self.request.user.is_moderator:
+            comments = initiative.public_comments()
+        else:
+            comments = initiative.public_comments().public()
+
+        kwargs['object'] = initiative
+        kwargs['comments'] = comments
         kwargs["comment_votes"] = get_votes(
-            self.request, CustomComment, kwargs["object"].public_comments()
+            self.request, CustomComment, comments
         )
         return kwargs
 

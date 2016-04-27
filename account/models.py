@@ -100,7 +100,8 @@ class User(auth.PermissionsMixin, auth.AbstractBaseUser):
         ) % {'count': 30, 'special_chars': '_'},
         validators=[
             validators.RegexValidator(
-                r'^[\w]+$', _('Enter a valid username.'), 'invalid'
+                r'^[a-zA-Z0-9_åäöÅÄÖ]+$', _('Syötä kelvollinen käyttäjätunnus.'),
+                'invalid'
             )
         ]
     )
@@ -139,7 +140,7 @@ class User(auth.PermissionsMixin, auth.AbstractBaseUser):
                                       self.settings.last_name])) or self.get_short_name()
 
     def get_contact_information(self):
-        return "\n".join(filter(None, [self.settings.email, self.settings.phone_number]))
+        return ", ".join(filter(None, [self.settings.email, self.settings.phone_number]))
 
     def get_organizations_joined(self):
         """ Returns related organizations with @ sign and joined with ',' """

@@ -38,7 +38,9 @@ class CommentModerator(BaseModerator):
                 ContentFlag.objects.is_flagged(moderated_object.content_object):
             super(CommentModerator, self).reject_object(moderated_object, moderator)
         else:
-            moderated_object.content_object.flags.create(
+            # user get_or_create instead of create - sometimes comment is removed before
+            # it is moderated which causes duplicate flags
+            moderated_object.content_object.flags.get_or_create(
                 user=moderator,
                 flag=CustomComment.FLAG_DELETED,
             )

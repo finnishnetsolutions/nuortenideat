@@ -1,5 +1,10 @@
 {% load i18n bleach_tags moderation %}
-{% if not deleted %}
+
+{% if deleted %}
+    <p><i>{% trans "Kommentti poistettu" %}.</i></p>
+{% endif %}
+
+{% if not deleted or request.user.is_moderator %}
     {% if comment.user %}
         {{ comment.comment|bleach }}
     {% else %}
@@ -7,6 +12,4 @@
     {% endif %}
 
     {% moderation_reasons comment %}
-{% else %}
-    <p><i>{% trans "Kommentti poistettu" %}.</i></p>
 {% endif %}

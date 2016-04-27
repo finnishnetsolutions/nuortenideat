@@ -4,10 +4,9 @@
 
 {% if object in perm.content.CanAddIdeaDetails %}
     <hr>
-            <div class="ajaxy-wrap editable-wrap">
-                <a href="{% url 'content:add_detail' initiative_id=object.pk %}" class="btn btn-default ajaxy-link edit-link">{% fa_icon "edit" %} {% trans "Uusi lisätieto" %}</a>
+    <div class="ajaxy-wrap editable-wrap">
+        <a href="{% url 'content:add_detail' initiative_id=object.pk %}" class="btn btn-default ajaxy-link edit-link">{% fa_icon "edit" %} {% trans "Uusi lisätieto" %}</a>
+    </div>
 
-            </div>
-            {% flag_link object extraclass='flag-link-bottom-right' %}
-
-{%  endif %}
+    {% flag_link object extraclass='flag-link-bottom-right' %}
+{% endif %}

@@ -1,10 +1,11 @@
 {% load i18n static bootstrap3 custom_comments %}
 
 <header>
-    <h4>{% trans "Kommentit" %} ({{ object.comments.count }})</h4>
+    <!-- always count public comments -->
+    <h4>{% trans "Kommentit" %} ({{ object.public_comments.public.count }})</h4>
 </header>
 <div class="content">
-    {% include 'nkcomments/comment_list.html' with comments=object.public_comments %}
+    {% include 'nkcomments/comment_list.html' with comments=comments %}
 
     {% if request.is_ajax %}{# HACK: dont re-display non-ajax messsages already show on page header #}
         {% bootstrap_messages %}

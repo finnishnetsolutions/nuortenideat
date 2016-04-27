@@ -309,9 +309,12 @@ class LoginView(generic.FormView):
         else:
             messages.success(self.request, _("Tervetuloa! Käytit palvelua viimeksi %s.") %
                              date(last_login, 'DATETIME_FORMAT'))
-        # TODO: logging configuration
+
         logger.info('User %s logged in. IP: %s', user.username,
                     self.request.META['REMOTE_ADDR'])
+
+        if 'next' in self.request.GET:
+            return HttpResponseRedirect(self.request.GET['next'])
         return redirect('frontpage')
 
     def form_invalid(self, form):

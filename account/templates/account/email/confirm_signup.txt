@@ -1,6 +1,6 @@
 {% extends 'nuka/email/base.txt' %}{% load i18n %}{% block content %}
 
-{% trans "Vahvista sähköpostiosoitteesi alla olevalla PIN-koodilla" %}:
+{% trans "Vahvista sähköpostiosoitteesi alla olevalla vahvistustunnuksella" %}:
 {{ pin_code }}
 
 {% trans "Voit myös vaihtoehtoisesti käyttää vahvistuslinkkiä" %}:

@@ -14,10 +14,17 @@ from actions.models import ActionGeneratingModelMixin
 from nuka.utils import strip_tags
 
 
+class CommentQuerySet(models.QuerySet):
+    def public(self):
+        id_list = [c.pk for c in self.all() if not c.is_deleted()]
+        return self.filter(pk__in=id_list)
+
+
 class CustomComment(Comment, ActionGeneratingModelMixin):
 
     FLAG_DELETED = "deleted"
     votes = GenericRelation("nkvote.Vote", related_query_name="comments")
+    objects = CommentQuerySet.as_manager()
 
     def comment_plaintext(self):
         return strip_tags(self.comment)

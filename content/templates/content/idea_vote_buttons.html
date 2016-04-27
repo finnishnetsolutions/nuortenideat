@@ -1,7 +1,7 @@
 {% load staticfiles i18n %}
 
 {% if object.interaction == object.INTERACTION_REGISTERED_USERS and not request.user.is_authenticated %}
-    <div class="alert alert-info">Tämän idean kannatus ja kommentointi vaatii sisäänkirjautumisen.</div>
+    <div class="alert alert-info">{% trans "Tämän idean kannatus ja kommentointi vaatii sisäänkirjautumisen." %}</div>
 {% endif %}
 
 <form action="{% url 'content:support_idea' initiative_id=object.pk %}" method="post" style="display: inline">

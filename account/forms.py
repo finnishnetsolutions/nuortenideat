@@ -135,7 +135,7 @@ class UserSignUpForm(UserSettingsForm):
 
 
 class UserActivateForm(forms.Form):
-    pin_code = forms.CharField(label=_('PIN-koodi'))
+    pin_code = forms.CharField(label=_('Vahvistustunnus'))
 
     def __init__(self, *args, **kwargs):
         self.valid_pin = kwargs.pop('pin_code')
@@ -145,7 +145,7 @@ class UserActivateForm(forms.Form):
 
     def clean_pin_code(self):
         if self.valid_pin != self.cleaned_data['pin_code']:
-            raise forms.ValidationError(_('Virheellinen PIN-koodi'))
+            raise forms.ValidationError(_('Virheellinen vahvistustunnus'))
         return self.cleaned_data['pin_code']
 
     def clean(self):

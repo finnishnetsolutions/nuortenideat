@@ -209,7 +209,7 @@
             <h3 class="h4-style">{% trans "Kommentit" %} ({{ comments.count }})</h3>
         </header>
         <div class="content">
-            {% include 'nkcomments/comment_list.html' with comments=comments.all %}
+            {% include 'nkcomments/comment_list.html' with comments=comments %}
         </div>
     </article>
 {% endblock idea_comments %}

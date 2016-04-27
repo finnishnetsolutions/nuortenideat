@@ -30,7 +30,7 @@
 {% endblock idea_main %}
 
 {% block idea_comments %}
-    <article class="well" id="comments">{% include 'nkcomments/comment_block.html' %}</article>
+    <article class="well" id="comments">{% include 'nkcomments/comment_block.html' with comments=comments %}</article>
 {% endblock idea_comments %}
 
 {% block idea_side_title_text %}

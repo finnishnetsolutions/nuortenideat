@@ -199,6 +199,39 @@ class IdeaDetailTest(TestCase):
         self.assertContains(resp, 'Julkaise idea</button>')
         self.assertTemplateUsed(resp, 'content/idea_detail.html')
 
+    def test_draft_elements_visibility(self):
+        idea = IdeaFactory(status=Idea.STATUS_DRAFT,
+                           visibility=Idea.VISIBILITY_DRAFT)
+        user = idea.owners.all()[0]
+        self.client.login(username=user.username, password=DEFAULT_PASSWORD)
+        resp = self.client.get('/fi/ideat/%d/' % idea.pk)
+        self.assertNotContains(resp, '<button type="submit" id="vote-support-idea"')
+        self.assertNotContains(resp, '<aside id="idea-share-buttons" class="well">')
+        self.assertNotContains(resp, '<div class="flag-content')
+        self.assertNotContains(resp, '<div class="row initiative-stats-row">')
+
+    def test_transferred_elements_visibility(self):
+        idea = IdeaFactory(status=Idea.STATUS_TRANSFERRED,
+                           visibility=Idea.VISIBILITY_PUBLIC)
+        user = idea.owners.all()[0]
+        self.client.login(username=user.username, password=DEFAULT_PASSWORD)
+        resp = self.client.get('/fi/ideat/%d/' % idea.pk)
+        self.assertNotContains(resp, '<button type="submit" id="vote-support-idea"')
+        self.assertContains(resp, '<aside id="idea-share-buttons" class="well">')
+        self.assertContains(resp, '<div class="flag-content')
+        self.assertContains(resp, '<div class="row initiative-stats-row">')
+
+    def test_published_elements_visibility(self):
+        idea = IdeaFactory(status=Idea.STATUS_PUBLISHED,
+                           visibility=Idea.VISIBILITY_PUBLIC)
+        user = idea.owners.all()[0]
+        self.client.login(username=user.username, password=DEFAULT_PASSWORD)
+        resp = self.client.get('/fi/ideat/%d/' % idea.pk)
+        self.assertContains(resp, '<button type="submit" id="vote-support-idea"')
+        self.assertContains(resp, '<aside id="idea-share-buttons" class="well">')
+        self.assertContains(resp, '<div class="flag-content')
+        self.assertContains(resp, '<div class="row initiative-stats-row">')
+
     def test_open_draft_as_non_owner(self):
         idea = IdeaFactory(status=Idea.STATUS_DRAFT,
                            visibility=Idea.VISIBILITY_DRAFT)
@@ -367,6 +400,7 @@ class IdeaEditFragmentTest(TestCase):
     def login_as_moderator(self):
         mod = UserFactory(groups=[Group.objects.get(name=GROUP_NAME_MODERATORS)])
         self.client.login(username=mod.username, password=DEFAULT_PASSWORD)
+        self.moderator = mod
 
     def test_open_edit_title_fragment(self):
         resp = self.client.get('/fi/ideat/%d/muokkaa/otsikko/' % self.idea.pk)
@@ -431,33 +465,31 @@ class IdeaEditFragmentTest(TestCase):
         self.assertEqual('%s' % Idea.objects.get(pk=self.idea.pk).description,
                          'New Description')
 
-    def test_save_description_fragment_as_moderator_no_reason(self):
-        self.login_as_moderator()
-        resp = self.client.post('/fi/ideat/%d/muokkaa/kuvaus/' % self.idea.pk, {
-            'description-fi': 'New Description',
-            'upload_ticket': get_upload_signature()
-        })
-        self.assertEqual(resp.status_code, 200)
-        self.assertRaises(ValueError, json.loads, resp.content)
-        self.assertContains(resp, "Tämä kenttä vaaditaan.")
+    # no reason needed NK-415 (reverted)
+    # def test_save_description_fragment_as_moderator_no_reason(self):
+    #     self.login_as_moderator()
+    #     resp = self.client.post('/fi/ideat/%d/muokkaa/kuvaus/' % self.idea.pk, {
+    #         'description-fi': 'New Description',
+    #         'upload_ticket': get_upload_signature()
+    #     })
+    #     self.assertEqual(resp.status_code, 200)
+    #     self.assertNotContains(resp, "Tämä kenttä vaaditaan.")
 
-    def test_save_description_fragment_as_moderator_reason_given(self):
+    def test_save_owners_fragment_as_moderator_reason_given(self):
         self.login_as_moderator()
         self.assertEqual(ModerationReason.objects.count(), 0)
-        resp = self.client.post('/fi/ideat/%d/muokkaa/kuvaus/' % self.idea.pk, {
-            'description-fi': 'New Description',
-            'upload_ticket': get_upload_signature(),
-            '_moderation_reason': 'old description was rather naughty'
+        resp = self.client.post('/fi/ideat/%d/muokkaa/omistajat/' % self.idea.pk, {
+            'owners': [self.idea.owners.first().pk, self.moderator.pk],
+            '_moderation_reason': 'Added moderator as owner'
         })
         self.assertEqual(resp.status_code, 200)
         resp = json.loads(resp.content)
         self.assertTrue(resp['success'])
-        self.assertEqual(resp['next'], '/fi/ideat/%d/nayta/kuvaus/' % self.idea.pk)
-        self.assertEqual('%s' % Idea.objects.get(pk=self.idea.pk).description,
-                         'New Description')
+        self.assertEqual(resp['next'], '/fi/ideat/%d/nayta/omistajat/' % self.idea.pk)
+        self.assertEqual(Idea.objects.get(pk=self.idea.pk).owners.count(), 2)
         self.assertEqual(ModerationReason.objects.count(), 1)
         self.assertEqual(ModerationReason.objects.first().reason,
-                         'old description was rather naughty')
+                         'Added moderator as owner')
 
     def test_save_owners_fragment(self):
         resp = self.client.post('/fi/ideat/%d/muokkaa/omistajat/' % self.idea.pk, {
@@ -538,6 +570,13 @@ class AdditionalDetailsTest(TestCase):
 
         resp = self.client.get('/fi/ideat/{}'.format(self.idea.pk), follow=True)
         self.assertContains(resp, '<section id="additional-details')
+
+    def test_visibility_as_draft(self):
+        self.idea.status = Idea.STATUS_DRAFT
+        self.idea.save()
+
+        resp = self.client.get('/fi/ideat/{}'.format(self.idea.pk), follow=True)
+        self.assertNotContains(resp, '<section id="additional-details')
 
     def test_add_detail(self):
         CustomCommentFactory(

@@ -6,7 +6,7 @@ from django import forms
 from django.conf import settings
 from django.db.models.aggregates import Sum, Count
 from django.db.models import Q
-from django.forms.models import ModelForm
+from django.forms.models import ModelForm, ModelChoiceField
 from django.forms.widgets import RadioSelect, TextInput
 from django.utils import timezone
 from django.utils.translation import ugettext, ugettext_lazy as _, string_concat
@@ -22,7 +22,7 @@ from account.models import User
 from nkcomments.models import CustomComment
 from nuka.forms.forms import HiddenLabelMixIn
 from nuka.forms.fields import ModelMultipleChoiceField, SaferFileField
-from nuka.forms.widgets import Select2Multiple, AutoSubmitButtonSelect
+from nuka.forms.widgets import Select2Multiple, AutoSubmitButtonSelect, Select2
 from nuka.utils import send_email
 from organization.models import Organization
 from tagging.models import Tag
@@ -294,12 +294,13 @@ class IdeaToPdfBaseForm(forms.ModelForm):
         choices=EMAIL_RECEIVER_TYPES, initial=EMAIL_RECEIVER_TYPES[0][0], required=False
     )
 
-    email_recipient_organization = ModelMultipleChoiceField(
+    email_recipient_organization = ModelChoiceField(
         label=string_concat(_("Valitse vastaanottaja"), '. ',
                             _("Tämä tieto näkyy ideasivulla muille käyttäjille.")),
-        widget=Select2Multiple(attrs={'class': 'email-field'}),
+        widget=Select2(attrs={'class': 'email-field'}),
         required=False,
-        queryset=Organization.objects.normal().filter(admins__isnull=False).distinct()
+        queryset=Organization.objects.normal().filter(admins__isnull=False).distinct(),
+        empty_label="- {} -".format(_("Valitse"))
     )
 
     email_recipient_name = forms.CharField(
@@ -330,11 +331,17 @@ class IdeaToPdfBaseForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(IdeaToPdfBaseForm, self).__init__(*args, **kwargs)
-        self.fields['included_comments'].queryset = kwargs['instance'].comments.all()
-        first_owner = kwargs['instance'].owners.first()
-        if first_owner is not None:
-            self.fields['name'].initial = first_owner.get_full_name()
-            self.fields['contacts'].initial = first_owner.get_contact_information()
+        idea = kwargs['instance']
+        self.fields['included_comments'].queryset = idea.comments.all()
+
+        if idea.initiator_organization:
+            self.fields['name'].initial = idea.initiator_organization.name
+            self.fields['contacts'].initial = idea.creator.settings.email
+        else:
+            first_owner = idea.owners.first()
+            if first_owner is not None:
+                self.fields['name'].initial = first_owner.get_full_name()
+                self.fields['contacts'].initial = first_owner.get_contact_information()
 
     def clean(self):
         cleaned_data = super(IdeaToPdfBaseForm, self).clean()
@@ -397,19 +404,19 @@ class IdeaToPdfForm(IdeaToPdfBaseForm):
 class InitiativeSearchForm(forms.ModelForm):
     organizations = ModelMultipleChoiceField(
         queryset=Organization.objects.active(),
-        label=_("Valitse organisaatio"),
+        label=_("Rajaa organisaatiolla"),
         required=False
     )
 
     tags = ModelMultipleChoiceField(
         queryset=Tag.objects.all(),
-        label=_("Valitse aihe"),
+        label=_("Rajaa aiheella"),
         required=False
     )
 
     municipalities = ModelMultipleChoiceField(
         queryset=Municipality.objects.natural().active(),
-        label=_("Valitse kunta"),
+        label=_("Rajaa paikkakunnalla"),
         required=False
     )
 

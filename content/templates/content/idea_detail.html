@@ -41,8 +41,18 @@
     {% if not object.visibility == object.VISIBILITY_ARCHIVED %}
         <hr>
         <div id="vote-buttons">
-            {% include "content/idea_vote_buttons.html" %}
-            {% if request.user.is_authenticated %}
+            {% if object in perm.content.CanVoteInitiative %}
+                {% include "content/idea_vote_buttons.html" %}
+            {% else %}
+                <div class="alert alert-info">
+                    {% if object.status == object.STATUS_DRAFT %}
+                        {% trans "Idea on luonnostilassa ja se ei näy muille käyttäjille ennen kuin se on julkaistu." %}
+                    {% else %}
+                        {% blocktrans with status=object.status_or_visibility %}Ideaa ei voi kannattaa, koska se on tilassa "{{ status }}".{% endblocktrans %}
+                    {% endif %}
+                </div>
+            {% endif %}
+            {% if request.user.is_authenticated and object.status != object.STATUS_DRAFT %}
                 <span class="ajaxy-wrap">{% fav_link object %}</span>
             {% endif %}
         </div>
@@ -56,14 +66,23 @@
     {% endif %}
 
     <!-- flag link object also in content/idea_detail_additional_details_list.html for layout reasons -->
+    <!-- todo: DRY -->
     {% if object not in perm.content.CanAddIdeaDetails %}
-        <hr>
-        {% flag_link object %}
+        {% if object.status != object.STATUS_DRAFT %}
+            <hr>
+            {% flag_link object %}
+        {% endif %}
     {% endif %}
 {% endblock idea_main %}
 
+{% block initiative_stats %}
+    {% if object.status != object.STATUS_DRAFT %}
+        <div id="votes-comments">{% include "content/initiative_stats.html" %}</div>
+    {% endif %}
+{% endblock initiative_stats %}
+
 {% block idea_share_buttons %}
-    {% if not object.visibility == object.VISIBILITY_ARCHIVED %}
+    {% if not object.visibility == object.VISIBILITY_ARCHIVED and object.status != object.STATUS_DRAFT %}
         {{ block.super }}
     {% endif %}
 {% endblock idea_share_buttons %}

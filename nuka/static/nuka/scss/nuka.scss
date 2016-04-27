@@ -1070,6 +1070,10 @@ article#comments {
         display: block;
         /*margin-right: 50px;*/
       }
+      .comment-deleted {
+        padding: 10px;
+        background-color: #ffcccc;
+      }
       .voting {
         display: inline-block;
         float: right;
@@ -1101,6 +1105,9 @@ article#comments {
       }
       .comment-content {
         margin: 10px 0;
+        p {
+          margin-bottom: 7px;
+        }
       }
       .report {
         float: right;

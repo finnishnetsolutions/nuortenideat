@@ -108,7 +108,7 @@ class SignupTest(TestCase):
 
     def test_wrong_pin_code(self):
         response = self.get_wrong_pin_activation_response()
-        self.assertContains(response, 'Virheellinen PIN-koodi')
+        self.assertContains(response, 'Virheellinen vahvistustunnus')
         self.assertTemplateUsed(response, 'account/signup_activation.html')
 
     def test_too_many_retries(self):
