@@ -15,7 +15,7 @@
                 <h1>{% trans "Ideat" %}</h1>
             </div>
             <div class="col-md-4 col-sm-4 write-idea-btn-wrwap">
-                <a class="btn btn-green btn-lg" href="{% url 'content:create_idea' %}">
+                <a class="btn btn-green btn-lg create-idea-btn" href="{% url 'content:create_idea' %}">
                     <img src="{% static 'nuka/img/ikoni_lamppu_valkoinen.png' %}" alt=""> {% trans "Kirjoita idea" %}
                 </a>
             </div>
@@ -59,8 +59,13 @@
             <div class="row">
                 <div class="col-md-8">
                     {% bootstrap_field searchform.status %}
+                    <div class="clearfix"></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feed-buttons">{% include "content/feed_buttons.html" %}</div>
                 </div>
             </div>
+
             <!--<span class="pull-right">{% trans "Piilota hakuehdot" %}</span>-->
         </form>
 
@@ -76,11 +81,7 @@
 
     <div class="text-center">{% bootstrap_pagination page=page_obj url=request.path|add:"?"|add:request.GET.urlencode %}</div>
 
-    <a target="_blank" href="{{ rss_url|add:"?"|add:request.GET.urlencode }}" type="button" class="btn btn-default btn-lg">RSS</a>
-    <button type="button" class="btn btn-default btn-lg" data-toggle="modal" data-target="#widget-modal" id="widget-modal-launch-btn">
-        <span class="glyphicon glyphicon-cog"></span> {% trans "Widget" %}
-    </button>
-
+    {% include "content/feed_buttons.html" %}
     {% include "content/widget_modal.html" %}
 
 {% endblock content %}

@@ -27,11 +27,18 @@ NOTIFICATION_OPTIONS = (
         'action_subtype': CustomComment.ACTION_SUB_TYPE_IDEA_COMMENTED,
         'group': Action.GROUP_ALL,
     }, {
-        'label': _("Kysymykseesi on vastattu / kysymystäsi kommentoidaan"),
+        'label': _("Kysymystäsi kommentoidaan"),
         'model': CustomComment,
         'action_type': Action.TYPE_CREATED,
         'role': Action.ROLE_CONTENT_OWNER,
         'action_subtype': CustomComment.ACTION_SUB_TYPE_QUESTION_COMMENTED,
+        'group': Action.GROUP_ALL,
+    }, {
+        'label': _("Kysymykseesi vastataan"),
+        'model': CustomComment,
+        'action_type': Action.TYPE_CREATED,
+        'role': Action.ROLE_CONTENT_OWNER,
+        'action_subtype': CustomComment.ACTION_SUB_TYPE_QUESTION_ANSWERED,
         'group': Action.GROUP_ALL,
     }, {
         'label': _("Oman idean tila muuttuu"),
@@ -82,5 +89,18 @@ NOTIFICATION_OPTIONS = (
         'role': Action.ROLE_MODERATOR,
         'action_subtype': '',
         'group': Action.GROUP_MODERATORS,
+    },
+)
+
+# Notify anonymous owners
+ACTIONS_FOR_ANONYMOUS = (
+    {
+        'model': CustomComment,
+        'action_type': Action.TYPE_CREATED,
+        'action_subtype': CustomComment.ACTION_SUB_TYPE_QUESTION_COMMENTED,
+    }, {
+        'model': CustomComment,
+        'action_type': Action.TYPE_CREATED,
+        'action_subtype': CustomComment.ACTION_SUB_TYPE_QUESTION_ANSWERED,
     },
 )

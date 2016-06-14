@@ -1,15 +1,23 @@
 {% extends "nkadmin/base_list.html" %}
-
-{% load i18n %}
+{% load i18n bootstrap3 %}
 
 {% block subtitle %}{% trans "Käyttäjähallinta" %}{% endblock subtitle %}
 
 {% block search_filter_content %}
-    <p>{% trans "Hae käyttäjätunnuksella tai nimellä" %}</p>
     <form method="get">
-        <div class="row" style="margin-bottom: 10px">
+        <div class="row user-list-search">
+
+            <div class="col-md-4">
+                <label for="#name-input">{% trans "Hae käyttäjätunnuksella tai nimellä" %}</label>
+                <input class="form-control" type="text" name="haku" id="name-input" value="{{ last_search }}" />
+            </div>
+            <div class="col-md-4">
+                {% bootstrap_field form.organizations %}
+            </div>
+            <div class="col-md-4"></div>
+        </div>
+        <div class="row user-list-search" style="margin-bottom: 10px">
             <div class="col-md-12 user-list-search">
-                <input class="form-control" type="text" name="haku" value="{{ last_search }}" />
                 <button class="btn btn-primary" type="submit">
                     <span class="glyphicon glyphicon-search"></span> {% trans "Hae" %}
                 </button>
@@ -19,9 +27,11 @@
 
     <a href="{% url 'nkadmin:users' filter='kaikki' %}{{ query_string.get_without_page_dpf }}" class="btn btn-default {% if filter == "kaikki" %}active{% endif %}">{% trans "Kaikki" %}</a>
     <a href="{% url 'nkadmin:users' filter='osallistujat' %}{{ query_string.get_without_page_dpf }}" class="btn btn-default {% if filter == "osallistujat" %}active{% endif %}">{% trans "Osallistuja" %}</a>
+    <!--<a href="{% url 'nkadmin:users' filter='nuoret' %}{{ query_string.get_without_page_dpf }}" class="btn btn-default {% if filter == "nuoret" %}active{% endif %}">{% trans "Nuori" %}</a>-->
+    <a href="{% url 'nkadmin:users' filter='yhteyshenkilot' %}{{ query_string.get_without_page_dpf }}" class="btn btn-default {% if filter == "yhteyshenkilot" %}active{% endif %}">{% trans "Yhteyshenkilö" %}</a>
     <a href="{% url 'nkadmin:users' filter='moderaattorit' %}{{ query_string.get_without_page_dpf }}" class="btn btn-default {% if filter == "moderaattorit" %}active{% endif %}">{% trans "Moderaattori" %}</a>
     <a href="{% url 'nkadmin:users' filter='yllapitajat' %}{{ query_string.get_without_page_dpf }}" class="btn btn-default {% if filter == "yllapitajat" %}active{% endif %}">{% trans "Ylläpitäjä" %}</a>
-    <p style="margin-top: 10px">{% trans "Tuloksia" %}: {{ user_list.count }}</p>
+    <p class="margin-top-sm">{% trans "Tuloksia" %}: {{ user_list.count }}</p>
 {% endblock search_filter_content %}
 
 {% block list_content %}

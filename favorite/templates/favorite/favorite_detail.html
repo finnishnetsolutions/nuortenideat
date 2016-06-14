@@ -1,16 +1,6 @@
 {% load i18n fontawesome favorites bootstrap3 %}
 
-<style>
-    #favorites_list li.tag {
-        background-color: #e5e5e5;
-        padding: 0 12px;
-        margin-bottom: 5px;
-        margin-right: 5px;
-        border-radius: 15px;
-    }
-</style>
-
-<ul id="favorites_list" class="list-inline" style="display:inline;">
+<ul class="favorites-list list-inline display-inline">
     {% fav_list ct_id user as obj_list %}
     {% for item in obj_list %}
         <li class="tag">

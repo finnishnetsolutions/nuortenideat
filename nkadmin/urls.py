@@ -17,6 +17,7 @@ from .perms import CanAccessAdminPanel, CanEditUser
 
 urlpatterns = decorated_patterns('', check_perm(CanAccessAdminPanel),
     url(r'^moderointi/$', views.ModerationQueueView.as_view(), name='moderation_queue'),
+    url(r'^organisaatiot/$', views.ModerationOrganizationQueueView.as_view(), name='moderation_organization_queue'),
     url(r'^kayttajat/$', views.UsersView.as_view(), name='users'),
     url(r'^kayttajat/(?P<filter>\w+)/$', views.UsersView.as_view(), name='users'),
 )

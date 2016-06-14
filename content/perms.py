@@ -181,8 +181,8 @@ class UserIsInitiativeTargetOrganizationAdminCheck(nuka.BasePermission):
         super(UserIsInitiativeTargetOrganizationAdminCheck, self).__init__(**kwargs)
 
     def is_authorized(self):
-        return len(set(self.initiative.target_organization_ids)
-                   & set(self.request.user.organization_ids)) > 0
+        return len(set(self.initiative.target_organization_ids) &
+                   set(self.request.user.organization_ids)) > 0
 
 UserIsInitiativeTargetOrganizationAdmin = perms.And(
     nuka.IsAuthenticated,
@@ -213,6 +213,15 @@ class IdeaIsDraft(nuka.BasePermission):
 
     def is_authorized(self):
         return self.idea.status == Idea.STATUS_DRAFT
+
+
+class CommentingIsLocked(nuka.BasePermission):
+    def __init__(self, **kwargs):
+        self.initiative = kwargs['obj']
+        super(CommentingIsLocked, self).__init__(**kwargs)
+
+    def is_authorized(self):
+        return self.initiative.commenting_closed
 
 
 CanModerateInitiative = perms.And(
@@ -356,6 +365,7 @@ CanPublishIdeaDecision = perms.And(
 CanCommentInitiative = perms.And(
     InitiativeIsPublic,
     InitiativeIsNotArchived,
+    perms.Not(CommentingIsLocked),
     perms.Or(
         perms.Not(InitiativeInteractionRegistered),
         nuka.IsAuthenticated,

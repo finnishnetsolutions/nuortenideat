@@ -25,7 +25,7 @@ organization_as_obj = obj_by_pk(Organization, "pk")
 
 ORGANIZATION_FRAGMENT_URLS = (
     # (url part, template name/url name part, form_class)
-    (r'kuva',           'picture',          forms.EditOrganizationPictureForm),
+    # (r'kuva',           'picture',          forms.EditOrganizationPictureForm),
     (r'kuvaus',         'description',      forms.EditOrganizationDescriptionForm),
     (r'yhteyshenkilot', 'admins',           forms.EditOrganizationAdminsForm),
     (r'nimi',           'name',             forms.EditOrganizationNameForm),
@@ -81,7 +81,15 @@ urlpatterns = patterns(
     url(r'(?P<pk>\d+)/$', views.OrganizationDetailView.as_view(), name='detail'),
     *partial_detail_urls
 ) + decorated_patterns('', combo(org_by_pk, check_perm(CanEditOrganization)),
-   #url(r'(?P<pk>\d+)/poista/kuva/$',
-   #    views.DeleteIdeaPictureView.as_view(), name='delete_idea_picture'),
+    url(r'(?P<pk>\d+)/kuva/$', views.PictureView.as_view(),
+        name='picture'),
+    url(r'(?P<pk>\d+)/kuva/muokkaa/$',
+        legacy_json_plaintext(views.EditPictureView.as_view()),
+        name='edit_picture'),
+    url(r'(?P<pk>\d+)/kuva/rajaa/$',
+        views.CropProfilePictureView.as_view(), name='crop_picture'),
+    url(r'(?P<pk>\d+)/kuva/poista/$',
+        views.DeletePictureView.as_view(),
+        name='delete_picture'),
     *partial_edit_patterns
 )

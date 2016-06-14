@@ -111,7 +111,7 @@ class OrganizationDetailTest(TestCase):
         resp = self.client.get('/fi/organisaatiot/%d/' % org.pk)
         self.assertTemplateUsed(resp, 'organization/organization_detail.html')
         self.assertTemplateUsed(resp, 'organization/organization_detail_description.html')
-        self.assertContains(resp, 'fa-edit', count=5)
+        self.assertContains(resp, 'fa-edit', count=4)
 
 
 class OrganizationListTest(TestCase):

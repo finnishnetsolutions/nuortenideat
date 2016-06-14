@@ -12,7 +12,7 @@ from content.utils import remind_untransferred
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        remind_date = date.today() - timedelta(days=settings.UNTRANSFERRED_REMIDING_DAYS)
+        remind_date = date.today() - timedelta(days=settings.UNTRANSFERRED_REMINDING_DAYS)
         archive_date = date.today() - timedelta(
             days=settings.UNTRANSFERRED_ARCHIVING_DAYS
         )

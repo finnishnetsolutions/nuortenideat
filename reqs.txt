@@ -39,3 +39,5 @@ pyClamd==0.3.10
 PyYAML==3.11
 # redhat/centos: sudo yum install libjpeg-devel openjpeg-devel libpng-devel giflib-devel freetype-devel
 django-model-utils==2.2
+django-image-cropping==1.0.3
+easy-thumbnails==2.3

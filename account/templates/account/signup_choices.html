@@ -3,32 +3,21 @@
 {% load i18n bootstrap3 %}
 
 {% block content %}
-
-<div class="well">
-
-    <h1>{% trans "Rekisteröidy" %}</h1>
-
-    <div class="row">
-        <div class="col-xs-12 col-md-6">
-             <div>
-                <h2 class="h4-style">{% trans "Nuortenideat.fi tunnukset" %}</h2>
-
-                <p>{% trans "Luo Nuortenideat.fi käyttäjätunnus." %}</p>
-                <a class="btn btn-default" id="nk-rekisteroityminen" href="{% url 'account:signup' %}">{% trans "Rekisteröidy" %}</a>
+    <div class="well">
+        <h1>{% trans "Rekisteröidy" %}</h1>
+        <div class="row">
+            <div class="col-xs-12 col-md-6">
+                <div>
+                    <h2 class="h3">{% trans "Rekisteröidy sähköpostiosoitteella" %}</h2>
+                    <a class="btn btn-default" id="nk-rekisteroityminen" href="{% url 'account:signup' %}">{% trans "Rekisteröidy sähköpostilla" %}</a>
+                </div>
             </div>
-        </div>
-
-        <div class="col-xs-12 col-md-6">
-            <div>
-                <h2 class="h4-style">{% trans "Facebook-tunnuksilla" %}</h2>
-
-                <p>{% trans "Säästä aikaa rekisteröitymällä Facebook-tunnuksillasi." %}</p>
-                <a class="btn btn-default" href="{% url 'social:begin' 'facebook' %}?next={% url 'account:activation_done' %}&action=signup">
-                    {% trans "Rekisteröidy" %}
-                </a>
+            <div class="col-xs-12 col-md-6">
+                <div>
+                    <h2 class="h3">{% trans "Rekisteröidy Facebook-tunnuksilla" %}</h2>
+                    <a class="btn btn-default" href="{% url 'social:begin' 'facebook' %}?next={% url 'account:activation_done' %}&action=signup">{% trans "Rekisteröidy Facebook-tunnuksillasi" %}</a>
+                </div>
             </div>
         </div>
     </div>
-</div>
-
 {% endblock content %}

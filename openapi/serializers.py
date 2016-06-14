@@ -115,7 +115,7 @@ class IdeaVotesSerializer(serializers.Serializer):
 
 
 class IdeaCommentsSerializer(serializers.Serializer):
-    count = serializers.IntegerField(source='public_comments.count',
+    count = serializers.IntegerField(source='public_comments.public.count',
                                      help_text="number of public comments the idea has "
                                                "received")
     url = serializers.SerializerMethodField('_comments_url',

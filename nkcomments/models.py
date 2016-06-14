@@ -30,18 +30,15 @@ class CustomComment(Comment, ActionGeneratingModelMixin):
         return strip_tags(self.comment)
 
     def is_deleted(self):
-        try:
-            self.flags.get(flag=self.FLAG_DELETED)
-        except ObjectDoesNotExist:
-            return False
-        else:
+        if self.flags.filter(flag=self.FLAG_DELETED).first():
             return True
+        return False
 
     def mark_deleted(self, deleting_user):
         if self.is_deleted():
             return True
 
-        self.flags.create(
+        self.flags.get_or_create(
             user=deleting_user,
             flag=self.FLAG_DELETED,
         )
@@ -79,16 +76,23 @@ class CustomComment(Comment, ActionGeneratingModelMixin):
     # action processing
     ACTION_SUB_TYPE_IDEA_COMMENTED = 'idea-commented'
     ACTION_SUB_TYPE_QUESTION_COMMENTED = 'question-commented'
+    ACTION_SUB_TYPE_QUESTION_ANSWERED = 'question-answered'
 
     def action_kwargs_on_create(self):
         if self.content_object.is_idea():
             subtype = CustomComment.ACTION_SUB_TYPE_IDEA_COMMENTED
         else:
-            subtype = CustomComment.ACTION_SUB_TYPE_QUESTION_COMMENTED
+            if self.user in self.content_object.organization.admins.all():
+                subtype = CustomComment.ACTION_SUB_TYPE_QUESTION_ANSWERED
+            else:
+                subtype = CustomComment.ACTION_SUB_TYPE_QUESTION_COMMENTED
         return {'actor': self.user, 'subtype': [subtype]}
 
     def fill_notification_recipients(self, action):
         self.content_object.fill_notification_recipients(action)
+
+    def fill_anonymous_notification_recipients(self, action):
+        self.content_object.fill_anonymous_notification_recipients(action)
 
     class Meta:
         proxy = True

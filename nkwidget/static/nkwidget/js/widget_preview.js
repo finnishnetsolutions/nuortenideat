@@ -25,7 +25,7 @@ function refresh_widget_preview() {
     widget_url += query_string;
 
     // Update the iframe's src.
-    var preview_wrap = $("iframe");
+    var preview_wrap = $("#widget-iframe");
     preview_wrap.attr("src", widget_url);
 
     // Update the code box.

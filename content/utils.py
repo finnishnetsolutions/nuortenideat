@@ -91,12 +91,11 @@ def archive_unpublished(archive_date):
 
 
 def remind_untransferred(remind_date, archive_date):
-    ideas = Idea.objects.filter(published=remind_date, status=Idea.STATUS_PUBLISHED,
+    ideas = Idea.objects.filter(published__startswith=remind_date, status=Idea.STATUS_PUBLISHED,
                                 visibility=Idea.VISIBILITY_PUBLIC)
 
     published_days = (date.today() - remind_date).days
     archive_days = (remind_date - archive_date).days
-
     for idea in ideas:
         for receiver in idea_receivers(idea, contact_persons=True):
             send_email(
@@ -115,7 +114,7 @@ def remind_untransferred(remind_date, archive_date):
 
 
 def warn_untransferred(warn_date, archive_date):
-    ideas = Idea.objects.filter(published=warn_date, status=Idea.STATUS_PUBLISHED,
+    ideas = Idea.objects.filter(published__startswith=warn_date, status=Idea.STATUS_PUBLISHED,
                                 visibility=Idea.VISIBILITY_PUBLIC)
 
     published_days = (date.today() - warn_date).days

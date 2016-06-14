@@ -864,9 +864,15 @@ a.fixed-write-idea:hover {
       text-align: center;
       padding-bottom: 15px;
     }
+    div.feed-buttons {
+      margin-top: 10px;
+    }
   }
   @media screen and (min-width: 768px) {
-    a.btn {
+    .create-idea-btn {
+      float: right;
+    }
+    div.feed-buttons {
       float: right;
     }
   }
@@ -2069,4 +2075,49 @@ div.idea-transfer-method-col {
 
 .contain-images img {
   max-width: 100%;
+}
+
+.margin-top-sm {
+  margin-top: 10px;
+}
+
+.margin-left-sm {
+  margin-left: 10px;
+}
+
+.reset-password-link-wrap {
+  text-align: right;
+  margin-top: 10px;
+
+  @media screen and (max-width: $width-xs-sm) {
+    & {
+      text-align: center;
+      margin-top: 30px;
+      margin-bottom: 30px;
+    }
+  }
+}
+
+.display-inline {
+  display: inline;
+}
+
+.favorites-list li.tag {
+  background-color: #e5e5e5;
+  padding: 0 12px;
+  margin-bottom: 5px;
+  margin-right: 5px;
+  border-radius: 15px;
+}
+
+.profile-pic-wrap {
+  .picture-crop-form {
+    img {
+      max-width: 320px;
+
+      @media screen and (max-width: $width-mg-lg) {
+        max-width: 270px;
+      }
+    }
+  }
 }

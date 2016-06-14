@@ -2,11 +2,9 @@
 {% load firstof from future %}
 
 {% spaceless %}
-
     {% if not no_link %}
         <a href="{{ user.get_absolute_url }}">
     {% endif %}
-
 
         {% if user.settings.picture %}
 
@@ -21,7 +19,7 @@
                         {{ user.settings.picture_medium.url }}
                     {% endif %}
                     {% endspaceless %}"
-                 alt="{{ user.username }}">
+                 alt="{% trans "Profiilikuva" %}: {{ user.username }}">
 
         {% else %}
             <img class="{% firstof ph_class class "" %}{% if highlight %} profile-pic-highlight{% endif %}"  src="{% static 'nuka/img/profile_pic_placeholder.png' %}" alt="{% trans "Profiilikuvan paikka" %}">

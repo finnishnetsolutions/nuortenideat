@@ -11,11 +11,16 @@ from nuka import perms as nuka
 from .models import User
 
 
-class OwnAccount(nuka.BasePermission):
+class AccountBasePermission(nuka.BasePermission):
     def __init__(self, **kwargs):
         self.account = kwargs.pop('obj')
-        super(OwnAccount, self).__init__(**kwargs)
+        super(AccountBasePermission, self).__init__(**kwargs)
+    
+    def is_authorized(self):
+        return super(AccountBasePermission, self).is_authorized()
 
+
+class OwnAccount(AccountBasePermission):
     def is_authorized(self):
         return self.user.pk == self.account.pk
 
@@ -31,13 +36,21 @@ class UserEmailSpecified(nuka.BasePermission):
         return bool(self.user.settings.email)
     
     
-class IsClosed(nuka.BasePermission):
-    def __init__(self, **kwargs):
-        self.account = kwargs.pop("obj")
-        super(IsClosed, self).__init__(**kwargs)
-        
+class IsClosed(AccountBasePermission):
+    def get_login_url(self):
+        return reverse('frontpage')
+
+    def get_unauthorized_message(self):
+        return ugettext("Käyttäjäprofiilia ei ole palvelussa.")
+
     def is_authorized(self):
         return self.account.status == User.STATUS_ARCHIVED
+
+
+class CanDisconnectSocial(AccountBasePermission):
+    def is_authorized(self):
+        print len(self.account.password), 'Salasanan pittuus'
+        return len(self.account.password) > 0
 
 
 CanEditUser = perms.And(
@@ -50,4 +63,9 @@ CanEditUser = perms.And(
             nuka.ObjectIsParticipant
         )
     )
+)
+
+CanViewUser = perms.Or(
+    perms.Not(IsClosed),
+    nuka.IsModerator,
 )

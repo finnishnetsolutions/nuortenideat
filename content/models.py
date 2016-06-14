@@ -86,6 +86,7 @@ class Initiative(PolymorphicModel, ActionGeneratingModelMixin):
                                            choices=INTERACTION_CHOICES,
                                            default=INTERACTION_EVERYONE)
     premoderation = models.BooleanField(_("kommenttien esimoderointi"), default=False)
+    commenting_closed = models.BooleanField(_("kommentointi suljettu"), default=False)
     created = models.DateTimeField(default=timezone.now)
     modified = models.DateTimeField(auto_now=True)
     published = models.DateTimeField(null=True, default=None, blank=True)
@@ -181,6 +182,9 @@ class Initiative(PolymorphicModel, ActionGeneratingModelMixin):
                 if u not in added_admins:
                     action.add_notification_recipients(
                         action.ROLE_ORGANIZATION_CONTACT, u)
+
+    def fill_anonymous_notification_recipients(self, action):
+        pass
 
     def __str__(self):
         return '%s' % self.title
@@ -355,14 +359,16 @@ def create_action_on_update(instance=None, created=False, **kwargs):
 class Question(ModeratedPolymorphicModelMixIn, Initiative):
 
     user_name = models.CharField(max_length=100)
+    user_email = models.EmailField(max_length=254, unique=False,
+                                   blank=True, default=None, null=True)
 
     @property
     def organization(self):
-        return self.target_organizations.first
+        return self.target_organizations.first()
 
     @property
     def owner(self):
-        return self.owners.first
+        return self.owners.first()
 
     def get_absolute_url(self):
         return reverse('content:question_detail', kwargs={'initiative_id': self.pk})
@@ -375,6 +381,14 @@ class Question(ModeratedPolymorphicModelMixIn, Initiative):
 
     def html_allowed(self):
         return self.creator_id is not None
+
+    # action generating
+    def fill_anonymous_notification_recipients(self, action):
+        if self.user_email:
+            action.add_anonymous_notification_recipients(action.ROLE_CONTENT_OWNER, {
+                'user_name': self.user_name,
+                'user_email': self.user_email
+            })
 
 
 class AdditionalDetail(models.Model):

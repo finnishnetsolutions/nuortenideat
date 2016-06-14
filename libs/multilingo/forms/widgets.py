@@ -73,6 +73,8 @@ class MultiLingualWidget(MultiWidget):
         for i, widget in enumerate(self.widgets):
             if isinstance(value, dict):
                 widget_value = value.get(self._lang_code(i), None)
+            elif isinstance(value, list) and len(value) > i:
+                widget_value = value[i]
             else:
                 widget_value = None
             if id_:

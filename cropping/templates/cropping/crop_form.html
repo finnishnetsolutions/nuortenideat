@@ -1,0 +1,13 @@
+{% extends 'nuka/inline_edit_base_form.html' %}
+{% load bootstrap3 i18n %}
+
+{% block before_form %}
+    {{ form.media }}
+{% endblock before_form %}
+
+{% block form_classes %}picture-crop-form{% endblock form_classes %}
+
+{% block form_actions %}
+    <button class="btn btn-default" type="submit">{% bootstrap_icon "ok" %} {% trans "Valmis" %}</button>
+    <a class="btn btn-default ajaxy-link" href="{{ object.get_cropping_cancel_url }}">{% trans "Peruuta" %}</a>
+{% endblock form_actions %}

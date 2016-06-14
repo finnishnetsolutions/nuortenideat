@@ -9,7 +9,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import GenericForeignKey
 from django.dispatch.dispatcher import receiver
 from actions.signals import action_performed
-from nuka.utils import send_email, render_email_template
+from nuka.utils import render_email_template
 
 
 class ActionTypeMixin(object):
@@ -64,13 +64,21 @@ class Action(models.Model, ActionTypeMixin):
     def __init__(self, *args, **kwargs):
         super(Action, self).__init__(*args, **kwargs)
         self.notification_recipients = []
+        self.anonymous_notification_recipients = []
 
     def add_notification_recipients(self, role, recipients):
         self.notification_recipients.append((role, recipients))
 
+    def add_anonymous_notification_recipients(self, role, recipients):
+        # recipients must contain user_name and user_email
+        self.anonymous_notification_recipients.append((role, recipients))
+
     def create_notifications(self):
         if hasattr(self.content_object, 'fill_notification_recipients'):
             self.content_object.fill_notification_recipients(self)
+
+        if hasattr(self.content_object, 'fill_anonymous_notification_recipients'):
+            self.content_object.fill_anonymous_notification_recipients(self)
 
         # remove duplicates from recipients
         recipients = list(set(self.notification_recipients))
@@ -87,14 +95,50 @@ class Action(models.Model, ActionTypeMixin):
 
         self.notify_subscribed_users(objects)
 
+        # anonymous recipients
+        anon_recipients = self.anonymous_notification_recipients
+        if anon_recipients and self.is_action_to_notify_anonymous():
+            anon_objects = []
+            for role, recipient in anon_recipients:
+                obj = Notification(
+                    user_name=recipient['user_name'], user_email=recipient['user_email'],
+                    action=self, role=role, send_instantly=True)
+                obj.save()
+                anon_objects.append(obj)
+            self.notify_anonymous_users(anon_objects)
+
+    def is_action_to_notify_anonymous(self):
+        from actions import lists
+        for options in lists.ACTIONS_FOR_ANONYMOUS:
+            ct_id = ContentType.objects.get_for_model(
+                options['model'], for_concrete_model=False).id
+            if self.content_type_id == ct_id:
+                if self.type == options['action_type']:
+                    if self.subtype == options['action_subtype']:
+                        return True
+        return False
+
+    def notify_anonymous_users(self, notifications):
+        for v in notifications:
+            self.notify_subscribed_user(role=v.role, notification=v)
+
     def notify_subscribed_users(self, notifications):
         for v in notifications:
             if v.send_instantly:
-                self.notify_subscribed_user(v.recipient, v.role, v)
+                self.notify_subscribed_user(user=v.recipient, role=v.role,
+                                            notification=v)
 
-    def notify_subscribed_user(self, user, role, notification=None):
-        if not self.user_is_subscribed(user, role):
-            return False
+    def notify_subscribed_user(self, user=None, role=None, notification=None):
+
+        send_to_anon_user = True if user is None else False
+
+        if not send_to_anon_user:
+            if not self.user_is_subscribed(user, role):
+                return False
+        else:
+            user = {'user_name': notification.user_name,
+                    'user_email': notification.user_email}
+
         template_pattern = 'notifications/email/{0}/{1}.{2}.{3}.txt'
         template = template_pattern.format(self.content_type.app_label,
                                            self.content_type.model,
@@ -103,10 +147,16 @@ class Action(models.Model, ActionTypeMixin):
 
         msg_context = {'object': self, 'user': user}
         subject, body = render_email_template(template, msg_context)
-        send_mail(subject=subject, message=body,
-                  recipient_list=[user.settings.email, ], from_email=None)
 
-        sent_email_obj = SentEmails(notification=notification, email=user.settings.email)
+        if send_to_anon_user:
+            email = user['user_email']
+        else:
+            email = user.settings.email
+
+        send_mail(subject=subject, message=body,
+                  recipient_list=[email, ], from_email=None)
+
+        sent_email_obj = SentEmails(notification=notification, email=email)
         sent_email_obj.save()
 
     def user_is_subscribed(self, user, role):
@@ -153,6 +203,8 @@ class Notification(models.Model):
     action = models.ForeignKey(Action, related_name='notifications')
     recipient = models.ForeignKey('account.User', blank=True, null=True,
                                   related_name='notifications')
+    user_name = models.CharField(max_length=100, blank=True, null=True, default=None)
+    user_email = models.EmailField(max_length=254, blank=True, default=None, null=True)
     role = models.CharField(max_length=50)
     send_instantly = models.BooleanField(default=False)
     created = models.DateTimeField(auto_now_add=True)

@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 
 from django import forms
 from django.contrib.auth.models import Group
+from django.forms.models import ModelChoiceField
 from django.utils.translation import ugettext as _
 
 from bootstrap3_datetime.widgets import DateTimePicker
@@ -20,6 +21,23 @@ from organization.models import Organization
 class GroupChoiceField(ModelMultipleChoiceField):
     def label_from_instance(self, obj):
         return dict(GROUP_LABELS).get(obj.name, obj.name)
+
+
+class UserSearchForm(forms.ModelForm):
+    organizations = ModelMultipleChoiceField(queryset=Organization.objects.all().
+                                             order_by('name'),
+                                             label=_("Rajaa organisaatiolla"),
+                                             required=False)
+
+    def form_filter(self, qs):
+        organizations = self.cleaned_data['organizations']
+        if organizations:
+            qs = qs.filter(organizations__pk__in=organizations)
+        return qs
+
+    class Meta:
+        model = User
+        fields = ('organizations', )
 
 
 class EditUserForm(forms.ModelForm):

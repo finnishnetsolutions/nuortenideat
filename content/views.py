@@ -613,6 +613,7 @@ class IdeaToPdf(PDFTemplateView):
             return cleaned_data.get('email_recipient_name')
 
     def get_email_receivers(self, cleaned_data):
+        receivers = set()
         # field is deleted in form.clean if it is not needed
         org = cleaned_data.get('email_recipient_organization', None)
         if org:
@@ -808,6 +809,20 @@ class IdeaPremoderationToggleView(View):
                     ugettext("Ideaan lisättävät kommentit julkaistaan välittömästi.")
                 ])
             )
+        return JsonResponse({'reload': True})
+
+
+class IdeaCommentingStatusToggleView(View):
+
+    @transaction.atomic()
+    def post(self, request, *args, **kwargs):
+        obj = self.kwargs['obj']
+        obj.commenting_closed = bool(int(kwargs['commenting_state']))
+        obj.save()
+        if obj.commenting_closed:
+            messages.success(self.request, ugettext("Kommentointi on suljettu."))
+        else:
+            messages.success(self.request, ugettext("Kommentointi on avoinna."))
         return JsonResponse({'reload': True})
 
 

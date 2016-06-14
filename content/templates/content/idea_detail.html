@@ -73,6 +73,16 @@
             {% flag_link object %}
         {% endif %}
     {% endif %}
+
+     {% if object in perm.content.CanChangeIdeaSettings %}
+         <hr>
+         <a href="{% url 'content:toggle_idea_premoderation' initiative_id=object.pk premoderation_state=object.premoderation|yesno:"0,1" %}" class="ajaxy-link btn btn-default" data-ajaxy-method="POST" title="{% trans "Jos kommenttien esimoderointi otetaan käyttöön, ideaan lisättävät kommentit julkaistaan vasta kun palvelun moderaattori on hyväksynyt ne." %}">
+             {% if object.premoderation %}{% fa_icon "check-square-o" alt=_("käytössä") %}{% else %}{% fa_icon "square-o" alt=_("ei käytössä") %}{% endif %} {% trans "Kommenttien esimoderointi" %}
+         </a>
+         <a href="{% url 'content:toggle_idea_commenting' initiative_id=object.pk commenting_state=object.commenting_closed|yesno:"0,1" %}" class="ajaxy-link btn btn-default" data-ajaxy-method="POST" title="{% trans "Kommentoinnin sulkeminen ja avaaminen." %}">
+             {% if object.commenting_closed %}{% fa_icon "check-square-o" alt=_("kyllä") %}{% else %}{% fa_icon "square-o" alt=_("ei") %}{% endif %} {% trans "Kommentointi suljettu" %}
+         </a>
+    {% endif %}
 {% endblock idea_main %}
 
 {% block initiative_stats %}
@@ -118,6 +128,7 @@
             </a>
         </li>
 
+        <!--
         {% if object in perm.content.CanChangeIdeaSettings %}
             <li role="presentation" class="divider"></li>
             <li role="presentation">
@@ -126,6 +137,7 @@
                 </a>
             </li>
         {% endif %}
+        -->
 
 
         {% if object in perm.content.CanArchiveIdea %}

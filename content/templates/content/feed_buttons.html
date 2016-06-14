@@ -1,0 +1,6 @@
+{% load i18n %}
+
+<a target="_blank" href="{{ rss_url|add:"?"|add:request.GET.urlencode }}" type="button" class="btn btn-default btn-lg">RSS</a>
+<button type="button" class="btn btn-default btn-lg" data-toggle="modal" data-target="#widget-modal" id="widget-modal-launch-btn">
+    <span class="glyphicon glyphicon-cog"></span> {% trans "Widget" %}
+</button>

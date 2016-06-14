@@ -5,6 +5,11 @@
     <h4>{% trans "Kommentit" %} ({{ object.public_comments.public.count }})</h4>
 </header>
 <div class="content">
+
+    {% if object.commenting_closed %}
+        <div class="alert alert-info">{% trans "Kommentointi on päättynyt." %}</div>
+    {% endif %}
+
     {% include 'nkcomments/comment_list.html' with comments=comments %}
 
     {% if request.is_ajax %}{# HACK: dont re-display non-ajax messsages already show on page header #}

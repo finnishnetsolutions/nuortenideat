@@ -207,7 +207,7 @@ class EditIdeaOrganizationsForm(EditIdeaBaseForm):
 
 
 class EditIdeaPictureForm(ModelForm):
-    picture = forms.ImageField(label=_("Uusi kuva"), widget=forms.FileInput,
+    picture = forms.ImageField(label=_("Valitse kuva"), widget=forms.FileInput,
                                required=False)
 
     picture_alt_text = forms.CharField(label=_("Kuvan tekstimuotoinen kuvaus"),
@@ -250,6 +250,10 @@ class CreateQuestionForm(RedactorAttachtorFormMixIn, CreateQuestionBaseForm):
 class CreateQuestionFormAnon(CreateQuestionBaseForm):
 
     user_name = forms.CharField(label=_('Lähettäjän nimi'))
+    user_email = forms.CharField(label=_('Sähköpostiosoite'), required=False,
+                                 help_text=_("Kirjoita sähköpostiosoitteesi, jos haluat "
+                                             "ilmoituksen kun kysymystä kommentoidaan "
+                                             "tai siihen tulee vastaus organisaatiolta."))
     captcha = NoReCaptchaField(
         label=_('Tarkistuskoodi'),
         error_messages={'invalid': _('Virheellinen tarkistuskoodi.')}
@@ -258,7 +262,7 @@ class CreateQuestionFormAnon(CreateQuestionBaseForm):
 
     class Meta:
         model = Question
-        fields = ('title', 'description', 'tags', 'user_name')
+        fields = ('title', 'description', 'tags', 'user_name', 'user_email')
 
 
 class IdeaToPdfBaseForm(forms.ModelForm):
@@ -286,7 +290,8 @@ class IdeaToPdfBaseForm(forms.ModelForm):
     EMAIL_RECEIVER_TYPES = (
         (EMAIL_RECEIVER_TYPE_INTERNAL, _("Valitse Nuortenideat.fi-palvelussa oleva "
                                          "organisaatio vastaanottajaksi")),
-        (EMAIL_RECEIVER_TYPE_EXTERNAL, _("... tai organisaatio, joka ei ole palvelussa mukana"))
+        (EMAIL_RECEIVER_TYPE_EXTERNAL, _("... tai organisaatio, joka ei ole palvelussa "
+                                         "mukana"))
     )
 
     email_receiver_type = forms.ChoiceField(

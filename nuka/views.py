@@ -78,7 +78,7 @@ class PictureCarousel(object):
 class PreFetchedObjectMixIn(object):
     obj_kwarg = 'obj'
 
-    def get_object(self):
+    def get_object(self, queryset=None):
         return self.kwargs[self.obj_kwarg]
 
 

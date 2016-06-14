@@ -42,6 +42,8 @@
                 <link rel="stylesheet" href="{% static "bower_components/select2-bootstrap3-css/select2-bootstrap.css" %}" type="text/css">
                 <link rel="stylesheet" href="{% static "redactor/css/redactor.css" %}" type="text/css">
                 <link rel="stylesheet" href="{% static "multilingo/css/multilingo.css" %}" type="text/css">
+                <link rel="stylesheet" href="{% static "cropping/scss/cropping.scss" %}" type="text/x-scss">
+                <link rel="stylesheet" href="{% static "nuka/css/jquery.Jcrop.min.css" %}" type="text/x-scss">
             {% endcompress %}
         {% endblock css %}
 
@@ -102,6 +104,7 @@
 
                 <script type="text/javascript" src="{% static "nkmoderation/js/jquery.modreasoning.js" %}"></script>
                 <script type="text/javascript" src="{% static "multilingo/js/jquery.multilingo.js" %}"></script>
+                <script type="text/javascript" src="{% static "nuka/js/jquery.Jcrop.min.js" %}"></script>
             {% endcompress %}
 
             <!--[if lte IE 9]>
@@ -211,7 +214,7 @@
                         <nav class="navbar ni-nav pull-right">
                             <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-main">
                                 <span class="sr-only">Toggle nation</span>
-                                <i class="ni-icon ni-icon-mobile-nav"><span class="sr-only"></span></i>
+                                <i class="ni-icon ni-icon-mobile-nav"><span class="sr-only">{% trans "Valikko" %}</span></i>
                             </button>
                         </nav>
                     </div>
@@ -230,7 +233,7 @@
                             <nav class="navbar ni-nav text-center">
                                 <button type="button" class="no-pull navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-main">
                                     <span class="sr-only">Toggle nation</span>
-                                    <img src="{% static 'nuka/img/btn-mobi-nav.png' %}?ver=15.3.2016" alt="">
+                                    <img src="{% static 'nuka/img/btn-mobi-nav.png' %}?ver=15.3.2016" alt="{% trans "Valikko" %}">
                                 </button>
                             </nav>
                         </div>

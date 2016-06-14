@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 from django.conf.urls import patterns, url
 from django.contrib.auth import views as auth
 from django.utils.translation import ugettext as _
-from account.perms import CanEditUser
+from account.perms import CanEditUser, CanViewUser
 
 from libs.djcontrib.conf.urls import decorated_patterns
 from libs.djcontrib.utils.decorators import combo
@@ -17,7 +17,6 @@ from libs.djcontrib.utils.decorators import obj_by_pk
 from .models import User
 from . import views
 from nuka.decorators import legacy_json_plaintext
-from nuka.perms import IsAuthenticated
 
 
 urlpatterns = patterns('',
@@ -33,10 +32,7 @@ urlpatterns = patterns('',
         name='activate_facebook'),
     url(r'^vahvista-sahkoposti/(?P<token>\w{26,50})/$',
         views.EmailConfirmationView.as_view(),
-        name='confirm_email'
-    ),
-    url(r'^(?P<user_id>\d+)/$',
-        obj_by_pk(User, 'user_id')(views.UserProfileView.as_view()), name='profile'),
+        name='confirm_email'),
     url(r'^aktivoitu/$', views.ActivationDoneView.as_view(), name='activation_done'),
     url(r'(?P<user_id>\d+)/lista/', views.UserProfileIdeaList.as_view(),
         name='idea_list'),
@@ -65,22 +61,25 @@ urlpatterns = patterns('',
                       "käyttäen uutta salasanaasi."),
             pattern_name='account:login'
         ), name='password_reset_ready')
+) + decorated_patterns('', combo(obj_by_pk(User, 'user_id'), check_perm(CanViewUser)),
+    url(r'^(?P<user_id>\d+)/$',
+        obj_by_pk(User, 'user_id')(views.UserProfileView.as_view()), name='profile'),
 ) + decorated_patterns('', combo(obj_by_pk(User, 'user_id'), check_perm(CanEditUser)),
     url(r'(?P<user_id>\d+)/asetukset/$', views.UserSettingsView.as_view(),
         name='settings'),
     url(r'(?P<user_id>\d+)/nayta-asetukset/',
         views.UserSettingsDetailView.as_view(),
-        name='settings_detail'
-    ),
+        name='settings_detail'),
     url(r'(?P<user_id>\d+)/muokkaa-asetukset/',
         views.UserSettingsEditView.as_view(),
-        name='settings_edit'
-    ),
+        name='settings_edit'),
     url(r'(?P<user_id>\d+)/asetukset/kuva/$', views.ProfilePictureView.as_view(),
         name='profile_picture'),
     url(r'(?P<user_id>\d+)/asetukset/kuva/muokkaa/$',
         legacy_json_plaintext(views.EditProfilePictureView.as_view()),
         name='edit_profile_picture'),
+    url(r'(?P<user_id>\d+)/asetukset/kuva/rajaa/$',
+        views.CropProfilePictureView.as_view(), name='crop_profile_picture'),
     url(r'(?P<user_id>\d+)/asetukset/kuva/poista/$',
         views.DeleteProfilePictureView.as_view(),
         name='delete_profile_picture'),

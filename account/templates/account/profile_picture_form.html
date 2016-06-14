@@ -4,4 +4,5 @@
 
 {% block form_actions %}
     <button class="btn btn-default" type="submit">{% bootstrap_icon "ok" %} {% trans "Valmis" %}</button>
+    <a class="btn btn-default ajaxy-link" href="{% url 'account:profile_picture' object.user_id %}">{% trans "Peruuta" %}</a>
 {% endblock  %}

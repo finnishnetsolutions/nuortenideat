@@ -3,6 +3,7 @@
 from __future__ import unicode_literals
 
 from collections import OrderedDict
+from easy_thumbnails.files import get_thumbnailer
 import requests
 import re
 import logging
@@ -13,7 +14,6 @@ from urllib2 import urlopen
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import logout, login
-from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.contenttypes.models import ContentType
 from django.core import mail
 from django.core.files.base import ContentFile
@@ -31,14 +31,16 @@ from django.views import generic
 from django.views.generic.base import TemplateView, View
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import UpdateView
-from account.models import NotificationOptions
+from account.models import NotificationOptions, UserSettings
 from actions import lists
 from actions.models import Action
+from cropping.views import CropPictureView, EditCroppablePictureView
 
 from libs.djcontrib.views.generic import MultiModelFormView
 
 from account.forms import EditProfilePictureForm, MessageForm, UserProfileIdeaListForm, \
-    UsernameForm, NotificationOptionsForm
+    UsernameForm, NotificationOptionsForm, PasswordChangeFormWithValidation, \
+    CropProfilePictureForm
 from content.models import Initiative, Idea, Question
 from content.perms import CanSeeAllInitiatives
 
@@ -315,7 +317,8 @@ class LoginView(generic.FormView):
 
         if 'next' in self.request.GET:
             return HttpResponseRedirect(self.request.GET['next'])
-        return redirect('frontpage')
+        return redirect(reverse('account:profile',
+                                kwargs={'user_id': user.pk}))
 
     def form_invalid(self, form):
         logger.info('Invalid login try for username %s. IP %s',
@@ -340,13 +343,14 @@ class UserSettingsMixIn(object):
         return self.kwargs['obj'].settings
 
 
-class EditProfilePictureView(UserSettingsMixIn, InlineUpdateView):
-    template_name = 'account/user_settings_base_form.html'
+class EditProfilePictureView(UserSettingsMixIn, InlineUpdateView,
+                             EditCroppablePictureView):
+    template_name = 'account/profile_picture_form.html'
     form_class = EditProfilePictureForm
 
-    def get_success_url(self):
-        return reverse('account:profile_picture',
-                       kwargs={'user_id': self.kwargs['obj'].pk})
+
+class CropProfilePictureView(UserSettingsMixIn, InlineUpdateView, CropPictureView):
+    form_class = CropProfilePictureForm
 
 
 class ProfilePictureView(ExistingUserMixIn, DetailView):
@@ -356,7 +360,11 @@ class ProfilePictureView(ExistingUserMixIn, DetailView):
 class DeleteProfilePictureView(View):
     def delete(self, request, **kwargs):
         obj = get_object_or_404(User, pk=kwargs['user_id'])
+        obj.settings.original_picture.delete()
         obj.settings.picture.delete()
+        obj.settings.cropping = ''
+        obj.settings.save()
+
         return JsonResponse({'success': True,
                              'next': reverse('account:profile_picture',
                                              kwargs={'user_id': obj.pk})})
@@ -365,12 +373,7 @@ class DeleteProfilePictureView(View):
         return self.delete(request, **kwargs)
 
 
-class UserProfileView(generic.DetailView):
-    pk_url_kwarg = 'user_id'
-    template_name = 'account/user_profile.html'
-    form_class = UserProfileIdeaListForm
-
-    # TODO: dry
+class UserProfileMixin(object):
     def get_initiatives(self):
         initiatives = Initiative.objects.filter(owners__in=(self.get_object(),),)
         if not CanSeeAllInitiatives(
@@ -385,12 +388,18 @@ class UserProfileView(generic.DetailView):
                 initiatives = initiatives.filter(visibility=Initiative.VISIBILITY_PUBLIC)
         return initiatives.order_by('-pk')
 
+
+class UserProfileView(UserProfileMixin, generic.DetailView):
+    pk_url_kwarg = 'user_id'
+    template_name = 'account/user_profile.html'
+    form_class = UserProfileIdeaListForm
+
     def get_object(self, queryset=None):
         return self.kwargs['obj']
 
     def get_context_data(self, **kwargs):
         kwargs = super(UserProfileView, self).get_context_data(**kwargs)
-
+        user = self.get_object()
         initiatives = kwargs['initiatives'] = self.get_initiatives()
 
         kwargs['voted_ideas'] = get_voted_objects(self.request, initiatives, Idea)
@@ -401,29 +410,15 @@ class UserProfileView(generic.DetailView):
             polymorphic_ctype_id=ContentType.objects.get_for_model(Idea).pk
         ).count()
         kwargs['comments_count'] = CustomComment.objects.filter(
-            user_id=self.get_object().pk).count()
+            user_id=user.pk).count()
         kwargs["summary"] = True
         kwargs['form'] = self.form_class
+        kwargs['is_public_profile'] = False if self.request.user == user else True
         return kwargs
 
 
-class UserProfileIdeaList(TemplateView):
+class UserProfileIdeaList(UserProfileMixin, TemplateView):
     template_name = 'account/user_profile_idea_list.html'
-
-    # TODO: dry
-    def get_initiatives(self):
-        initiatives = Initiative.objects.filter(owners__in=(self.get_object(),),)
-        if not CanSeeAllInitiatives(
-            request=self.request, obj=self.get_object()
-        ).is_authorized():
-            if IsAuthenticated(request=self.request).is_authorized():
-                initiatives = initiatives.filter(
-                    Q(visibility=Initiative.VISIBILITY_PUBLIC)
-                    | Q(owners__in=(self.request.user, ))
-                )
-            else:
-                initiatives = initiatives.filter(visibility=Initiative.VISIBILITY_PUBLIC)
-        return initiatives.order_by('-pk')
 
     def get_object(self, **kwargs):
         return User.objects.get(pk=self.kwargs['user_id'])
@@ -537,7 +532,7 @@ class UserSettingsDetailView(MultiModelFormView):
 
 class UserChangePasswordView(generic.UpdateView):
     template_name = 'account/user_change_password.html'
-    form_class = PasswordChangeForm
+    form_class = PasswordChangeFormWithValidation
 
     def get_object(self):
         return get_object_or_404(User, pk=self.kwargs['user_id'])

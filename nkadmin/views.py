@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import SetPasswordForm
 from django.contrib.auth.views import password_change
+from django.contrib.contenttypes.models import ContentType
 
 from django.views import generic
 from django.contrib.auth.decorators import login_required
@@ -19,8 +20,9 @@ from account.models import GROUP_NAME_ADMINS, GROUP_NAME_MODERATORS
 from account.models import User
 from .forms import EditUserForm, EditUserSettingsForm
 from libs.moderation.models import ModeratedObject, MODERATION_STATUS_PENDING
+from nkadmin.forms import UserSearchForm
 from nuka.perms import IsAdmin
-
+from organization.models import Organization
 
 QS_PAGE = "sivu"
 QS_ORDER_BY = "jarjestys"
@@ -39,7 +41,12 @@ class QueryString():
             for key, value in self.components.items():
                 if key in skip:
                     continue
-                for_join.append(key + "=" + value)
+
+                if type(value) is list:
+                    for v in value:
+                        for_join.append(key + "=" + v)
+                else:
+                    for_join.append(key + "=" + value)
 
             if not for_join:
                 return ""
@@ -86,7 +93,7 @@ class PagedQueryString(QueryString):
 class UsersQueryString(PagedQueryString):
 
     def get_without_order(self):
-        return self.get(prefix="&", skip=(QS_ORDER_BY))
+        return self.get(prefix="&", skip=QS_ORDER_BY)
 
 
 class UsersView(generic.ListView):
@@ -100,6 +107,7 @@ class UsersView(generic.ListView):
     queryset = None
     users_per_page = 50
     query_string = UsersQueryString()
+    form_class = UserSearchForm
 
     def get_queryset(self):
         self.query_string.components = {}
@@ -114,25 +122,43 @@ class UsersView(generic.ListView):
             self.query_string.components[QS_SEARCH] = self.request.GET.get(QS_SEARCH)
             self.search = self.request.GET.get(QS_SEARCH)
 
+        if 'organizations' in self.request.GET:
+            self.query_string.components['organizations'] = \
+                self.request.GET.getlist('organizations')
+
         if not self.queryset:
             self.set_queryset()
 
+        form = self.form_class(self.request.GET)
+        if self.request.GET and form.is_valid():
+            self.queryset = form.form_filter(self.queryset)
+
         return self.queryset
 
+    def get_default_queryset(self):
+        return User.objects.all()
+
     def set_queryset(self):
-        if self.filter == "kaikki":
-            self.queryset = User.objects.all()
-        elif self.filter == "yllapitajat":
-            self.queryset = User.objects.filter(groups__name=GROUP_NAME_ADMINS)
+        if self.filter == "yllapitajat":
+            qs = User.objects.filter(groups__name=GROUP_NAME_ADMINS)
         elif self.filter == "moderaattorit":
-            self.queryset = User.objects.filter(groups__name=GROUP_NAME_MODERATORS)
-        elif self.filter == "osallistujat":
-            self.queryset = User.objects.exclude(groups__name=GROUP_NAME_ADMINS).exclude(groups__name=GROUP_NAME_MODERATORS)
+            qs = User.objects.filter(groups__name=GROUP_NAME_MODERATORS)
+        #elif self.filter == "osallistujat":
+        #    qs = User.objects.exclude(groups__name=GROUP_NAME_ADMINS).exclude(
+        #        groups__name=GROUP_NAME_MODERATORS)
         else:
-            self.queryset = User.objects.all()
+            if self.filter == 'kaikki' or not self.filter:
+                qs = self.get_default_queryset()
+            else:
+                qs = User.objects.exclude(groups__name=GROUP_NAME_ADMINS).exclude(
+                    groups__name=GROUP_NAME_MODERATORS)
+                if self.filter == 'osallistujat':
+                    qs = qs.filter(organizations__isnull=True)
+                elif self.filter == 'yhteyshenkilot':
+                    qs = qs.filter(organizations__isnull=False)
 
         if self.search:
-            self.queryset = self.queryset.filter(
+            qs = qs.filter(
                 Q(settings__first_name__istartswith=self.search) |
                 Q(settings__last_name__istartswith=self.search) |
                 Q(username__istartswith=self.search) |
@@ -143,13 +169,13 @@ class UsersView(generic.ListView):
 
         if self.order_by:
             if self.order_by == "nimi":
-                self.queryset = self.queryset.order_by("settings__last_name")
+                qs = qs.order_by("settings__last_name")
             elif self.order_by == "kotikunta":
-                self.queryset = self.queryset.order_by("settings__municipality")
+                qs = qs.order_by("settings__municipality")
             elif self.order_by == "organisaatio":
-                self.queryset = self.queryset.order_by("organizations__name")
+                qs = qs.order_by("organizations__name")
 
-        self.queryset = self.queryset.distinct()
+        self.queryset = qs.distinct()
 
     def get_context_data(self, **kwargs):
         context = super(UsersView, self).get_context_data(**kwargs)
@@ -172,6 +198,7 @@ class UsersView(generic.ListView):
 
         self.query_string.page = context["users"]
         context["query_string"] = self.query_string
+        context['form'] = self.form_class(self.request.GET)
 
         return context
 
@@ -219,11 +246,23 @@ class SetPasswordView(generic.UpdateView):
         return super(SetPasswordView, self).form_valid(form)
 
 
-class ModerationQueueView(generic.ListView):
+class ModerationQueueBaseView(generic.ListView):
     model = ModeratedObject
     template_name = 'nkadmin/moderation_queue.html'
     paginate_by = 40
 
+
+class ModerationQueueView(ModerationQueueBaseView):
     def get_queryset(self):
-        return self.model.objects.filter(moderation_status=MODERATION_STATUS_PENDING)\
-                                 .order_by('-pk')
+        ct = ContentType.objects.get_for_model(Organization)
+        return self.model.objects.filter(moderation_status=MODERATION_STATUS_PENDING).\
+            exclude(content_type_id=ct.pk).order_by('-date_updated', '-pk')
+
+
+class ModerationOrganizationQueueView(ModerationQueueBaseView):
+    def get_queryset(self):
+        ct = ContentType.objects.get_for_model(Organization)
+        return self.model.objects.filter(
+            moderation_status=MODERATION_STATUS_PENDING,
+            content_type_id=ct.pk
+        ).order_by('-pk')

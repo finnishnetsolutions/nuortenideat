@@ -8,11 +8,13 @@ import logging
 from django import forms
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models.aggregates import Count
 from django.db.models.query_utils import Q
-from django.utils.translation import ugettext_lazy as _
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.utils.translation import ugettext_lazy as _, ugettext
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, \
+    PasswordChangeForm
 
 from bootstrap3_datetime.widgets import DateTimePicker
 from account.models import NotificationOptions
@@ -34,7 +36,47 @@ from .models import User, UserSettings, GROUP_NAME_MODERATORS
 logger = logging.getLogger(__name__)
 
 
-class UserForm(FieldReAttrMixIn, UserCreationForm):
+PASSWORD_MIN_LENGTH = 7
+
+
+def validate_password_strength(value):
+    errors = []
+    if len(value) < PASSWORD_MIN_LENGTH:
+        errors.append(ugettext("Salasanan täytyy olla vähintään {0} merkkiä pitkä.").
+                      format(PASSWORD_MIN_LENGTH))
+
+    # check for digit
+    if not any(char.isdigit() for char in value):
+        errors.append(ugettext('Salasanaan täytyy sisältyä vähintään yksi numero.'))
+
+    # check for letter
+    if not any(char.isalpha() for char in value):
+        errors.append(ugettext('Salasanaan täytyy sisältyä vähintään yksi kirjain.'))
+
+    if errors:
+        raise ValidationError(' '.join(errors))
+
+
+class PasswordValidationMixin(object):
+    password_field = 'password1'
+
+    def __init__(self, *args, **kwargs):
+        super(PasswordValidationMixin, self).__init__(*args, **kwargs)
+        self.fields[self.password_field].validators.append(validate_password_strength)
+        # self.fields[self.password_field].help_text = _("Salasanan täytyy olla "
+        #                                              "vähintään {0} merkkiä pitkä.").\
+        #     format(PASSWORD_MIN_LENGTH)
+
+
+class UserCreationFormWithValidation(PasswordValidationMixin, UserCreationForm):
+    pass
+
+
+class PasswordChangeFormWithValidation(PasswordValidationMixin, PasswordChangeForm):
+    password_field = 'new_password1'
+
+
+class UserForm(FieldReAttrMixIn, UserCreationFormWithValidation):
     field_widgets = (
         ('password1', NoAutocompletePasswordInput(render_value=True)),
         ('password2', NoAutocompletePasswordInput(render_value=True))
@@ -244,18 +286,31 @@ class UserSettingsEditForm(UserSettingsDetailForm, UserSettingsForm):
 
 
 class EditProfilePictureForm(forms.ModelForm):
-    picture = forms.ImageField(label=_("Uusi kuva"), widget=forms.FileInput,
+    picture = forms.ImageField(label=_("Valitse kuva"), widget=forms.FileInput,
                                required=False)
 
     class Meta:
         model = UserSettings
         fields = ('picture', )
-        
+
+
+class CropProfilePictureForm(forms.ModelForm):
+    class Meta:
+        model = UserSettings
+        fields = ('original_picture', 'cropping', )
+
+
+class ReceiversModelChoiceField(ModelMultipleChoiceField):
+    def label_from_instance(self, obj):
+        if obj.organizations.count():
+            return "{} ({})".format(obj.get_full_name(), obj.get_organizations_joined())
+        return obj
+
 
 class MessageForm(forms.ModelForm):
-    receivers = ModelMultipleChoiceField(
+    receivers = ReceiversModelChoiceField(
         label=_("Valitse vastaanottajat"),
-        queryset=User.objects.filter(is_active=True)
+        queryset=User.objects.filter(is_active=True),
     )
     message = forms.CharField(label=_('Viesti'), widget=forms.Textarea)
 

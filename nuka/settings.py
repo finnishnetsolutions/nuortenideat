@@ -4,6 +4,7 @@ from __future__ import unicode_literals, absolute_import
 
 from datetime import timedelta
 from celery.schedules import crontab
+from easy_thumbnails.conf import Settings as thumbnail_settings
 
 """
     Django settings for nuortenkanava project.
@@ -38,59 +39,62 @@ ALLOWED_HOSTS = []
 # Application definition
 
 PROJECT_APPS = (
-                'nuka',
-                'account',
-                'nkadmin',
-                'nkchat',
-                'nkcomments',
-                'nkvote',
-                'nkmoderation',
-                'organization',
-                'content',
-                'tagging',
-                'kuaapi',
-                'nkmessages',
-                'favorite',
-                'help',
-                'nkwidget',
-                'libs.fimunicipality',
-                'libs.djcontrib',
-                'libs.permitter',
-                'libs.attachtor',
-                'info',
-                'openapi',
-                'nkpicturecarousel',
-                'omnavi',
-                'actions',
-                'smslog',
-                'campaign',
-                )
+    'nuka',
+    'account',
+    'nkadmin',
+    'nkchat',
+    'nkcomments',
+    'nkvote',
+    'nkmoderation',
+    'organization',
+    'content',
+    'tagging',
+    'kuaapi',
+    'nkmessages',
+    'favorite',
+    'help',
+    'nkwidget',
+    'libs.fimunicipality',
+    'libs.djcontrib',
+    'libs.permitter',
+    'libs.attachtor',
+    'cropping',
+    'info',
+    'openapi',
+    'nkpicturecarousel',
+    'omnavi',
+    'actions',
+    'smslog',
+    'campaign',
+)
 
 INSTALLED_APPS = PROJECT_APPS + (
-                                 'django.contrib.admin',
-                                 'django.contrib.auth',
-                                 'django.contrib.contenttypes',
-                                 'django.contrib.messages',
-                                 'django.contrib.staticfiles',
-                                 'django.contrib.humanize',
-                                 'django.contrib.sites',
-                                 'django.contrib.comments',
-                                 'bootstrap3',
-                                 'bootstrap3_datetime',
-                                 'compressor',
-                                 'djangobower',
-                                 'redactor',
-                                 'django_bleach',
-                                 'jstemplate',
-                                 'nocaptcha_recaptcha',
-                                 'social.apps.django_app.default',
-                                 'wkhtmltopdf',
-                                 'mptt',
-                                 'libs.moderation',
-                                 'libs.multilingo',
-                                 'rest_framework',
-                                 'rest_framework_swagger',
-                                 )
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'django.contrib.humanize',
+    'django.contrib.sites',
+    'django.contrib.comments',
+    'bootstrap3',
+    'bootstrap3_datetime',
+    'compressor',
+    'djangobower',
+    'redactor',
+    'django_bleach',
+    'jstemplate',
+    'nocaptcha_recaptcha',
+    'social.apps.django_app.default',
+    'wkhtmltopdf',
+    'mptt',
+    'libs.moderation',
+    'libs.multilingo',
+    'rest_framework',
+    'rest_framework_swagger',
+    'image_cropping',
+    'easy_thumbnails',
+)
 
 COMMENTS_APP = 'nkcomments'
 
@@ -416,7 +420,7 @@ FORMAT_MODULE_PATH = 'nuka.formats'
 
 UNPUBLISHED_WARNING_DAYS = 7
 UNPUBLISHED_ARCHIVING_DAYS = 30
-UNTRANSFERRED_REMIDING_DAYS = 30
+UNTRANSFERRED_REMINDING_DAYS = 30
 UNTRANSFERRED_WARNING_DAYS = 60
 UNTRANSFERRED_ARCHIVING_DAYS = 90
 
@@ -473,3 +477,10 @@ CLAMAV = {
     'enabled': False
 }
 
+# https://github.com/jonasundderwolf/django-image-cropping
+
+THUMBNAIL_PROCESSORS = (
+    'image_cropping.thumbnail_processors.crop_corners',
+) + thumbnail_settings.THUMBNAIL_PROCESSORS
+
+IMAGE_CROPPING_JQUERY_URL = None

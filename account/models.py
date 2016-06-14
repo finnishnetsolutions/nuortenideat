@@ -18,10 +18,13 @@ from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import ugettext
+from image_cropping.fields import ImageRatioField
 
 from imagekit.models.fields import ProcessedImageField, ImageSpecField
 from pilkit.processors.resize import SmartResize, ResizeToFit
 from actions.models import ActionTypeMixin
+from cropping.fields import ProcessedImageFieldWithCropping
+from cropping.models import CroppingModelMixin
 from nkmessages.models import Message
 
 
@@ -144,13 +147,12 @@ class User(auth.PermissionsMixin, auth.AbstractBaseUser):
 
     def get_organizations_joined(self):
         """ Returns related organizations with @ sign and joined with ',' """
-        # TODO: Possibly link to the organization's page.
-
         organizations = self.organizations.all()
         to_be_joined = []
 
-        for organization in organizations:
-            to_be_joined.append("@" + organization.name)
+        for o in organizations:
+            if o.type is not o.TYPE_UNKNOWN:
+                to_be_joined.append("@{}".format(o.name))
 
         return ", ".join(to_be_joined)
 
@@ -226,7 +228,7 @@ def _user_profile_pic_path(obj, name):
     return 'user/%d/pictures/%s.jpg' % (obj.pk, uuid4().hex)
 
 
-class UserSettings(models.Model):
+class UserSettings(models.Model, CroppingModelMixin):
     LANGUAGE_FINNISH = 'fi'
     LANGUAGE_SWEDISH = 'sv'
     LANGUAGE_CHOICES = (
@@ -251,9 +253,16 @@ class UserSettings(models.Model):
     municipality = models.ForeignKey('fimunicipality.Municipality')
     message_notification = models.BooleanField(_("ilmoitus uusista viesteistä"),
                                                default=True)
-
-    picture = ProcessedImageField(
+    # cropping
+    original_picture = ProcessedImageFieldWithCropping(
         upload_to=_user_profile_pic_path,
+        processors=[ResizeToFit(width=1280, height=1280, upscale=False)],
+        format='JPEG', options={'quality': 90}, default=""
+    )
+
+    # cropped picture goes here
+    picture = ProcessedImageField(
+        upload_to=_user_profile_pic_path, max_length=120,
         processors=[ResizeToFit(width=1280, height=1280, upscale=False)],
         format='JPEG', options={'quality': 90}
     )
@@ -263,6 +272,14 @@ class UserSettings(models.Model):
     picture_small = ImageSpecField(source='picture',
                                    processors=[SmartResize(width=46, height=46)],
                                    format='JPEG', options={'quality': 70})
+
+    # cropping
+    cropping_pk_field = 'user_id'
+    cropping = ImageRatioField('original_picture', '220x220', size_warning=True,
+                               verbose_name=_("Profiilikuvan rajaus"))
+
+    def get_cropping_cancel_url(self):
+        return reverse('account:profile_picture', kwargs={'user_id': self.user_id})
 
     def get_municipality_display(self):
         return self.municipality

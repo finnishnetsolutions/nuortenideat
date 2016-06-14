@@ -12,11 +12,14 @@ from django.dispatch.dispatcher import receiver
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
+from image_cropping.fields import ImageRatioField
 
 from imagekit.models.fields import ProcessedImageField, ImageSpecField
 from pilkit.processors.resize import ResizeToFit, SmartResize
 from account.models import User, GROUP_NAME_MODERATORS
 from actions.models import ActionGeneratingModelMixin
+from cropping.fields import ProcessedImageFieldWithCropping
+from cropping.models import CroppingModelMixin
 
 from libs.moderation.models import MODERATION_STATUS_APPROVED
 from libs.moderation.signals import post_moderation
@@ -44,8 +47,9 @@ class OrganizationQuerySet(models.QuerySet):
     def normal_and_inactive(self):
         return self.filter(type__gt=self.model.TYPE_UNKNOWN)
 
+
 @python_2_unicode_compatible
-class Organization(ActionGeneratingModelMixin, models.Model):
+class Organization(ActionGeneratingModelMixin, models.Model, CroppingModelMixin):
     TYPE_UNKNOWN = 0
     TYPE_NATION = 1
     TYPE_ORGANIZATION = 3
@@ -71,15 +75,25 @@ class Organization(ActionGeneratingModelMixin, models.Model):
         related_name=_("Kunnat"),
         verbose_name=_("Valitse kunnat, joiden alueella organisaatio toimii.")
     )
-    picture = ProcessedImageField(
+
+    # cropping
+    original_picture = ProcessedImageFieldWithCropping(
         upload_to=_organization_pic_path,
+        processors=[ResizeToFit(width=1280, height=1280, upscale=False)],
+        format='JPEG', options={'quality': 90}, default=""
+    )
+
+    picture = ProcessedImageField(
+        upload_to=_organization_pic_path, max_length=120,
         processors=[ResizeToFit(width=1280, height=1280, upscale=False)],
         format='JPEG', options={'quality': 90},
         null=True, default=None, blank=True
     )
     picture_medium = ImageSpecField(source='picture',
-                                    processors=[SmartResize(width=220, height=220),],
+                                    processors=[SmartResize(width=220, height=220)],
                                     format='JPEG', options={'quality': 70})
+    cropping = ImageRatioField('original_picture', '220x220', size_warning=True,
+                               verbose_name=_("Profiilikuvan rajaus"))
     is_active = models.BooleanField(_("aktiivinen"), default=False)
     created = models.DateTimeField(_("luotu"), default=timezone.now)
 
@@ -91,6 +105,9 @@ class Organization(ActionGeneratingModelMixin, models.Model):
 
     def __str__(self):
         return '%s' % self.name
+
+    def get_cropping_cancel_url(self):
+        return reverse('organization:picture', kwargs={'pk': self.pk})
 
     def get_absolute_url(self):
         return reverse('organization:detail', kwargs={'pk': self.pk})

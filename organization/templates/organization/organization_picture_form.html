@@ -1,0 +1,8 @@
+{% extends 'nuka/inline_edit_base_form.html' %}
+
+{% load i18n bootstrap3 fontawesome %}
+
+{% block form_actions %}
+    <button class="btn btn-default" type="submit">{% bootstrap_icon "ok" %} {% trans "Valmis" %}</button>
+    <a class="btn btn-default ajaxy-link" href="{% url 'organization:picture' object.pk %}">{% trans "Peruuta" %}</a>
+{% endblock  %}

@@ -1,13 +1,45 @@
 {% extends 'nuka/base.html' %}
 
-{% load i18n bootstrap3 %}
+{% load i18n bootstrap3 fontawesome %}
 
 {% block content %}
+    {% url 'account:signup_choices' as signup_url %}
 
-<div class="well">
+    <div class="well">
+        <h1>{% trans "Kirjaudu sisään" %}</h1>
 
-    <h1>{% trans "Kirjaudu sisään" %}</h1>
+        <div class="row">
+            <div class="col-md-5">
+                <form method="post" action="{% url 'account:login' %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}">
+                    {% csrf_token %}
+                    {% bootstrap_form form %}
 
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <button type="submit" class="btn btn-primary btn-lg btn-padded">{% trans "Kirjaudu" %}</button>
+                        </div>
+                        <div class="col-sm-6 reset-password-link-wrap">
+                            <a href="{% url 'account:reset_password' %}">{% trans "Salasana hukassa?" %}</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="col-md-2"><br></div>
+            <div class="col-md-5">
+                <a href="{% url 'social:begin' 'facebook' %}?next={% url 'frontpage' %}&action=login" class="btn btn-primary btn-lg btn-padded">
+                    {% fa_icon "facebook" alt="facebook" %} <span class="margin-left-1">{% trans 'Kirjaudu Facebook-tunnuksillasi' %}</span>
+                </a>
+                <p class="margin-top-sm">{% trans "Kirjaudu Facebook-tunnuksillasi, jos olet rekisteröitynyt jo aikaisemmin." %}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center well margin-top-1">
+        <h2>{% trans "Oletko uusi käyttäjä?" %}</h2>
+        {% blocktrans %}Tee tunnus <a href="{{ signup_url }}">rekisteröitymällä</a>{% endblocktrans %}
+    </div>
+
+    <!--
     <div class="row">
         <div class="col-xs-12 col-md-6">
             <h2 class="h4-style">{% trans "Nuortenideat.fi tunnuksilla" %}</h2>
@@ -40,7 +72,6 @@
                 <p>{% blocktrans %}Tee tunnus <a href="{{ signup_url }}">rekisteröitymällä</a>{% endblocktrans %}</p>
             </div>
         </div>
+    </div>-->
     </div>
-</div>
-
 {% endblock content %}

@@ -5,18 +5,19 @@ from __future__ import unicode_literals
 from django import forms
 from django.core.urlresolvers import reverse
 from django.forms.models import ModelForm
-from django.utils.translation import ugettext, ugettext_lazy as _, override
+from django.utils.translation import ugettext, ugettext_lazy as _
 
 from libs.attachtor.forms.forms import RedactorAttachtorFormMixIn
 from libs.fimunicipality.models import Municipality
 
-from nuka.forms.fields import ModelMultipleChoiceField, SaferRedactorField, MultilingualRedactorField
+from nuka.forms.fields import ModelMultipleChoiceField
 from account.models import User
 from nuka.forms.forms import HiddenLabelMixIn
 from nuka.forms.widgets import Select2Multiple, AutoSubmitButtonSelect
 from nuka.utils import send_email
 
 from .models import Organization
+
 
 class OrganizationAdminsField(ModelMultipleChoiceField):
     def __init__(self, *args, **kwargs):
@@ -150,13 +151,19 @@ class EditOrganizationAdminsForm(OrganizationAdminsMixin, EditOrganizationBaseFo
         fields = ('admins', )
 
 
-class EditOrganizationPictureForm(ModelForm):
-    picture = forms.ImageField(label=_("Uusi kuva"), widget=forms.FileInput,
+class EditPictureForm(forms.ModelForm):
+    picture = forms.ImageField(label=_("Valitse kuva"), widget=forms.FileInput,
                                required=False)
 
     class Meta:
         model = Organization
         fields = ('picture', )
+
+
+class CropPictureForm(forms.ModelForm):
+    class Meta:
+        model = Organization
+        fields = ('original_picture', 'cropping', )
 
 
 class OrganizationBaseSearchForm(ModelForm):

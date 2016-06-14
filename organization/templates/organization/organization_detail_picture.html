@@ -1,3 +1,15 @@
+{% load i18n bootstrap3 %}
 {% include "organization/organization_picture.html" %}
 
-{% include "organization/organization_fragment_edit_link.html" with fragment='picture' title=_("Muokkaa kuvaa") %}
+<div class="cleafix"></div>
+{% if object in perm.organization.CanEditOrganization %}
+    <div class="btn-group margin-top-sm">
+        {% if object.picture %}
+            <a class="btn btn-default ajaxy-link" href="{% url 'organization:crop_picture' object.pk %}">{% bootstrap_icon "edit" %} {% trans "Rajaa" %}</a>
+            <a class="btn btn-default ajaxy-link" href="{% url 'organization:edit_picture' object.pk %}">{% bootstrap_icon "edit" %} {% trans "Vaihda" %}</a>
+            <a class="btn btn-default ajaxy-link" data-ajaxy-method="post" href="{% url 'organization:delete_picture' object.pk %}">{% bootstrap_icon "remove" %} {% trans "Poista" %}</a>
+        {% else %}
+            <a class="btn btn-default ajaxy-link" href="{% url 'organization:edit_picture' object.pk %}">{% bootstrap_icon "plus" %} {% trans "Lisää kuva" %}</a>
+        {% endif %}
+    </div>
+{% endif %}

@@ -108,7 +108,7 @@ class IdeaViewSet(viewsets.ReadOnlyModelViewSet):
         """
         idea = get_object_or_404(Idea.objects.filter(visibility=Idea.VISIBILITY_PUBLIC),
                                  pk=pk)
-        comments = idea.public_comments().order_by('-pk')
+        comments = idea.public_comments().public().order_by('-pk')
         page = self.paginate_queryset(comments)
         context = self.get_serializer_context()
         serializer = PaginatedCommentSerializer(instance=page, context=context)

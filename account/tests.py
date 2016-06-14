@@ -65,7 +65,7 @@ class SignupTest(TestCase):
     def test_rekisteroitymisvalintalomakkeen_avaaminen(self):
         resp = self.client.get('/fi/kayttaja/valitse-rekisteroitymistapa/')
         self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'Luo Nuortenideat.fi käyttäjätunnus')
+        self.assertContains(resp, 'Rekisteröidy sähköpostiosoitteella')
         self.assertTemplateUsed(resp, 'account/signup_choices.html')
         self.assertTemplateNotUsed(resp, 'account/signup.html')
 
@@ -206,7 +206,7 @@ class LoginTest(TestCase):
             'username': user.username,
             'password': DEFAULT_PASSWORD
         }, follow=True)
-        self.assertRedirects(resp, '/fi/')
+        self.assertRedirects(resp, '/fi/kayttaja/{}/'.format(user.pk))
         self.assertContains(resp, 'Tepotin')
         self.assertNotContains(resp, "Ei käyttöoikeutta")
 
@@ -235,7 +235,8 @@ class LoginTest(TestCase):
             'username': user.username,
             'password': DEFAULT_PASSWORD
         }, follow=True)
-        self.assertRedirects(resp, '/fi/', target_status_code=200)
+        self.assertRedirects(resp, '/fi/kayttaja/{}/'.format(user.pk),
+                             target_status_code=200)
         self.assertNotContains(resp, 'Käytit palvelua viimeksi')
         self.assertContains(resp, 'Tervetuloa Nuortenideat.fi palveluun!')
         user.joined -= timedelta(seconds=5)
@@ -315,9 +316,9 @@ class ProfilePictureTest(TestCase):
     def test_open_edit_picture_fragment(self):
         resp = self.client.get('/fi/kayttaja/%d/asetukset/kuva/muokkaa/' % self.user.pk)
         self.assertEqual(resp.status_code, 200)
-        self.assertTemplateUsed(resp, 'account/user_settings_base_form.html')
+        self.assertTemplateUsed(resp, 'account/profile_picture_form.html')
         self.assertTemplateUsed(resp, 'nuka/inline_edit_base_form.html')
-        self.assertContains(resp, "Uusi kuva")
+        self.assertContains(resp, "Valitse kuva")
 
     def test_open_picture_fragment_no_existing_pic(self):
         resp = self.client.get('/fi/kayttaja/%d/asetukset/kuva/' % self.user.pk)

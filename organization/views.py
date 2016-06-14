@@ -8,19 +8,21 @@ from django.contrib import messages
 from django.db import transaction
 from django.db.models.query_utils import Q
 from django.http.response import JsonResponse, HttpResponseRedirect
+from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext, ugettext_lazy as _
 from django.views.generic.base import View
 
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import UpdateView, CreateView
 from django.views.generic.list import ListView
+from cropping.views import CropPictureView, EditCroppablePictureView
 
 from .models import Organization
 
 from content.models import Idea, Question, Initiative
 from nuka.views import PreFetchedObjectMixIn
 from organization.forms import CreateOrganizationForm, OrganizationSearchForm, \
-    OrganizationSearchFormAdmin
+    OrganizationSearchFormAdmin, EditPictureForm, CropPictureForm
 from organization.perms import CanEditOrganization
 
 
@@ -123,6 +125,46 @@ class OrganizationPartialEditView(PreFetchedObjectMixIn, UpdateView):
                 kwargs={'pk': self.kwargs['pk']}
             )
         })
+
+
+class PictureUpdateView(UpdateView):
+    def form_valid(self, form):
+        super(PictureUpdateView, self).form_valid(form)
+        return JsonResponse({'success': True,
+                             'next': self.get_success_url()})
+
+    def get_success_url(self):
+        return reverse('organization:picture',
+                       kwargs={'pk': self.kwargs['obj'].pk})
+
+
+class EditPictureView(PreFetchedObjectMixIn, PictureUpdateView, EditCroppablePictureView):
+    template_name = 'organization/organization_picture_form.html'
+    form_class = EditPictureForm
+
+
+class CropProfilePictureView(PreFetchedObjectMixIn, PictureUpdateView, CropPictureView):
+    form_class = CropPictureForm
+
+
+class PictureView(PreFetchedObjectMixIn, DetailView):
+    template_name = 'organization/organization_detail_picture.html'
+
+
+class DeletePictureView(View):
+    def delete(self, request, **kwargs):
+        obj = get_object_or_404(Organization, pk=kwargs['pk'])
+        obj.original_picture.delete()
+        obj.picture.delete()
+        obj.cropping = ''
+        obj.save()
+
+        return JsonResponse({'success': True,
+                             'next': reverse('organization:picture',
+                                             kwargs={'pk': obj.pk})})
+
+    def post(self, request, **kwargs):
+        return self.delete(request, **kwargs)
 
 
 class OrganizationSetActiveMixIn(PreFetchedObjectMixIn):
