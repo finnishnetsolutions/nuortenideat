@@ -8,10 +8,14 @@ from django.db.models.aggregates import Sum, Count
 from django.db.models import Q
 from django.forms.models import ModelForm, ModelChoiceField
 from django.forms.widgets import RadioSelect, TextInput
+from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.translation import ugettext, ugettext_lazy as _, string_concat
+from file_resubmit.admin import AdminResubmitImageWidget
 
 from nocaptcha_recaptcha import NoReCaptchaField
+from content.models import IdeaSurvey
+from content.perms import CanChangeIdeaSettings
 
 from libs.attachtor.forms.fields import RedactorAttachtorField
 from libs.attachtor.forms.forms import RedactorAttachtorFormMixIn, FileUploadForm
@@ -21,7 +25,8 @@ from libs.fimunicipality.models import Municipality
 from account.models import User
 from nkcomments.models import CustomComment
 from nuka.forms.forms import HiddenLabelMixIn
-from nuka.forms.fields import ModelMultipleChoiceField, SaferFileField
+from nuka.forms.fields import ModelMultipleChoiceField, SaferFileField, \
+    MultilingualRedactorField
 from nuka.forms.widgets import Select2Multiple, AutoSubmitButtonSelect, Select2
 from nuka.utils import send_email
 from organization.models import Organization
@@ -30,13 +35,20 @@ from tagging.models import Tag
 from .models import Idea, AdditionalDetail, Question, Initiative
 
 
-class CreateIdeaForm(forms.ModelForm):
+class CreateIdeaForm(RedactorAttachtorFormMixIn, ModelForm):
     TARGET_TYPE_ORGANIZATION = -1
     TARGET_TYPE_NATION = Organization.TYPE_NATION
     TARGET_TYPE_UNKNOWN = Organization.TYPE_UNKNOWN
 
     WRITE_AS_USER = 0
     WRITE_AS_ORGANIZATION = 1
+
+    picture = forms.ImageField(label=_("Otsikkokuva"), widget=AdminResubmitImageWidget,
+                               required=False)
+    picture_alt_text = forms.CharField(label=_("Mitä kuvassa on? (kuvaus suositeltava)"),
+                                       required=False)
+
+    description = MultilingualRedactorField(label=_("Idean sisältö"), required=True)
 
     write_as = forms.ChoiceField(
         label=_("Kirjoitetaanko idea organisaationa vai käyttäjänä?"),
@@ -55,7 +67,7 @@ class CreateIdeaForm(forms.ModelForm):
     owners = ModelMultipleChoiceField(
         queryset=User.objects.filter(is_active=True),
         label=_("Valitse idean omistajat"),
-        help_text=_("Valitse idean muiden omistajien Nuortenideat.fi käyttäjätunnukset.")
+        help_text=_("Valitse idean muiden omistajien Nuortenideat.fi-käyttäjätunnukset.")
     )
 
     target_type = forms.ChoiceField(
@@ -73,7 +85,8 @@ class CreateIdeaForm(forms.ModelForm):
         label='', required=False
     )
     tags = ModelMultipleChoiceField(label=_("Valitse aiheet"), widget=Select2Multiple,
-                                    queryset=Tag.objects.all(), required=False)
+                                    queryset=Tag.objects.all(), required=False,
+                                    help_text=_("Valitse ideaan liittyvät aiheet."))
 
     def __init__(self, user, *args, **kwargs):
         super(CreateIdeaForm, self).__init__(*args, **kwargs)
@@ -125,7 +138,8 @@ class CreateIdeaForm(forms.ModelForm):
 
     class Meta:
         model = Idea
-        fields = ('title', 'write_as', 'initiator_organization', 'owners', 'target_type',
+        fields = ('title', 'picture', 'picture_alt_text', 'description', 'write_as',
+                  'initiator_organization', 'owners', 'target_type',
                   'target_organizations', 'tags', 'interaction')
         widgets = {'interaction': RadioSelect, }
 
@@ -187,7 +201,7 @@ class EditIdeaOwnersForm(EditIdeaBaseForm):
 class EditInitiativeTagsForm(EditIdeaBaseForm):
     tags = ModelMultipleChoiceField(
         queryset=Tag.objects.all(),
-        label=_("Aiheet")
+        label=_("Aiheet"), required=False
     )
 
     class Meta:
@@ -206,16 +220,34 @@ class EditIdeaOrganizationsForm(EditIdeaBaseForm):
         fields = ('target_organizations', )
 
 
+class EditIdeaSettingsForm(ModelForm):
+    perm_class = CanChangeIdeaSettings
+
+    class Meta:
+        model = Idea
+        fields = ('premoderation', 'commenting_closed', 'interaction', )
+        widgets = {'interaction': RadioSelect, }
+
+
 class EditIdeaPictureForm(ModelForm):
     picture = forms.ImageField(label=_("Valitse kuva"), widget=forms.FileInput,
                                required=False)
 
-    picture_alt_text = forms.CharField(label=_("Kuvan tekstimuotoinen kuvaus"),
+    picture_alt_text = forms.CharField(label=_("Mitä kuvassa on? (kuvaus suositeltava)"),
                                        required=False)
 
     class Meta:
         model = Idea
         fields = ('picture', 'picture_alt_text')
+
+
+class DummyPictureForm(ModelForm):
+    def save(self):
+        pass
+
+    class Meta:
+        model = Idea
+        fields = ()
 
 
 class AdditionalDetailForm(RedactorAttachtorFormMixIn, ModelForm):
@@ -266,6 +298,7 @@ class CreateQuestionFormAnon(CreateQuestionBaseForm):
 
 
 class IdeaToPdfBaseForm(forms.ModelForm):
+
     included_comments = ModelMultipleChoiceField(queryset=CustomComment.objects.none(),
                                                  label='',
                                                  required=False)
@@ -312,15 +345,15 @@ class IdeaToPdfBaseForm(forms.ModelForm):
         label=string_concat(_("Vastaanottajan nimi"), '. ',
                             _("Tämä tieto näkyy ideasivulla muille käyttäjille.")),
         required=False,
-        widget=TextInput(attrs={'class': 'email-field'}),
-        error_messages={'invalid': _("Virheellinen sähköpostiosoite")}
+        #help_text=_("Voit erottaa useamman vastaanottajan nimet pilkulla.")
     )
 
     email_recipient = forms.EmailField(
         label=_("Vastaanottajan sähköpostiosoite"),
         required=False,
         widget=TextInput(attrs={'class': 'email-field'}),
-        error_messages={'invalid': _("Virheellinen sähköpostiosoite")}
+        error_messages={'invalid': _("Virheellinen sähköpostiosoite.")},
+        #help_text=_("Voit erottaa useamman vastaanottajan sähköpostiosoitteet pilkulla.")
     )
 
     email_copy = forms.BooleanField(
@@ -335,18 +368,31 @@ class IdeaToPdfBaseForm(forms.ModelForm):
         required=False)
 
     def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+
         super(IdeaToPdfBaseForm, self).__init__(*args, **kwargs)
+
         idea = kwargs['instance']
         self.fields['included_comments'].queryset = idea.comments.all()
 
+        sender_email = None
         if idea.initiator_organization:
             self.fields['name'].initial = idea.initiator_organization.name
-            self.fields['contacts'].initial = idea.creator.settings.email
+            sender_email = self.fields['contacts'].initial = idea.creator.settings.email
         else:
             first_owner = idea.owners.first()
             if first_owner is not None:
                 self.fields['name'].initial = first_owner.get_full_name()
                 self.fields['contacts'].initial = first_owner.get_contact_information()
+                sender_email = first_owner.settings.email
+
+        template = 'content/email/transfer_idea_email_default_text.txt'
+        context = {
+            'sender_name': self.fields['name'].initial,
+            'sender_email': sender_email,
+            'idea_url': idea.get_absolute_url()
+        }
+        self.initial['email_message'] = render_to_string(template, context)
 
     def clean(self):
         cleaned_data = super(IdeaToPdfBaseForm, self).clean()
@@ -640,3 +686,24 @@ class KuaTransferMembershipReasonForm(KuaTransferBlankForm):
     class Meta:
         model = Idea
         fields = ('membership', )
+
+
+class PublishIdeaAndSurveysForm(forms.Form):
+    included_surveys = ModelMultipleChoiceField(queryset=IdeaSurvey.objects.none(),
+                                                label='', required=False)
+
+    def __init__(self, *args, **kwargs):
+        idea = kwargs.pop('instance')
+        super(PublishIdeaAndSurveysForm, self).__init__(*args, **kwargs)
+
+        self.fields['included_surveys'].queryset = idea.idea_surveys.drafts()
+
+    class Meta:
+        fields = ()
+
+
+class EditIdeaSurveyNameForm(HiddenLabelMixIn, ModelForm):
+
+    class Meta:
+        model = IdeaSurvey
+        fields = ('title', )

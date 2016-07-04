@@ -1,0 +1,93 @@
+{% load i18n nuka_tags bootstrap3 %}
+<article class="gallup well survey-parent-wrap ajaxy-wrap" data-ajaxy-url="{% url 'content:survey_detail' survey_id=idea_survey.content_object.pk %}">
+    <header>
+        <div class="buttons">
+            {% if idea_survey.content_object in perm.survey.CanViewSurveyModifyMenu %}
+
+            <div class="btn-group gallup-header-btn-group">
+                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" title="{% trans 'Toiminnot' %}">
+                    <span class="glyphicon glyphicon-edit"></span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-right" role="menu">
+                    <li {% if not idea_survey.content_object in perm.survey.CanEditSurvey %}class="disabled"{% endif %}>
+                        <a href="{% url 'content:survey_edit' survey_id=idea_survey.content_object.pk %}" class="ajaxy-link edit-survey-btn">
+                            {% trans "Muokkaa" %}
+                        </a>
+                    </li>
+                    <li><a class="ajaxy-link" href="{% url 'content:survey_edit_name' survey_id=idea_survey.content_object.pk %}" data-toggle="ajaxy-modal">{% trans "Muokkaa otsikkoa" %}</a></li>
+                    <li class="divider"></li>
+                    <li class="dropdown-header">{% trans "Kuka saa vastata kyselyyn?" %}</li>
+                    {% include 'idea_survey/survey_interaction_items.html' %}
+
+                    <li class="dropdown-header">{% trans "Ketkä näkevät vastaukset?" %}</li>
+                    {% include 'idea_survey/survey_show_results_items.html' %}
+
+                    <li class="divider"></li>
+                    {% if idea_survey.content_object in perm.survey.CanOpenSurvey %}
+                        <li><a href="{% url 'content:survey_open' idea_survey.content_object.pk %}" class="ajaxy-link survey-status-link" data-ajaxy-method="POST">{% trans "Julkaise" %}</a></li>
+                    {% endif %}
+
+                    {% if idea_survey.content_object in perm.survey.CanCloseSurvey %}
+                        <li><a href="{% url 'content:survey_close' idea_survey.content_object.pk %}" class="ajaxy-link survey-status-link" data-ajaxy-method="POST">{% trans "Sulje" %}</a></li>
+                    {% endif %}
+
+                    <li><a href="{% url 'content:survey_results' idea_survey.content_object.pk %}" target="_blank">{% trans "Tulokset (PDF)" %}</a></li>
+                    <li class="divider"></li>
+                    {% if idea_survey.content_object in perm.survey.CanDeleteSurvey %}
+                        <li><a href="{% url 'content:survey_delete' idea_survey.content_object.pk %}">{% trans "Poista" %}</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+            {% endif %}
+            {% if idea_survey.is_open %}
+            <div class="btn-group gallup-header-btn-group">
+                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" title="{% trans 'Jaa' %}">
+                    <span class="glyphicon glyphicon-share"></span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-right" role="menu">
+                    <li role="presentation" class="dropdown-header">Jaa kysely</li>
+                    <li role="presentation" class="divider"></li>
+                    <li role="presentation"><a href="http://www.facebook.com/sharer.php?u={{ absolute_uri|iriencode }}#survey-{{ idea_survey.pk }}">Facebook</a></li>
+                    <li role="presentation"><a href="https://twitter.com/intent/tweet?url={{ absolute_uri|iriencode }}#survey-{{ idea_survey.pk }}">Twitter</a></li>
+                    <li role="presentation"><a href="https://plus.google.com/share?&hl=en&url={{ absolute_uri|iriencode }}#survey-{{ idea_survey.pk }}">Google+</a></li>
+                    <li role="presentation"><a href="mailto:?subject=Nuortenideat.fi-kysely&body=%0D%0A{{ absolute_uri|iriencode }}#survey-{{ idea_survey.pk }}">{% trans "Sähköposti" %}</a></li>
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+        <div id="survey-name-{{ idea_survey.content_object.pk }}" class="ajaxy-wrap">{% include 'idea_survey/survey_name.html' %}</div>
+    </header>
+    <div class="body">
+
+        <div class="status">
+            {% if idea_survey.is_closed %}
+            <p>{% trans 'Kysely on suljettu.' %}</p>
+            {% elif idea_survey.is_draft %}
+            <p>{% trans 'Kysely on luonnos. Vain idean omistajat näkevät sen.' %}</p>
+            {% endif %}
+        </div>
+
+        <div class="questions">
+            {% if not edit_mode and idea_survey.content_object in perm.survey.CanAnswerSurvey %}
+                <p>{% trans "Kyselyn pakolliset kysymykset on merkitty (*) tähtimerkillä." %}</p>
+            {% endif %}
+
+            {% if edit_mode %}
+                {% include "survey/survey_form.html" with survey=idea_survey.content_object edit_mode=True %}
+            {% else %}
+                {% include "survey/survey_answer_mode.html" with survey=idea_survey.content_object not_owner=not_owner %}
+            {% endif %}
+
+            {% if idea_survey.content_object in perm.survey.CanEditSurvey and edit_mode %}
+                <div class="margin-top-sm">
+                    <div class="clearfix margin-top-sm"></div>
+                    {% if edit_mode %}
+                        <a href="{% url 'content:survey_detail' idea_survey.content_object.pk %}" class="btn btn-default survey-answer-mode-btn ajaxy-link">
+                            {% trans "Lopeta muokkaus" %}
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</article>

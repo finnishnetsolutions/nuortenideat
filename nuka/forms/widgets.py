@@ -69,3 +69,25 @@ class MultiLingualWidget(multilingo.MultiLingualWidget):
             'langChoiceText': ugettext("Kieliversiot")
         })
         return opts
+
+
+class MultiLingualWidgetWithTranslatedNotification(MultiLingualWidget):
+
+    def render(self, name, value, attrs=None):
+        html = super(MultiLingualWidgetWithTranslatedNotification, self).render(
+            name, value, attrs)
+
+        fully_translated = True
+        for i, widget in enumerate(self.widgets):
+            widget_value = None
+            if isinstance(value, dict):
+                widget_value = value.get(self._lang_code(i), None)
+            elif isinstance(value, list) and len(value) > i:
+                widget_value = value[i]
+            if not widget_value:
+                fully_translated = False
+
+        if fully_translated:
+            html += '<span class="fully-translated">({})</span>'.format(
+                ugettext("Käännetty"))
+        return html

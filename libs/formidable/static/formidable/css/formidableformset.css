@@ -1,0 +1,11 @@
+
+.formidable-form-wrap > .formidable-form {
+    width: auto;
+    display: inline-block;
+}
+
+.formidable-form-wrap > .formidable-form-actions {
+    width: auto;
+    display: inline-block;
+    vertical-align: top;
+}

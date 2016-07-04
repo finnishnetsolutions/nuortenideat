@@ -552,7 +552,8 @@ class GallupTest(NukaTestCase):
                 "q-2-fi": question_texts[1],
                 "q-2_o-1-fi": option_texts[2],
                 "q-2_o-2-fi": option_texts[3],
-                "default_view": "questions"
+                "default_view": "questions",
+                'interaction': Gallup.INTERACTION_EVERYONE,
             },
             follow=True
         )
@@ -594,7 +595,7 @@ class GallupTest(NukaTestCase):
 
         self.assertEqual(resp.status_code, 200)
         self.assertTemplateUsed(resp, "gallup/well.html")
-        self.assertNotContains(resp, "Gallup on luonnostilassa.")
+        self.assertNotContains(resp, "Gallup on luonnos.")
         self.assertNotContains(resp, "Gallup on suljettu.")
         gallup = Gallup.objects.get(pk=gallup.pk)
         self.assertEqual(gallup.is_draft(), False)
@@ -612,7 +613,7 @@ class GallupTest(NukaTestCase):
 
         self.assertEqual(resp.status_code, 200)
         self.assertTemplateUsed(resp, "gallup/well.html")
-        self.assertNotContains(resp, "Gallup on luonnostilassa.")
+        self.assertNotContains(resp, "Gallup on luonnos.")
         self.assertContains(resp, "Gallup on suljettu.")
         gallup = Gallup.objects.get(pk=gallup.pk)
         self.assertEqual(gallup.is_draft(), False)
@@ -639,7 +640,7 @@ class GallupTest(NukaTestCase):
         admin = UserFactory(groups=[Group.objects.get(name=GROUP_NAME_ADMINS)])
         self.client.login(username=admin.username, password=DEFAULT_PASSWORD)
         resp = self.client.get("/fi/ideat/{}/".format(self.idea.pk))
-        self.assertContains(resp, "Gallup on luonnostilassa.")
+        self.assertContains(resp, "Gallup on luonnos.")
         self.assertContains(resp, "Question #1")
         self.assertContains(resp, "Question #2")
         self.assertContains(resp, "Option #1")
@@ -654,7 +655,7 @@ class GallupTest(NukaTestCase):
         moderator = UserFactory(groups=[Group.objects.get(name=GROUP_NAME_MODERATORS)])
         self.client.login(username=moderator.username, password=DEFAULT_PASSWORD)
         resp = self.client.get("/fi/ideat/{}/".format(self.idea.pk))
-        self.assertContains(resp, "Gallup on luonnostilassa.")
+        self.assertContains(resp, "Gallup on luonnos.")
         self.assertContains(resp, "Question #1")
         self.assertContains(resp, "Question #2")
         self.assertContains(resp, "Option #1")
@@ -669,7 +670,7 @@ class GallupTest(NukaTestCase):
         owner = self.idea.owners.first()
         self.client.login(username=owner.username, password=DEFAULT_PASSWORD)
         resp = self.client.get("/fi/ideat/{}/".format(self.idea.pk))
-        self.assertContains(resp, "Gallup on luonnostilassa.")
+        self.assertContains(resp, "Gallup on luonnos.")
         self.assertContains(resp, "Question #1")
         self.assertContains(resp, "Question #2")
         self.assertContains(resp, "Option #1")
@@ -684,7 +685,7 @@ class GallupTest(NukaTestCase):
         user = UserFactory()
         self.client.login(username=user.username, password=DEFAULT_PASSWORD)
         resp = self.client.get("/fi/ideat/{}/".format(self.idea.pk))
-        self.assertNotContains(resp, "Gallup on luonnostilassa.")
+        self.assertNotContains(resp, "Gallup on luonnos.")
         self.assertNotContains(resp, "Question #1")
         self.assertNotContains(resp, "Question #2")
         self.assertNotContains(resp, "Option #1")

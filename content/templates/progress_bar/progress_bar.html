@@ -1,0 +1,30 @@
+{% load progressbar %}
+<div class="checkout-wrap">
+    {% format_idea_statuses_for_progress_bar object as statuses %}
+
+    <ul class="checkout-bar">
+        {% for s in statuses %}
+            <li class="{{ s.classes }}"><span class="text">{{ s.text }}
+                {% if not s.date %}<span class="hidden-xs">{% endif %}<br>{% if not s.date %}</span>{% endif %}
+                {{ s.date|date:"SHORT_DATE_FORMAT" }}&nbsp;</span></li>
+        {% endfor %}
+    </ul>
+    <div class="clearfix"></div>
+</div>
+
+<script type="text/javascript">
+    $(function() {
+        var progress_bar_elements = $('ul.checkout-bar').children('li');
+        var resizePbElements = function () {
+            if ($(window).width() > 768) {
+                var width = ($('ul.checkout-bar').width() * 0.95) / progress_bar_elements.length;
+                progress_bar_elements.css({'width': width+'px'})
+            }
+        }
+        resizePbElements();
+
+        $(window).on('resize', function() {
+            resizePbElements();
+        });
+    });
+</script>

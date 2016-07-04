@@ -1,0 +1,117 @@
+$bar-color: lightgrey;
+
+.checkout-wrap {
+  color: #767676;
+  font-family: 'PT Sans Caption', sans-serif;
+  margin: 40px auto;
+  position: relative;
+}
+
+ul.checkout-bar {
+  li {
+    color: #767676;
+    display: block;
+    font-size: 16px;
+    padding: 14px 20px 14px 80px;
+    position: relative;
+    &:before {
+      background: #FFF;
+      border: 3px solid $bar-color;
+      border-radius: 50%;
+      font-size: 16px;
+      font-weight: 700;
+      left: 20px;
+      line-height: 37px;
+      height: 35px;
+      position: absolute;
+      text-align: center;
+      top: 4px;
+      width: 35px;
+      z-index: 999;
+    }
+    &.active {
+      font-weight: bold;
+      &:before {
+        border: 0;
+        background: #8bc53f;
+        z-index: 99;
+      }
+    }
+    &.draft.active {
+      font-weight: bold;
+      &:before {
+        background: darkred;
+        z-index: 99;
+      }
+    }
+    &.visited {
+      font-weight: bold;
+      z-index: 99999;
+      &:before {
+       background: $bar-color;
+        z-index: 99999;
+      }
+    }
+    &:before {
+      content: " ";
+    }
+  }
+}
+
+@media all and (min-width: $width-xs-sm) {
+  .checkout-wrap {
+    margin: 30px auto 75px auto;
+  }
+  ul.checkout-bar {
+    background-size: 3px 3px;
+    background-color: $bar-color;
+    height: 3px;
+    margin: 0 auto;
+    padding: 0;
+    position: absolute;
+    width: 100%;
+    li {
+      display: inline-block;
+      margin: 43px 0 0;
+      padding: 0;
+      text-align: center;
+      width: 19%;
+      &:before {
+        height: 45px;
+        left: 40%;
+        line-height: 45px;
+        position: absolute;
+        top: -65px;
+        width: 45px;
+        z-index: 99;
+      }
+      &.visited {
+        background: none;
+        &:after {
+          content: "";
+          height: 15px;
+          left: 50%;
+          position: absolute;
+          top: -50px;
+          width: 100%;
+          z-index: 99;
+        }
+      }
+    }
+  }
+}
+
+@media all and (max-width: $width-xs-sm) {
+  .checkout-wrap {
+    margin: 0 auto;
+  }
+  ul.checkout-bar {
+    li {
+      width: 100%;
+      padding: 7px 20px 7px 15px;
+      &:before {
+        left: -40px;
+      }
+    }
+  }
+}

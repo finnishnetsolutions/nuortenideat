@@ -9,7 +9,7 @@ from django.utils.translation import ugettext_lazy as _, ugettext
 from libs.permitter import perms
 
 from account import perms as account
-from content.models import Idea, Initiative
+from content.models import Idea, Initiative, IdeaSurvey
 from nkvote.models import Vote
 from nkvote.utils import get_voter
 from nuka import perms as nuka
@@ -224,6 +224,19 @@ class CommentingIsLocked(nuka.BasePermission):
         return self.initiative.commenting_closed
 
 
+class IdeaSurveyBasePermission(nuka.BasePermission):
+    def __init__(self, **kwargs):
+        self.idea_survey = kwargs['obj']
+        self.idea = self.idea_survey.idea
+        super(IdeaSurveyBasePermission, self).__init__(**kwargs)
+
+
+class AnsweringSurveyRequiresLogin(IdeaSurveyBasePermission):
+    def is_authorized(self):
+        return self.idea_survey.interaction == IdeaSurvey.INTERACTION_REGISTERED_USERS
+
+
+
 CanModerateInitiative = perms.And(
     nuka.IsAuthenticated,
     perms.Or(nuka.IsModerator, UserIsInitiativeTargetOrganizationAdmin),
@@ -370,4 +383,14 @@ CanCommentInitiative = perms.And(
         perms.Not(InitiativeInteractionRegistered),
         nuka.IsAuthenticated,
     )
+)
+
+CanParticipateSurvey = perms.Or(
+    perms.Not(AnsweringSurveyRequiresLogin),
+    nuka.IsAuthenticated
+)
+
+CanCreateSurvey = perms.And(
+    InitiativeIsNotArchived,
+    perms.Or(OwnsInitiative, nuka.IsModerator)
 )

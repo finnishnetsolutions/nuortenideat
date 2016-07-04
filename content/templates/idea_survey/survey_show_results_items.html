@@ -1,0 +1,13 @@
+{% load i18n fontawesome nuka_tags %}
+{% get_survey_result_choices as choices %}
+{% for key, value in choices %}
+    <li class="survey-result-choice survey-trigger-ajaxy-ready">
+        <a href="{% url 'content:survey_set_show_results' survey_id=idea_survey.content_object.pk value=key %}" class="ajaxy-link" data-ajaxy-method="post">
+            {% if idea_survey.content_object.show_results == key %}
+                {% fa_icon "check" "fw" %}
+            {% else %}
+                {% fa_icon "fw" %}
+            {% endif %} {{ value }}
+        </a>
+    </li>
+{% endfor %}

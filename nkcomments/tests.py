@@ -86,7 +86,7 @@ class WriteCommentTest(TestCase):
         resp = self.client.get('/fi/ideat/{}'.format(self.idea.pk), follow=True)
         self.assertEqual(resp.status_code, 200)
         self.assertTemplateUsed(resp, 'content/idea_detail.html')
-        self.assertContains(resp, '<article class="well" id="comments">')
+        self.assertContains(resp, '<article id="comments"')
         self.assertContains(resp, '<h4>Kommentit (0)</h4>')
 
     def test_comment_block_pvisibility_not_public_idea(self):

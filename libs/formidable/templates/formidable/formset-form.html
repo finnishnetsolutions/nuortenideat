@@ -1,0 +1,12 @@
+<div{{ form_wrap_attrs }}>
+    <div class="formidable-form">
+        {% block form_fields %}
+            {{ form.as_p }}
+        {% endblock form_fields %}
+    </div>
+    <div class="formidable-form-actions">
+        {% block form_actions %}
+            {% include "formidable/formset-form-actions.html" %}
+        {% endblock form_actions %}
+    </div>
+</div>

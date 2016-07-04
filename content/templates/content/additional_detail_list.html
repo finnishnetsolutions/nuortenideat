@@ -1,5 +1,5 @@
 {% load i18n bleach_tags %}
-<ul class="list-unstyled">
+<ul class="list-unstyled ajaxy-wrap" id="idea-additional-detail-list" data-ajaxy-url="{% url 'content:list_details' object.pk %}">
     {% for row in details %}
         <li style="{% if row.type != row.TYPE_NONE %}background-color:{{ row.get_bgcolor }}; padding:8px;{% endif %}">
             <strong>{% if row.type != row.TYPE_NONE %} {{ row.get_type_display }} {% endif %}{{ row.created|date:"SHORT_DATE_FORMAT" }}</strong>

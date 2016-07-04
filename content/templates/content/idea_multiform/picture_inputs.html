@@ -1,0 +1,5 @@
+{% load bootstrap3 i18n %}
+
+<div id="no-picture-container-editable" class="margin-top-sm">
+    <a class="btn btn-default ajaxy-link edit-link" href="{% url 'content:edit_idea_picture' initiative_id=form.instance.pk %}" data-toggle="ajaxy-modal">{% bootstrap_icon "edit" %} {% trans "Muokkaa otsikkokuvaa" %}</a>
+</div>

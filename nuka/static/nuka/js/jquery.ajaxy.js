@@ -4,7 +4,7 @@ $(function () {
 
     "use strict";
 
-    var ajaxySuccess = function(wrap, returnUrl, successWrap, msgELem) {
+    var ajaxySuccess = function(wrap, returnUrl, successWrap, targetMethod, trigger) {
         return function (resp) {
             if(typeof resp === "string") {
                 // Try to interpret response as json. Useful with
@@ -21,27 +21,29 @@ $(function () {
                    wrap = $(successWrap);
                 }
                 var next = resp.next || returnUrl;
-
                 wrap.load(next, function () {
                     wrap.trigger('ajaxy-refreshed');
                 });
-
-                if ($(msgELem)) {
-                    $(msgELem).show();
-                }
-
             } else if (resp.location) {
                 window.location = resp.location;
             } else if (resp.reload) {
+                if (resp.hash) {
+                    window.location.hash = resp.hash;
+                }
                 window.location.reload(true);
             } else if (typeof resp === "string") {
-                wrap.html(resp).trigger('ajaxy-refreshed');
+                targetMethod = targetMethod || "html";
+                wrap[targetMethod](resp).trigger('ajaxy-refreshed');
+            }
+
+            if (resp.trigger) {
+                trigger.trigger('triggerAjaxyReady');
             }
         }
     };
 
     $(document).on('click', '.ajaxy-link', function (e) {
-        var target, method, confirmation;
+        var target, method, confirmation, targetMethod;
 
         e.preventDefault();
 
@@ -52,13 +54,14 @@ $(function () {
 
         target = $(this).attr('data-ajaxy-target'),
         method = $(this).attr("data-ajaxy-method") || "GET";
+        targetMethod = $(this).attr("data-ajaxy-target-method") || targetMethod;
 
         if (target) {
             target = $(target);
         } else if($(this).data('toggle') == 'ajaxy-modal') {
             var dialogClass = $(this).data('modal-dialog-class') || 'modal-lg';
             var modalWrap = $(
-                '<div class="modal fade">' +
+                '<div class="modal fade ajaxy-modal-div">' +
                     '<div class="modal-dialog">' +
                         '<div class="modal-content ajaxy-wrap"></div>' +
                     '</div>' +
@@ -73,7 +76,8 @@ $(function () {
 
         $.ajax($(this).attr('href'), {
             type: method,
-            success: ajaxySuccess(target, $(this).attr('data-ajaxy-success-url'))
+            success: ajaxySuccess(target, $(this).attr('data-ajaxy-success-url'),
+                $(this).attr('data-ajaxy-success-wrap'), targetMethod, $(this))
         });
 
     });
@@ -85,7 +89,7 @@ $(function () {
     $(document).on('submit', '.ajaxy-form', function (e) {
         var form = $(this),
             wrap = $(this).parents('.ajaxy-wrap').first(),
-            onSuccess, beforeSubmit;
+            onSuccess, beforeSubmit, targetMethod;
 
         e.preventDefault();
 
@@ -94,9 +98,10 @@ $(function () {
             wrap = $(target);
         }
 
+        targetMethod = $(this).attr("data-ajaxy-target-method") || targetMethod;
+
         onSuccess = ajaxySuccess(wrap, form.attr('data-ajaxy-return-url'),
-            form.attr('data-ajaxy-success-wrap'),
-            form.attr('data-ajaxy-success-msg'));
+            form.attr('data-ajaxy-success-wrap'), targetMethod);
 
         beforeSubmit = $.Event("beforeAjaxySubmit")
 
@@ -113,10 +118,10 @@ $(function () {
             var data = form.find('input,textarea,select').serialize();
             $.post(form.attr('data-ajaxy-action'), data).done(onSuccess);
         };
-
     });
 
-    $(document).on('ajaxy-reload', '.ajaxy-wrap', function () {
+    $(document).on('ajaxy-reload', '.ajaxy-wrap', function (e) {
+        e.stopPropagation();
         $(this).load($(this).attr('data-ajaxy-url'), function () {
             $(this).trigger('ajaxy-refreshed');
         });

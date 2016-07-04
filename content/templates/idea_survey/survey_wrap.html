@@ -1,0 +1,10 @@
+{% for idea_survey in object.idea_surveys.all %}
+    {% if idea_survey.content_object in perm.survey.CanViewSurvey %}
+        {% if idea_survey.interaction != idea_survey.INTERACTION_REGISTERED_USERS or request.user.is_authenticated %}
+            <aside class="ajaxy-wrap">
+                <a name="survey-{{ idea_survey.id }}"></a>
+                {% include 'idea_survey/survey_container.html' %}
+            </aside>
+        {% endif %}
+    {% endif %}
+{% endfor %}

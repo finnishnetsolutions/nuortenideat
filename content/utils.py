@@ -10,7 +10,7 @@ from django.db.models.query_utils import Q
 from django.utils.translation import ugettext as _
 from django.utils import timezone
 
-from content.models import Idea
+from content.models import Idea, IdeaSurvey
 from nkvote.models import Gallup
 from nuka.utils import send_email
 
@@ -73,6 +73,7 @@ def archive_unpublished(archive_date):
     for idea in ideas:
         idea.visibility = Idea.VISIBILITY_ARCHIVED
         close_idea_target_gallups(idea)
+        close_idea_target_surveys(idea)
         idea.save()
         logger.info("Idea %s arkistoitu.", idea.pk)
         for receiver in idea_receivers(idea):
@@ -145,6 +146,7 @@ def archive_untransferred(archive_date):
         idea.visibility = Idea.VISIBILITY_ARCHIVED
         idea.save()
         close_idea_target_gallups(idea)
+        close_idea_target_surveys(idea)
         logger.info("Idea %s arkistoitu.", idea.pk)
         for receiver in idea_receivers(idea, contact_persons=True):
             send_email(
@@ -169,3 +171,12 @@ def close_idea_target_gallups(idea):
             g.save()
 
     return idea.gallup_set.all()
+
+
+def close_idea_target_surveys(idea):
+    for s in idea.idea_surveys.all():
+        if s.status == IdeaSurvey.STATUS_OPEN:
+            s.status = IdeaSurvey.STATUS_CLOSED
+            s.closed = timezone.now()
+            s.save()
+    return idea.idea_surveys.all()

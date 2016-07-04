@@ -8,4 +8,6 @@
     {% endif %}
 </div>
 
-{% include "content/idea_fragment_edit_link.html" with fragment='description' title=_("Muokkaa kuvausta") %}
+{% if not no_edit %}
+    {% include "content/idea_fragment_edit_link.html" with fragment='description' title=_("Muokkaa kuvausta") %}
+{% endif %}

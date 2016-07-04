@@ -1,0 +1,28 @@
+{% load i18n survey_tags bootstrap3 %}
+
+<div class="survey-element survey-element-mode-edit survey-element-subtitle ajaxy-wrap {% if new %}survey-element-new{% endif %}">
+    <form action="{{ request.path }}" class="ajaxy-form" method="post" data-ajaxy-target-method="replaceWith" novalidate>
+        {% csrf_token %}
+        {% bootstrap_form form %}
+
+        {% if not element.pk %}
+            <input type="hidden" name="prefix_id" value="{{ prefix_id }}" class="prefix_id">
+        {% endif %}
+
+        <button type="submit" class="btn btn-primary survey-element-save" title="{% trans 'Tallenna' %}">{% bootstrap_icon "ok" %} {% trans "Tallenna" %}</button>
+        {% if element.pk %}
+            <a href="{% url 'survey:subtitle' survey_id=element.survey.pk subtitle_id=element.pk %}" class="btn btn-default ajaxy-link" data-ajaxy-target-method="replaceWith">
+                {% trans "Peruuta" %}
+            </a>
+        {% endif %}
+
+        <div class="btn-group pull-right">
+            {% if not element.pk %}
+                {% include "survey/edit_mode/element_buttons_temp_element.html" %}
+            {% else %}
+                {% include "survey/edit_mode/element_buttons.html" %}
+            {% endif %}
+        </div>
+        <div class="clearfix"></div>
+    </form>
+</div>

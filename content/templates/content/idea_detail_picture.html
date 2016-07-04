@@ -1,26 +1,30 @@
 {% load i18n %}
 
 {% spaceless %}
-{% if object.picture %}
-    <div id="picture-container">
-        {% include 'content/idea_main_picture.html' %}
+    {% if object.picture %}
+        <div id="picture-container">
+            {% include 'content/idea_main_picture.html' %}
 
-        {% if object in perm.content.CanEditIdea %}
-        {% include "content/idea_fragment_edit_link.html" with fragment="picture" title=_("Vaihda kuva") %}
-        {% endif %}
-    </div>
-{% else %}
-    {% if object in perm.content.CanEditIdea %}
-    <div id="no-picture-container-editable">
-        {% trans "Lisää otsikkokuva" %}
-        {% include "content/idea_fragment_edit_link.html" with fragment="picture" no_pull=True title=_("Vaihda kuva") %}
-    </div>
+            {% comment %}
+            {% if object in perm.content.CanEditIdea %}
+            {% include "content/idea_fragment_edit_link.html" with fragment="picture" title=_("Vaihda kuva") %}
+            {% endif %}
+            {% endcomment %}
+        </div>
     {% else %}
-        {% if object.initiator_organization %}
-            <div class="no-picture-bar-blue"></div>
+        {% if object in perm.content.CanEditIdea %}
+            {% comment %}
+            <div id="no-picture-container-editable">
+                {% trans "Lisää otsikkokuva" %}
+                {% include "content/idea_fragment_edit_link.html" with fragment="picture" no_pull=True title=_("Vaihda kuva") %}
+            </div>
+            {% endcomment %}
         {% else %}
-            <div class="no-picture-bar-magenta"></div>
+            {% if object.initiator_organization %}
+                <div class="no-picture-bar-blue"></div>
+            {% else %}
+                <div class="no-picture-bar-magenta"></div>
+            {% endif %}
         {% endif %}
     {% endif %}
-{% endif %}
 {% endspaceless %}

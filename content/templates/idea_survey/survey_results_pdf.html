@@ -1,0 +1,65 @@
+{% extends 'nuka/base.html' %}
+{% load i18n static compress %}
+
+{% block js %}{% endblock js %}
+
+{% block css %}
+    {{ block.super }}
+    {% compress css %}
+        <link rel="stylesheet" href="{% static "nkvote/css/results_pdf.css" %}" type="text/css">
+    {% endcompress css %}
+{% endblock css %}
+
+{% block precontent %}
+    {% with BASE_URL|add:idea_survey.idea.get_absolute_url as link %}
+        {% include "nuka/pdf/header.html" with link=link %}
+    {% endwith %}
+
+{% endblock precontent %}
+
+{% block content %}
+
+    <h2>{% trans "Idea" %}: {{ idea_survey.idea.title }}</h2>
+
+    <article class="gallup well gallup-pdf">
+        <header><h4>{% trans "Kysely" %}</h4></header>
+        <div class="body">
+            <div class="status">
+                <p>{% spaceless %}
+                    {% if idea_survey.is_closed %}
+                        {% trans 'Kysely on suljettu.' %}
+                    {% elif idea_survey.is_draft %}
+                        {% trans 'Kysely on luonnos. Vain idean omistajat näkevät sen.' %}
+                    {% endif %}
+                {% endspaceless %}</p>
+            </div>
+            <div class="questions">
+                {% for question in object.elements.questions %}
+                    <div class="question-title">{{ question.text }}</div>
+                    {% if question.type == question.TYPE_TEXT or question.type == question.TYPE_NUMBER %}
+                        {% if question.answers.all %}
+                            <ul>
+                                {% for answer in question.answers.all %}
+                                    {% if answer.text %}
+                                        <li>{{ answer.text }}</li>
+                                    {% endif %}
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    {% endif %}
+                    {% if question.type == question.TYPE_RADIO or question.type == question.TYPE_CHECKBOX %}
+                        {% with survey_submission_count=question.survey.submissions.all|length %}
+                            {% if survey_submission_count %}
+                                <ul>
+                                    {% for option in question.options.all %}
+                                        <li>{{ option.text }} {{ option.answers.all|length }}/{{ survey_submission_count }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        {% endwith %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </article>
+{% endblock content %}

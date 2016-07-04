@@ -1,0 +1,14 @@
+{% load i18n bootstrap3 %}
+
+<div class="survey-element survey-element-mode-answer survey-element-subtitle ajaxy-wrap">
+    {{ element.text }}
+
+    {% if edit_mode %}
+        <div class="btn-group pull-right">
+            <a href="{% url 'survey:update_subtitle' survey_id=element.survey.pk subtitle_id=element.pk %}" class="btn btn-default ajaxy-link" data-ajaxy-target-method="replaceWith" title="{% trans 'Muokkaa' %}">
+                {% bootstrap_icon "pencil" %}
+            </a>
+            {% include "survey/edit_mode/element_buttons.html" with editable=True %}
+        </div>
+    {% endif %}
+</div>

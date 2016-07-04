@@ -52,7 +52,7 @@ def wkhtmltopdf(pages, output=None, **kwargs):
                          _options_to_args(**options),
                          list(pages),
                          [output]))
-    logger.info(' '.join(ck_args))
+    #logger.info(' '.join(ck_args))
     child = subprocess.Popen(ck_args, env=env, stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
@@ -61,7 +61,8 @@ def wkhtmltopdf(pages, output=None, **kwargs):
         if not output[-4:-1] == r'EOF':
             raise WkhtmlToPdfError(err)
         else:
-            logger.warn("wkhtmltodpdf: %s", err)
+            print 'else'
+            #logger.warn("wkhtmltodpdf: %s", err)
     return output
 
 

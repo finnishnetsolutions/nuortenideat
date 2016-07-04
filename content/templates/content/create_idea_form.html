@@ -39,12 +39,44 @@
         <h1>{% trans "Uusi idea 1/2" %}</h1>
         <div class="alert alert-info">
             {% trans "Täytä idean perustiedot: otsikko, aihe, idean omistajat, mitä kuntaa tai organisaatiota idea koskee ja kuka saa ottaa kantaa." %}
-            {% trans "Seuraavassa vaiheessa voit lisätä idealle mm. kuvaustekstin ja kuvia, sekä gallupin." %}
+            {% trans "Seuraavassa vaiheessa voit lisätä idealle mm. kuvaustekstin ja kuvia, sekä kyselyn." %}
         </div>
 
-        <form method="post" novalidate>
+        <form method="post" enctype="multipart/form-data" novalidate>
             {% csrf_token %}
-            {% bootstrap_form form %}
+            {{ form.upload_ticket }}
+            {% bootstrap_field form.title %}
+            {% bootstrap_field form.description %}
+            <hr>
+            <div class="row">
+                <div class="col-md-6">{% bootstrap_field form.picture %}</div>
+                <div class="col-md-6">{% bootstrap_field form.picture_alt_text %}</div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-md-6">
+                    <!-- test requires following if clause -->
+                    {% if form.write_as%}
+                        {% bootstrap_field form.write_as %}
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <!-- test requires following if clause -->
+                    {% if form.initiator_organization %}
+                        {% bootstrap_field form.initiator_organization %}
+                    {% endif %}
+                    {% bootstrap_field form.owners %}
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-md-6">
+                    {% bootstrap_field form.target_type %}
+                    {% bootstrap_field form.target_organizations %}
+                </div>
+                <div class="col-md-6">{% bootstrap_field form.tags %}</div>
+            </div>
+            {% bootstrap_field form.interaction %}
             <button type="submit" class="btn btn-default">{% trans "Jatka seuraavaan vaiheeseen" %}</button>
         </form>
     </article>

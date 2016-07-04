@@ -5,9 +5,9 @@ from __future__ import unicode_literals
 import logging
 
 from bootstrap3 import renderers
-from bootstrap3.forms import render_field, FORM_GROUP_CLASS
+from bootstrap3.forms import render_field
 
-from django.forms.widgets import HiddenInput
+from django.forms.widgets import HiddenInput, TextInput, DateInput, Select
 from django.template.context import Context
 from django.template.loader import get_template
 from django.utils.html import escape
@@ -16,26 +16,65 @@ from django.utils.html import escape
 logger = logging.getLogger(__name__)
 
 
+class BaseFieldRenderer(renderers.FieldRenderer):
+    def __init__(self, *args, **kwargs):
+        self.button_addon_before = kwargs.get("button_addon_before", "")
+        self.button_addon_after = kwargs.get("button_addon_after", "")
+        super(BaseFieldRenderer, self).__init__(*args, **kwargs)
+
+    def make_input_group(self, html):
+        assert (not (self.button_addon_before and self.addon_before) and
+                not (self.button_addon_after and self.addon_after)), \
+            "Bootstrap does not support multiple addons on a single side."
+
+        if hasattr(self.widget, "widget_class"):
+            widget_class = self.widget.widget_class
+        else:
+            widget_class = type(self.widget)
+
+        if issubclass(widget_class, (TextInput, DateInput, Select)):
+            if self.button_addon_before:
+                before = '<span class="input-group-btn">{addon}</span>'.format(
+                    addon=self.button_addon_before)
+            elif self.addon_before:
+                before = '<span class="input-group-addon">{addon}</span>'.format(
+                    addon=self.addon_before)
+            else:
+                before = ''
+
+            if self.button_addon_after:
+                after = '<span class="input-group-btn">{addon}</span>'.format(
+                    addon=self.button_addon_after)
+            elif self.addon_after:
+                after = '<span class="input-group-addon">{addon}</span>'.format(
+                    addon=self.addon_after)
+            else:
+                after = ''
+
+            size = self.get_size_class(prefix="input-group")
+
+            if before or after:
+                html = '<div class="input-group {size}">{before}{html}{after}</div>' \
+                    .format(size=size, before=before, html=html, after=after)
+
+        return html
+
+
 class WrapIdentifyingFieldRendererMixIn(object):
     def wrap_label_and_field(self, html):
-        klasses = [FORM_GROUP_CLASS,]
-        if self.field.field.required:
-            klasses.append('required')
-        if self.field.errors:
-            klasses.append('has-error')
         return '<div id="{field}_wrap" class="{klass}">{content}</div>'.format(
             field=self.field.auto_id,
-            klass=' '.join(klasses),
+            klass=self.get_form_group_class(),
             content=html
         )
 
 
 class WrapIdFieldRenderer(WrapIdentifyingFieldRendererMixIn,
-                          renderers.FieldRenderer):
+                          BaseFieldRenderer):
     pass
 
 
-class FieldPreviewRenderer(renderers.FieldRenderer):
+class FieldPreviewRenderer(BaseFieldRenderer):
     def __init__(self, *args, **kwargs):
         logger.debug('render field %s', kwargs)
         self.value_displayer = kwargs.pop('value_displayer', None)
@@ -104,12 +143,14 @@ class AccessibilityFieldRendererMixIn(object):
             )
         return html
 
-    def add_help_attrs(self):
-        super(AccessibilityFieldRendererMixIn, self).add_help_attrs()
+    def add_help_attrs(self, widget=None):
+        super(AccessibilityFieldRendererMixIn, self).add_help_attrs(widget=widget)
+        if widget is None:
+            widget = self.widget
         if self.field_help or self.field_errors:
-            self.widget.attrs['aria-describedby'] = self._help_block_id()
+            widget.attrs['aria-describedby'] = self._help_block_id()
         if self.field_errors:
-            self.widget.attrs['aria-invalid'] = 'true'
+            widget.attrs['aria-invalid'] = 'true'
 
 
 class AccessibleWrapIdFieldRenderer(AccessibilityFieldRendererMixIn,
@@ -121,3 +162,17 @@ class AccessibleInlineFieldRenderer(AccessibilityFieldRendererMixIn,
                                     renderers.InlineFieldRenderer):
     pass
 
+
+class InstructionedFieldRendererMixin(object):
+    """
+    Adds fields instruction_text between label and input.
+    Uses CSS class "instruction-block".
+    """
+    def append_to_field(self, html):
+        html = super(InstructionedFieldRendererMixin, self).append_to_field(html)
+        form_field = self.field.field
+        if hasattr(form_field, "instruction_text") and form_field.instruction_text:
+            html = '<span class="instruction-block">{instruction}</span>'.format(
+                instruction=form_field.instruction_text
+            ) + html
+        return html

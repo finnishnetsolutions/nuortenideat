@@ -37,6 +37,7 @@ $font-size-13: .8125em;
 $font-size-12: .75em;
 
 @import "../../nkchat/static/nkchat/scss/nkchat.scss";
+@import "../../content/static/progress_bar/scss/progress_bar.scss";
 
 $static-path: "/static/";
 $nuka-image-path: "#{$static-path}nuka/img/";
@@ -875,6 +876,23 @@ a.fixed-write-idea:hover {
     div.feed-buttons {
       float: right;
     }
+  }
+}
+
+.organization-search-well, .idea-search-well, .search-container, .survey-element-mode-answer {
+  .has-success {
+    > .control-label, .checkbox > label {
+      color: black;
+    }
+    input, .select2-choices {
+      border-color: #cccccc;
+    }
+  }
+}
+
+.survey-element-mode-answer.survey-has-answers {
+  input[disabled], textarea[disabled], div.radio, div.checkbox {
+    display: none;
   }
 }
 
@@ -1729,6 +1747,12 @@ ul.object-moderation-reasons {
     text-align: right;
     padding-right: 0 !important;
   }
+
+  .idea-edit-buttons {
+    .btn {
+      margin-top: 2px;
+    }
+  }
 }
 
 @media screen and (min-width: $width-xs-sm) {
@@ -1746,8 +1770,12 @@ label {
 .initiative-stats-row {
   min-width: 225px;
 
-  .ni-icon {
+  i {
     margin-right: 10px;
+
+  }
+  i:not(:first-child) {
+    margin-left: 15px;
   }
 }
 
@@ -2081,6 +2109,14 @@ div.idea-transfer-method-col {
   margin-top: 10px;
 }
 
+.margin-top-md {
+  margin-top: 30px;
+}
+
+.margin-top-lg {
+  margin-top: 60px;
+}
+
 .margin-left-sm {
   margin-left: 10px;
 }
@@ -2119,5 +2155,70 @@ div.idea-transfer-method-col {
         max-width: 270px;
       }
     }
+  }
+}
+
+.idea-edit-buttons {
+  margin: 10px 0 40px 0;
+
+  .preview-mode {
+    display: none;
+  }  
+}
+
+div.multiform-border {
+  padding: 10px;
+  border: 1px solid #4e91ae;
+}
+
+fieldset.multiform-fieldset {
+  legend {
+    font-size: $font-size-16;
+    font-weight: bold;
+    border: none;
+    margin-bottom: 5px;
+  }
+}
+
+/**
+ * Survey related.
+ **/
+
+.survey-edit-buttons {
+  margin-bottom: 10px;
+}
+
+.survey-question-answers {
+  word-wrap: break-word;
+}
+
+.gallup-pdf {
+  .question-title {
+    font-size: $font-size-22;
+    font-weight: 400;
+  }
+}
+
+.fa-idea-stats-survey {
+  font-size: 33px;
+  color: #DB4491;
+  position: relative;
+  top: 5px;
+}
+
+.container.progress-bar-container {
+  margin-top: 20px;
+  margin-bottom: -20px;
+}
+
+#id_included_surveys_wrap {
+  display: none;
+}
+
+.panel-nuka {
+  background-color: $color-blue;
+  border-color: $color-blue;
+  .panel-heading {
+    color: #fff;
   }
 }

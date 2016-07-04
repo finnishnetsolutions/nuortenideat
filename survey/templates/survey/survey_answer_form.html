@@ -1,0 +1,28 @@
+{% load i18n staticfiles bootstrap3 survey_tags %}
+
+<div class="survey-wrap ajaxy-wrap" data-survey-submitted="{{ form_submitted|lower }}" data-survey-answerable="{% if survey in perm.survey.CanAnswerSurvey %}true{% else %}false{% endif %}">
+    <form class="survey-form ajaxy-form" method="post" action="{% url 'survey:submit' survey_id=survey.pk %}" data-ajaxy-target-method="replaceWith" novalidate>
+        <div class="survey-messages">
+            {% if request.is_ajax %}{# HACK: dont re-display non-ajax messsages already show on page header #}
+                {% bootstrap_messages %}
+            {% elif survey|is_answered:request %}
+                <div class="alert alert-info">
+                    {% trans "Olet jo vastannut kyselyyn." %}
+                </div>
+            {% endif %}
+        </div>
+        <div class="survey-elements">
+            {% for element in survey.elements.all %}
+                {% render_survey_element %}
+            {% endfor %}
+        </div>
+        <div class="survey-actions">
+            {% if survey in perm.survey.CanAnswerSurvey %}
+                <button type="submit" class="btn btn-primary survey-submit">
+                    {% trans "Lähetä vastaukset" %}
+                </button>
+            {% endif %}
+        </div>
+    </form>
+    <script type="text/javascript" src="{% static 'survey/js/survey_answer.js' %}"></script>
+</div>

@@ -1,0 +1,21 @@
+{% load i18n survey_tags %}
+
+{% survey_element_subtype_order element as element_subtype_order %}
+{% survey_element_subtype_count element as element_subtype_count %}
+
+{% if edit_mode %}
+    <div class="survey-element survey-element-mode-answer survey-element-page">
+        - {% trans "Sivunvaihto" %} -
+
+        <div class="btn-group pull-right">
+            {% include "survey/edit_mode/element_buttons.html" %}
+        </div>
+        <div class="clearfix"></div>
+    </div>
+{% else %}
+    <div class="survey-element-page-button-wrap">
+        <button type="button" class="btn btn-primary survey-element-page-btn">
+            {% trans "Jatka vastaamista" %} ({{ element_subtype_order|add:1 }}/{{ element_subtype_count|add:1 }})
+        </button>
+    </div>
+{% endif %}

@@ -1,0 +1,14 @@
+{% extends "nuka/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<article id="gallup-delete-confirmation" class="well">
+    <h1>{% trans "Kyselyn poisto" %}</h1>
+    <form method="post">
+        {% csrf_token %}
+        <p>{% trans "Poistetaanko kysely varmasti?" %}</p>
+        <input type="submit" class="btn btn-default" value="{% trans "Poista" %}" />
+        <a class="btn btn-default" href="{% url 'content:idea_detail' idea_id %}#survey-{{ object.pk }}">{% trans "Peruuta" %}</a>
+    </form>
+</article>
+{% endblock content %}

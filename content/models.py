@@ -1,7 +1,7 @@
 # coding=utf-8
 
 from __future__ import unicode_literals
-
+from django.template.defaultfilters import date
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.db import models
@@ -10,8 +10,8 @@ from django.dispatch.dispatcher import receiver
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext_lazy as _
-from django.contrib.contenttypes.fields import GenericRelation
+from django.utils.translation import ugettext_lazy as _, ugettext
+from django.contrib.contenttypes.fields import GenericRelation, GenericForeignKey
 
 from imagekit.models.fields import ImageSpecField, ProcessedImageField
 from kombu.utils import uuid4
@@ -19,6 +19,7 @@ from pilkit.processors.resize import ResizeToFit, Resize
 from polymorphic.polymorphic_model import PolymorphicModel
 from model_utils import FieldTracker
 from actions.signals import action_performed
+from kuaapi.utils import get_kua_and_idea_status_map
 
 from libs.attachtor.models.fields import RedactorAttachtorField
 from libs.attachtor import signals as attachtor
@@ -81,8 +82,7 @@ class Initiative(PolymorphicModel, ActionGeneratingModelMixin):
     tags = models.ManyToManyField('tagging.Tag', verbose_name=_("aiheet"))
     visibility = models.SmallIntegerField(_("näkyvyys"), choices=VISIBILITY_CHOICES,
                                           default=VISIBILITY_DRAFT)
-    interaction = models.SmallIntegerField(_("Kuka saa ottaa kantaa ja "
-                                             "vastata gallupeihin?"),
+    interaction = models.SmallIntegerField(_("Kuka saa kannattaa ja kommentoida?"),
                                            choices=INTERACTION_CHOICES,
                                            default=INTERACTION_EVERYONE)
     premoderation = models.BooleanField(_("kommenttien esimoderointi"), default=False)
@@ -94,6 +94,8 @@ class Initiative(PolymorphicModel, ActionGeneratingModelMixin):
 
     comments = GenericRelation('nkcomments.CustomComment',
                                object_id_field='object_pk')
+
+    field_tracker = FieldTracker(fields=['premoderation', 'commenting_closed'])
 
     # action processing
     connect_post_save = False
@@ -161,6 +163,15 @@ class Initiative(PolymorphicModel, ActionGeneratingModelMixin):
         ).count() or \
             Vote.objects.filter(content_object=self).count() or \
             Answer.objects.filter(gallup__idea=self).count()
+
+    def check_commenting_options_change(self):
+        changed_fields = self.field_tracker.changed()
+        fields = ['premoderation', 'commenting_closed']
+        for field_name in fields:
+            if field_name in changed_fields:
+                if getattr(self, field_name) is not changed_fields[field_name]:
+                    return True
+        return False
 
     # action processing
     def action_kwargs_on_create(self):
@@ -250,7 +261,7 @@ class Idea(ModeratedPolymorphicModelMixIn, Initiative):
                                                 ResizeToFit(width=350, height=4*350)],
                                     format='JPEG', options={'quality': 70})
 
-    picture_alt_text = models.CharField(_("kuvan tekstimuotoinen kuvaus (suositeltava)"),
+    picture_alt_text = models.CharField(_("Mitä kuvassa on? (kuvaus suositeltava)"),
                                         max_length=255,
                                         default=None,
                                         null=True)
@@ -287,40 +298,65 @@ class Idea(ModeratedPolymorphicModelMixIn, Initiative):
     def html_allowed(self):
         return True
 
-    def get_status_values(self, statuses, status):
+    def get_status_values(self, statuses, status, add_status_value=False):
+        if add_status_value:
+            return tuple((status, getattr(self, statuses[status][0]),
+                         statuses[status][1], ))
         return tuple((getattr(self, statuses[status][0]), statuses[status][1], ))
 
-    def get_kua_statuses_to_status_list(self):
+    def get_kua_statuses_to_status_list(self, add_status_value=False):
         try:
             kuas, dupes = [], set()
             for s in self.kua_initiative.statuses.all():
                 msg = s.get_friendly_status_message()
                 if msg is not None and not _is_dupe(msg, dupes):
-                    kuas.append((s.created, msg, ))
+                    if add_status_value:
+                        idea_status = get_kua_and_idea_status_map(self,
+                                                                  kua_status=s.status)
+                        kuas.append((idea_status, s.created, msg, ))
+                    else:
+                        kuas.append((s.created, msg, ))
             return kuas
         except KuaInitiative.DoesNotExist:
             return []
 
-    def get_status_list(self):
+    def get_status_list(self, add_status_value=False):
         statuses = dict([(s[0], (s[1], s[2])) for s in self.STATUSES])
         ret = []
         if self.status == self.STATUS_DRAFT:
-            ret.append(self.get_status_values(statuses, self.STATUS_DRAFT))
+            ret.append(self.get_status_values(statuses, self.STATUS_DRAFT,
+                                              add_status_value))
         else:
-            ret.append(self.get_status_values(statuses, self.STATUS_PUBLISHED))
-            kua_status_list = self.get_kua_statuses_to_status_list()
-
+            ret.append(self.get_status_values(statuses, self.STATUS_PUBLISHED,
+                                              add_status_value))
+            kua_status_list = self.get_kua_statuses_to_status_list(add_status_value)
             if kua_status_list:
                 ret.extend(kua_status_list)
             elif self.status >= self.STATUS_TRANSFERRED:
-                ret.append(self.get_status_values(statuses, self.STATUS_TRANSFERRED))
+                ret.append(self.get_status_values(statuses, self.STATUS_TRANSFERRED,
+                                                  add_status_value))
 
             if self.status == self.STATUS_DECISION_GIVEN:
-                ret.append(self.get_status_values(statuses, self.STATUS_DECISION_GIVEN))
+                ret.append(self.get_status_values(statuses, self.STATUS_DECISION_GIVEN,
+                                                  add_status_value))
             if self.visibility == self.VISIBILITY_ARCHIVED:
                 visibilities = dict([(s[0], (s[1], s[2])) for s in self.VISIBILITIES])
-                ret.append(self.get_status_values(visibilities, self.VISIBILITY_ARCHIVED))
+                ret.append(self.get_status_values(visibilities, self.VISIBILITY_ARCHIVED,
+                                                  add_status_value))
         return ret
+
+    def status_complete(self, unnecessary_dates=True):
+        status = self.get_status_list().pop()
+        no_dates = [Idea.VISIBILITY_ARCHIVED]
+        if not unnecessary_dates and self.visibility in no_dates:
+            return status[1]
+        else:
+            status_date = date(status[0], 'SHORT_DATE_FORMAT')
+            return "{}: {}".format(status[1], status_date)
+
+    def status_complete_fixed_dates(self):
+        return self.status_complete(unnecessary_dates=False)
+
 
     ACTION_SUB_TYPE_IDEA_PUBLISHED = 'idea-published'
     ACTION_SUB_TYPE_STATUS_UPDATED = 'status-updated'
@@ -349,11 +385,72 @@ class Idea(ModeratedPolymorphicModelMixIn, Initiative):
     def action_kwargs_on_update(self):
         return {'actor': None, 'subtype': self.get_subtypes()}  # TODO: save modifier
 
+    def count_survey_submissions(self):
+        count = 0
+        for s in self.idea_surveys.all():
+            count += s.count_submissions()
+        return count
+
 
 @receiver(post_save, sender=Idea)
 def create_action_on_update(instance=None, created=False, **kwargs):
     if not created and instance.check_status_change():
         action_performed.send(sender=instance, created=created)
+
+
+class IdeaSurveyQuerySet(models.QuerySet):
+    def drafts(self):
+        id_list = [x.pk for x in self.all() if x.is_draft()]
+        return self.filter(id__in=id_list)
+
+
+@python_2_unicode_compatible
+class IdeaSurvey(models.Model):
+    STATUS_DRAFT = 1
+    STATUS_OPEN = 5
+    STATUS_CLOSED = 10
+
+    INTERACTION_EVERYONE = 1
+    INTERACTION_REGISTERED_USERS = 2
+    INTERACTION_CHOICES = (
+        (INTERACTION_EVERYONE,          _("Kaikki")),
+        (INTERACTION_REGISTERED_USERS,  _("Rekisteröityneet käyttäjät")),
+    )
+
+    idea = models.ForeignKey(Idea, related_name='idea_surveys')
+    content_type = models.ForeignKey(ContentType)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey()
+    status = models.SmallIntegerField(default=STATUS_DRAFT)
+    created = models.DateTimeField(auto_now_add=True)
+    opened = models.DateTimeField(null=True)
+    closed = models.DateTimeField(null=True)
+    interaction = models.SmallIntegerField(_("Kuka saa vastata kyselyyn?"),
+                                           choices=INTERACTION_CHOICES,
+                                           default=INTERACTION_EVERYONE)
+    title = MultilingualTextField(_("otsikko"), max_length=255, simultaneous_edit=True)
+
+    objects = IdeaSurveyQuerySet.as_manager()
+
+    def is_open(self):
+        return self.status == self.STATUS_OPEN
+
+    def is_draft(self):
+        return self.status == self.STATUS_DRAFT
+
+    def is_closed(self):
+        return self.status == self.STATUS_CLOSED
+
+    def get_absolute_url(self):
+        idea_url = self.idea.get_absolute_url()
+        return "{}#survey-{}".format(idea_url, self.pk)
+
+    def count_submissions(self):
+        return self.content_object.submissions.count()
+
+    def __str__(self):
+        title = self.title.__get_any_value__()
+        return title if title else ugettext("Kysely")
 
 
 class Question(ModeratedPolymorphicModelMixIn, Initiative):

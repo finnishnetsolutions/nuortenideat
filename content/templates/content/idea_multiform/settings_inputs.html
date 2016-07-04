@@ -1,0 +1,18 @@
+{% extends 'content/idea_multiform/base_inputs.html' %}
+{% load i18n bootstrap3 %}
+
+{% block content %}
+    <div class="multiform-border">
+        <h3 class="h4">{% trans "Asetukset" %}</h3>
+        {{ block.super }}
+    </div>
+{% endblock %}
+
+{% block form_body %}
+    <fieldset class="multiform-fieldset">
+        <legend>{% trans "Kommentointi" %}</legend>
+        {% bootstrap_field form.premoderation %}
+        {% bootstrap_field form.commenting_closed %}
+    </fieldset>
+    {% bootstrap_field form.interaction %}
+{% endblock form_body %}

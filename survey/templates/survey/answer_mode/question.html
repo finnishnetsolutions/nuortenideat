@@ -1,0 +1,18 @@
+{% load i18n bootstrap3 survey_tags %}
+
+<div class="survey-element survey-element-mode-answer survey-element-question ajaxy-wrap{% if element.survey in perm.survey.SurveyHasAnswers %} survey-has-answers{% endif %}">
+    {% if edit_mode %}
+        <div class="btn-group pull-right">
+            <a href="{% url 'survey:update_question' survey_id=element.survey.pk question_id=element.pk %}" class="btn btn-default ajaxy-link" data-ajaxy-target-method="replaceWith" title="{% trans 'Muokkaa' %}">
+                {% bootstrap_icon "pencil" %}
+            </a>
+            {% include "survey/edit_mode/element_buttons.html" %}
+        </div>
+    {% endif %}
+
+    {% bootstrap_form form %}
+    <noscript>{% csrf_token %}</noscript>
+    {% if element.survey in perm.survey.ShowSurveyResults %}
+        {% render_question_answers question=element %}
+    {% endif %}
+</div>

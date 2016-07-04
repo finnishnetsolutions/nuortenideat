@@ -46,16 +46,13 @@ urlpatterns = patterns('',
     url(r'^kommentit/', include('nkcomments.urls', namespace='nkcomments')),
     url(r'', include('social.apps.django_app.urls', namespace='social')),
     url(r'^palaute/$', FeedbackView.as_view(), name="feedback"),
-
     url(r'', include('nkmoderation.urls', namespace='nkmoderation')),
-
     url(r'^tietoa-palvelusta/', include('help.urls', namespace='help')),
     url(r'^tiedotteet/', include('info.urls', namespace='info')),
     url(r'^kampanjat/', include('campaign.urls', namespace='campaign')),
     url(r'^suosikit/', include('favorite.urls', namespace='favorite')),
-
     url(r'^widget/', xframe_options_exempt(ShowWidgetView.as_view()), name="nkwidget"),
-
+    url(r'^', include('survey.urls', namespace='survey')),
     url('^liitteet/laheta/(?P<upload_group_id>[a-f0-9]{32})'
         '(?P<upload_token>[a-f0-9]{32})/$',
         combo(check_perm(IsAuthenticated), legacy_json_plaintext)(

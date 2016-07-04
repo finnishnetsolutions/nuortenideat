@@ -14,7 +14,8 @@
             <h2 class="h3-style">{% trans "Viestit" %}</h2>
             <a href="{% url 'account:create_message' object.pk %}#sisalto" class="btn btn-default btn-lg new-message-btn">{% trans "Uusi viesti" %}</a>
         </header>
-        <hr style="margin-top: 30px" />
+        <div class="margin-top-md alert alert-info">{% trans "Voit lähettää viestin organisaatioiden yhteyshenkilöille tai moderaattoreille. Huomioi, että viestin lähettäjän ja vastaanottajan viestilaatikossa näkyvät omiin tietoihin tallennetut etunimi ja sukunimi. Muualla palvelussa julkisesti on näkyvissä ainoastaan käyttäjätunnus." %}</div>
+        <hr class="margin-top-md">
 
         <div class="row" style="margin-bottom: 20px;">
             <div class="col-md-4">

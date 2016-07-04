@@ -5,6 +5,7 @@ from __future__ import unicode_literals, absolute_import
 from datetime import timedelta
 from celery.schedules import crontab
 from easy_thumbnails.conf import Settings as thumbnail_settings
+import sys
 
 """
     Django settings for nuortenkanava project.
@@ -66,6 +67,7 @@ PROJECT_APPS = (
     'actions',
     'smslog',
     'campaign',
+    'nuka.apps.NukaSurveyAppConfig',
 )
 
 INSTALLED_APPS = PROJECT_APPS + (
@@ -94,7 +96,17 @@ INSTALLED_APPS = PROJECT_APPS + (
     'rest_framework_swagger',
     'image_cropping',
     'easy_thumbnails',
+    'file_resubmit',
+    'libs.formidable',
 )
+
+# todo: formidable tests fails
+#TEST_APPS = (
+#    'libs.formidable.tests',
+#)
+
+#if len(sys.argv) > 1 and sys.argv[1] in ('test', 'jenkins'):
+#    INSTALLED_APPS += TEST_APPS
 
 COMMENTS_APP = 'nkcomments'
 
@@ -179,7 +191,11 @@ CACHES = {
             "PARSER_CLASS": "redis.connection.HiredisParser",
         },
         "KEY_PREFIX": "nuka:%s:session" % ENV_NAME
-}
+    },
+    'file_resubmit': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': '/tmp',
+    }
 }
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
@@ -254,12 +270,14 @@ BOOTSTRAP3 = {
         'notification_options_preview': 'bootstrap3.renderers.FormRenderer',
     },
     'field_renderers': {
-        'default': 'libs.bs3extras.renderers.AccessibleWrapIdFieldRenderer',
+        'default': 'nuka.forms.renderers.NukaFieldRenderer',
+        #'default': 'libs.bs3extras.renderers.AccessibleWrapIdFieldRenderer',
         'inline': 'bootstrap3.renderers.InlineFieldRenderer',
         'preview': 'libs.bs3extras.renderers.WrapIdFieldPreviewRenderer',
         'notification_options_preview': 'account.renderers.'
             'NotificationOptionsFieldPreviewRenderer',
-},
+    },
+    'required_css_class': 'required',
 }
 
 

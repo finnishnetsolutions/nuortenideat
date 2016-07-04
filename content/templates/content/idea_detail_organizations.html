@@ -1,3 +1,6 @@
 {% load i18n %}
 {% include "content/organization_list.html" with orgs=object.target_organizations.all %}
-{% include "content/idea_fragment_edit_link.html" with fragment='organizations' title=_("Muokkaa organisaatioita") no_pull=True %}
+
+{% if not no_edit %}
+    {% include "content/idea_fragment_edit_link.html" with fragment='organizations' title=_("Muokkaa organisaatioita") no_pull=True %}
+{% endif %}

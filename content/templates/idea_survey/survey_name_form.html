@@ -1,0 +1,13 @@
+{% load i18n bootstrap3 %}
+
+<div class="modal-header">
+    <h1 class="h2-style">{% trans "Muokkaa otsikkoa" %}<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">{% trans "Sulje" %}</span></button></h1>
+</div>
+<div class="modal-body">
+    <form class="ajaxy-form" data-ajaxy-success-wrap="#survey-name-{{ object.pk }}" novalidate method="post" action="{% url 'content:survey_edit_name' survey_id=object.pk %}">
+        {% csrf_token %}
+        {% bootstrap_form form %}
+        <button type="submit" class="btn btn-default">{% trans "Tallenna" %}</button>
+        <button type="button" class="btn btn-default close-survey-modal" data-dismiss="modal">{% trans "Peruuta" %}</button>
+    </form>
+</div>

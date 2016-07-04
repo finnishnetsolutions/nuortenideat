@@ -8,7 +8,7 @@
     {% if comment.user %}
         {{ comment.comment|bleach }}
     {% else %}
-        {{ comment.comment|linebreaksbr }}
+        {{ comment.comment|urlize|linebreaksbr }}
     {% endif %}
 
     {% moderation_reasons comment %}

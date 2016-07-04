@@ -1,0 +1,19 @@
+{% load i18n bootstrap3 nuka_tags %}
+
+<ul class="list-group ajaxy-wrap">
+    {% for answer in answers %}
+        {% if answer.text %}
+            <li class="list-group-item survey-question-answer survey-question-answer-text">
+                {{ answer.text }}
+            </li>
+        {% endif %}
+    {% empty %}
+        <li class="list-group-item"><i>{% trans "Ei vastauksia" %}</i></li>
+    {% endfor %}
+
+    {% if paginate and answers.paginator.num_pages > 1 %}
+        <li class="list-group-item survey-question-answers-pagination">
+            {% bootstrap_ajaxy_pagination page=answers url=pagination_url %}
+        </li>
+    {% endif %}
+</ul>

@@ -12,7 +12,7 @@
     <header class="detail-page-header well">
         <h1>
             <i class="ni-icon ni-icon-profile"><span class="sr-only">{% trans "Oma sivu" %}</span></i>
-            {% if is_public_profile %}
+            {% if not show_private_data %}
                 {% trans 'Julkinen profiili' %}
             {% else %}
                 {% trans 'Oma sivu' %}
@@ -33,9 +33,14 @@
                 <div class="col-md-3" style="padding-bottom:10px;">
                     {% include "account/profile_picture.html" with user=object no_link=True %}
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-9">
+                    {% if object in perm.account.CanEditUser %}
+                        <a class="btn btn-default btn-lg btn-green pull-right" href="{% url 'content:create_idea' %}">
+                            <img src="{% static 'nuka/img/ikoni_lamppu_valkoinen.png' %}" alt=""> {% trans "Kirjoita idea" %}
+                        </a>
+                    {% endif %}
                     <h2 class="h3-style">
-                        {% if is_public_profile and object.organizations.count %}
+                        {% if not show_private_data and object.organizations.count %}
                             {{ object.get_full_name }}
                         {% else %}
                             {{ object }}
@@ -48,34 +53,29 @@
                         {% if object in perm.account.CanEditUser %}<a class="btn btn-default margin-left-sm" href="{% url 'account:settings' object.pk %}">{% fa_icon "edit" %}</a>{% endif %}
                     </h2>
                     <ul class="stats">
+                        {% if object.organizations.count %}
+                            <li>{% trans "Yhteyshenkilö" %}: &nbsp;
+                                <ul class="favorites-list list-inline display-inline">
+                                    {% for o in object.organizations.all %}
+                                        <li class="tag"><a href="{{ o.get_absolute_url }}">{{ o }}</a></li>
+                                    {% endfor %}
+                                </ul>
+                            </li>
+                        {% endif %}
                         <li>{% trans "Ideoita" %}: {{ ideas_count }}</li>
                         <li>{% trans "Kysymyksiä" %}: {{ questions_count }}</li>
                         <li>{% trans "Kommentteja" %}: {{ comments_count }}</li>
-                            {% if object.organizations.count %}
-                                <li>{% trans "Yhteyshenkilönä organisaatioissa" %}: &nbsp;
-                                    <ul class="favorites-list list-inline display-inline">
-                                        {% for o in object.organizations.all %}
-                                            <li class="tag"><a href="{{ o.get_absolute_url }}">{{ o }}</a></li>
-                                        {% endfor %}
-                                    </ul>
-                                </li>
-                            {% endif %}
-                        <li>{% trans "Seuratut aiheet" %}: &nbsp;
-                            {% fav_get_ct_id 'tagging.tag' as ct_id %}
-                            {% include "favorite/favorite_detail.html" with user=object ct_id=ct_id no_edit=True %}
-                        </li>
-                        <li>{% trans "Seuratut organisaatiot" %}: &nbsp;
-                            {% fav_get_ct_id 'organization.organization' as ct_id %}
-                            {% include "favorite/favorite_detail.html" with user=object ct_id=ct_id no_edit=True %}
-                        </li>
+                        {% if show_private_data %}
+                            <li>{% trans "Seuratut aiheet" %}: &nbsp;
+                                {% fav_get_ct_id 'tagging.tag' as ct_id %}
+                                {% include "favorite/favorite_detail.html" with user=object ct_id=ct_id no_edit=True %}
+                            </li>
+                            <li>{% trans "Seuratut organisaatiot" %}: &nbsp;
+                                {% fav_get_ct_id 'organization.organization' as ct_id %}
+                                {% include "favorite/favorite_detail.html" with user=object ct_id=ct_id no_edit=True %}
+                            </li>
+                        {% endif %}
                     </ul>
-                </div>
-                <div class="col-md-3">
-                     {% if object in perm.account.CanEditUser %}
-                        <a class="btn btn-default btn-lg btn-green pull-right" href="{% url 'content:create_idea' %}">
-                            <img src="{% static 'nuka/img/ikoni_lamppu_valkoinen.png' %}" alt=""> {% trans "Kirjoita idea" %}
-                        </a>
-                     {% endif %}
                 </div>
             </div>
         {% endif %}

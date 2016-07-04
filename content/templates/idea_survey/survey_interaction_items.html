@@ -1,0 +1,12 @@
+{% load i18n fontawesome %}
+{% for val, text in idea_survey.INTERACTION_CHOICES %}
+    <li class="survey-interaction survey-trigger-ajaxy-ready">
+        <a href="{% url 'content:toggle_survey_interaction' survey_id=idea_survey.content_object.pk interaction=val %}" class="ajaxy-link" data-ajaxy-method="post">
+            {% if idea_survey.interaction == val %}
+                {% fa_icon "check" "fw" %}
+            {% else %}
+                {% fa_icon "fw" %}
+            {% endif %} {{ text }}
+        </a>
+    </li>
+{% endfor %}

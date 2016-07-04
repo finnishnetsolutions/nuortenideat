@@ -24,3 +24,19 @@ class MultiLangDict(dict):
 
     def __str__(self):
         return self.__getitem__(get_language())
+
+    def __get_any_value__(self):
+        key = get_language()
+        value = ''
+        if key in self and self['key']:
+            value = super(MultiLangDict, self).__getitem__(key)
+
+        if not value:
+            if CONF['default_language'] in self:
+                value = self[CONF['default_language']]
+
+        if not value and len(self.values()) > 0:
+            for v in self.values():
+                if v:
+                    return v
+        return value

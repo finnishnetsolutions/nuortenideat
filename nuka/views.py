@@ -7,14 +7,17 @@ from random import randint
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
+from django.db import transaction
 from django.db.models.aggregates import Count
-from django.http.response import HttpResponse, HttpResponseNotFound
+from django.http.response import HttpResponse, HttpResponseNotFound, JsonResponse
 from django.shortcuts import render
+from django.template.context import RequestContext
 from django.template.loader import render_to_string
 from django.templatetags.static import static
 from django.template import loader
 from django.utils.translation import override
 from django.views.generic.base import RedirectView, TemplateView, View
+from libs.djcontrib.views.generic import MultiModelFormView
 from nkpicturecarousel.models import PictureCarouselSet, PictureCarouselImage
 
 from nuka.utils import chunks
@@ -117,3 +120,62 @@ class AllowedFileUploadExtensions(View):
 
 def error_page_not_found(request):
     return render(request, 'nuka/errors/404.html', status=404)
+
+
+class JsonMultiModelFormView(MultiModelFormView):
+    form_template_name_syntax = None
+    form_default_template = None
+    preview_template_name_syntax = None
+
+    def render_to_response(self, context, preview=False, reload=False, **response_kwargs):
+        data = {}
+        if preview:
+            items = self.form_classes
+            context = self.get_preview_context()
+        else:
+            items = context['forms'].items()
+
+        for prefix, form in items:
+            template_names = self.get_form_template_names(prefix, preview)
+
+            if not preview:
+                context = self.get_form_context(form)
+
+            data[prefix] = render_to_string(
+                template_names,
+                RequestContext(self.request, context)
+            )
+
+        return JsonResponse({'data': data, 'preview': preview, 'reload': reload})
+
+    def get_form_template_names(self, prefix=None, preview=False):
+
+        template_syntax = self.form_template_name_syntax if not preview else \
+            self.preview_template_name_syntax
+
+        template_names = [template_syntax.format(prefix=prefix), ]
+
+        if not preview and self.form_default_template:
+            template_names.append(self.form_default_template)
+        return template_names
+
+    def get_form_context(self, form=None):
+        return {'form': form}
+
+    def get_preview_context(self):
+        return {}
+
+    def get(self, *args, **kwargs):
+        preview = self.request.GET.get('preview', None)
+        if preview:
+            return self.render_to_response(self.get_context_data(), preview=True)
+        return super(JsonMultiModelFormView, self).get(*args, **kwargs)
+
+    @transaction.atomic()
+    def form_valid(self):
+        self.save_forms()
+        return self.render_to_response(self.get_context_data(), preview=True)
+
+    def form_invalid(self):
+        super(JsonMultiModelFormView, self).form_invalid()
+        return self.render_to_response(self.get_context_data())

@@ -1,0 +1,44 @@
+{% extends 'nuka/base.html' %}
+{% load i18n bootstrap3 %}
+
+{% block title %}{% trans "Ideat" %}: {% trans "Julkaise idea ja kyselyt" %} - {{ block.super }}{% endblock title %}
+
+{% block js_extra %}
+    <script type="text/javascript">
+        $(function() {
+            $('.survey-checkbox').on('change', function() {
+                var pk = $(this).attr('data-survey-pk');
+                var is_selected = $(this).prop('checked');
+                $('#id_included_surveys option[value="'+pk+'"]').
+                        prop('selected', is_selected);
+            });
+
+            $('.survey-checkbox').trigger('change');
+        });
+    </script>
+{% endblock js_extra %}
+
+{% block content %}
+    <div class="well">
+        <h1 class="h2-style">{% trans "Idean ja kyselyiden julkaiseminen" %}</h1>
+        <div class="alert alert-info margin-top-md">{% trans "Voit julkaista samalla ideaasi liittyvät kyselyt. Poista valinta kyselyistä, joita et halua julkaista vielä." %}</div>
+
+        <h2 class="h4-style margin-top-md">{% trans "Kyselyt" %}</h2>
+
+        {% for s in object.idea_surveys.drafts %}
+            <ul class="list-unstyled">
+                <li>
+                    <input id="survey-cb-{{ s.pk }}" type="checkbox" class="survey-checkbox" checked="checked" data-survey-pk="{{ s.pk }}">
+                    <label for="survey-cb-{{ s.pk }}">{{ s }}</label>
+                </li>
+            </ul>
+        {% endfor %}
+
+        <form method="post" novalidate class="margin-top-md">
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            <button type="submit" class="btn btn-default">{% trans "Julkaise" %}</button>
+            <a href="{% url 'content:idea_detail' initiative_id=object.pk %}" class="btn btn-default">{% trans "Peruuta" %}</a>
+        </form>
+    </div>
+{% endblock content %}

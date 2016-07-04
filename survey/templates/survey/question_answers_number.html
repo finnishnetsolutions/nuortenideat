@@ -1,0 +1,14 @@
+{% load i18n %}
+
+{% if question.answers.all %}
+    <div class="survey-question-answers survey-question-answers-number panel panel-nuka">
+        <div class="panel-heading">{% trans "Vastaukset" %}</div>
+        <div class="panel-body">
+            {% for answer in question.answers.all %}
+                <span class="survey-question-answer survey-question-answer-number">{{ answer.text }}</span>{% if not forloop.last %}, {% endif %}
+            {% empty %}
+                <i>{% trans "Ei vastauksia" %}</i>
+            {% endfor %}
+        </div>
+    </div>
+{% endif %}

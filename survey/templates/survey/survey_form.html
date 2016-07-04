@@ -1,0 +1,40 @@
+{% load i18n staticfiles survey_tags %}
+
+<div class="survey-wrap ajaxy-wrap">
+    <div class="survey-elements margin-top-1">
+        {% for element in survey.elements.all %}
+            {% render_survey_element %}
+        {% endfor %}
+    </div>
+
+    {% if edit_mode %}
+        <!-- Buttons to add survey elements. -->
+        <div class="btn-group">
+            <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <span class="glyphicon glyphicon-plus"></span> {% trans "Lisää kysymys" %} <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu">
+                <li><a href="{% url 'survey:create_text_question' survey_id=survey.pk %}" class="survey-element-add survey-element-add-question">{% trans "Tekstikenttä" %}</a></li>
+                {% comment %}<li><a href="{% url 'survey:create_number_question' survey_id=survey.pk %}" class="survey-element-add survey-element-add-question">{% trans "Numerokenttä" %}</a></li>{% endcomment %}
+                <li><a href="{% url 'survey:create_radio_question' survey_id=survey.pk %}" class="survey-element-add survey-element-add-question">{% trans "Yksivalinta" %}</a></li>
+                <li><a href="{% url 'survey:create_checkbox_question' survey_id=survey.pk %}" class="survey-element-add survey-element-add-question">{% trans "Monivalinta" %}</a></li>
+            </ul>
+        </div>
+        <a href="{% url 'survey:create_subtitle' survey_id=survey.pk %}" data-method="get" class="btn btn-primary survey-element-add survey-element-add-subtitle">
+            <span class="glyphicon glyphicon-plus"></span> {% trans "Lisää väliotsikko" %}
+        </a>
+        {% comment %}
+        <a href="{% url 'survey:create_page' survey_id=survey.pk %}" data-method="post" class="btn btn-primary survey-element-add">
+            <span class="glyphicon glyphicon-plus"></span> {% trans "Lisää sivunvaihto" %}
+        </a>
+        {% endcomment %}
+    {% endif %}
+
+    {% if not edit_mode and survey in perm.survey.CanAnswerSurvey %}
+        <button type="submit" class="btn btn-primary ajaxy-link" data-ajaxy-method="post" data-ajaxy-target-method="replaceWith">
+            {% trans "Lähetä vastaukset" %}
+        </button>
+    {% endif %}
+</div>
+
+<script type="text/javascript" src="{% static 'survey/js/survey_form.js' %}"></script>

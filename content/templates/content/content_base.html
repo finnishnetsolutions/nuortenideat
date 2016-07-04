@@ -21,13 +21,14 @@
              * Ask for confirmation to leave the page if:
              * - description or detail field are open
              * - comment field has focus
-             **/
+
             $(window).on("beforeunload", function() {
                 var comment = $("#id_comment");
                 if ($("#id_description-fi, #id_description-sv").length || $("#additional-details").find(".multilingo-input").length || comment.val()) {
                     return "{% trans 'Sinulla on tallentamattomia muutoksia. Poistutaanko sivulta? Tallentamattomat muutokset menetetään.' %}";
                 }
             });
+             **/
         });
     </script>
 {% endblock %}
@@ -63,7 +64,7 @@
 
             {% block idea_comments %}
                 {% if object.is_public %}
-                    <article class="well" id="comments">{% include 'nkcomments/comment_block.html' with comments=comments %}</article>
+                    <article id="comments" class="well ajaxy-wrap" data-ajaxy-url="{{ comment_block_url }}">{% include 'nkcomments/comment_block.html' with comments=comments %}</article>
                 {% endif %}
             {% endblock idea_comments %}
         </div>
@@ -82,8 +83,10 @@
 
                     {% block idea_owners %}
                         <div id="owners">
-                            <div class="ajaxy-wrap editable-wrap">
-                                {% include "content/idea_detail_owners.html" %}
+                            <div class="ajaxy-wrap editable-wrap" data-form-wrap="owners">
+                                {% block idea_owners_inclusion %}
+                                    {% include "content/idea_detail_owners.html" %}
+                                {% endblock idea_owners_inclusion%}
                             </div>
                         </div>
                     {% endblock idea_owners %}
@@ -95,15 +98,17 @@
                     {% endblock initiative_stats %}
                     {% block idea_status %}
                         <hr>
-                        {% include "content/idea_status.html" %}
+                        {% include "content/idea_status.html" with show_current_only=True %}
                     {% endblock idea_status %}
 
                     {% block idea_organizations %}
                         <hr>
                         <div id="organizations">
                            <h3 class="h5-style">{% trans "Organisaatiot" %}</h3>
-                           <div class="ajaxy-wrap editable-wrap">
-                               {% include "content/idea_detail_organizations.html" %}
+                           <div class="ajaxy-wrap editable-wrap" data-form-wrap="organizations">
+                               {% block idea_organizations_inclusion %}
+                                   {% include "content/idea_detail_organizations.html" %}
+                               {% endblock idea_organizations_inclusion %}
                            </div>
                         </div>
                     {% endblock idea_organizations %}
@@ -111,16 +116,18 @@
                     <hr>
                     <div id="subjects">
                         <h3 class="h5-style">{% trans "Aiheet" %}</h3>
-                        <div class="ajaxy-wrap editable-wrap">
-                            {% include "content/idea_detail_tags.html" %}
+                        <div id="tags" class="ajaxy-wrap editable-wrap" data-form-wrap="tags">
+                            {% block idea_tags_inclusion %}
+                                {% include "content/idea_detail_tags.html" %}
+                            {% endblock idea_tags_inclusion %}
                         </div>
                     </div>
 
                     {% block idea_tools %}
                         <hr>
+                        <div id="tools" style="text-align: center">
+                            {% block idea_tools_menu %}
 
-                        {% block idea_tools_menu %}
-                            <div id="tools" style="text-align: center">
                                 {% comment %}btn-group is a fix for the dropdown aligning left{% endcomment %}
                                 <div class="btn-group">
                                     <div class="dropdown">
@@ -134,8 +141,9 @@
                                         </ul>
                                     </div>
                                 </div>
-                            </div>
-                        {% endblock idea_tools_menu %}
+
+                            {% endblock idea_tools_menu %}
+                        </div>
                     {% endblock idea_tools %}
 
                 {% endblock idea_side_1 %}

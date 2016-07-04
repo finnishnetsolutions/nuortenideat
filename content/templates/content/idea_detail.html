@@ -3,7 +3,129 @@
 {% load i18n bootstrap3 fontawesome static permitter flagging favorites moderation %}
 {% block title %}{% trans "Idea" %}: {{ object.title|truncatechars:50 }} - {{ block.super }}{% endblock title %}
 
+{% block css %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static "survey/css/survey.css" %}" type="text/css">
+{% endblock css %}
+
+{% block js_extra %}
+    {{ block.super }}
+
+    <script type="text/javascript" src="{% static 'idea_survey/js/idea_survey.js' %}"></script>
+
+    {% if object in perm.content.CanEditIdea %}
+        <script type="text/javascript">
+            $(function() {
+                function getFormElements(url) {
+                    $.get(url, function(data) {
+                        updateFormElements(data);
+                    });
+                }
+
+                function updateFormElements(data) {
+                    $.each(data['data'], function (i, val) {
+                        var wrap = $('.editable-wrap[data-form-wrap="' + i + '"]');
+                        if (wrap.length) {
+                            wrap.html(val);
+                        } else {
+                            console.log('Element ' + wrap.selector + ' does not exist');
+                        }
+                    });
+                    toggleEditButtons(data['preview']);
+
+                    if (data['reload']) {
+                        // reload commenting block when settings changed
+                        $('#comments').trigger('ajaxy-reload');
+                    }
+                }
+
+                function toggleEditButtons(preview) {
+                    $('.idea-edit-buttons > .edit-mode').toggle(preview);
+                    $('.idea-edit-buttons > .preview-mode').toggle(!preview);
+                }
+
+                var ideaEditUrl = '{% url 'content:edit_idea' object.pk %}';
+
+                $('.edit-idea.edit').on('click', function() {
+                    getFormElements(ideaEditUrl);
+                });
+
+                $('.edit-idea.cancel').on('click', function() {
+                    var url = ideaEditUrl + '?preview=true';
+                    getFormElements(url);
+                });
+
+                $('.edit-idea.save').on('click', function() {
+                    var formData = $('.editable-wrap[data-form-wrap]').
+                            find('form').find(':input').serialize();
+                    $.post(ideaEditUrl, formData).done(function(data) {
+                        updateFormElements(data);
+                    });
+                });
+
+                $('#add-details-btn').on('click', function() {
+                    window.scrollTo(0, $("#additional-detail-form-wrap").offset().top);
+                });
+
+                $(document).on('click', '.add-details-cancel', function() {
+                    $('#idea-additional-detail-list').trigger('ajaxy-reload');
+                });
+            });
+        </script>
+    {% endif %}
+{% endblock js_extra %}
+
+{% block precontent %}
+    <div class="container progress-bar-container">
+        <div class="well">{% include 'progress_bar/progress_bar.html' %}</div>
+    </div>
+{% endblock precontent %}
+
 {% block idea_main %}
+    <div class="idea-edit-buttons">
+        <div class="edit-mode text-center">
+            {% if object.visibility != object.VISIBILITY_ARCHIVED %}
+                {% if object in perm.content.CanPublishIdea %}
+                    <a href="{% url 'content:publish_idea' initiative_id=object.pk %}" class="btn btn-default btn-green ajaxy-link disable-after-press" data-ajaxy-method="post">{% bootstrap_icon "share" %} {% trans "Julkaise idea" %}</a>
+                {% elif object in perm.content.CanTransferIdeaForward %}
+                    <a href="{% url 'content:transfer_idea' initiative_id=object.pk %}" class="btn btn-default btn-green ajaxy-link" data-toggle="ajaxy-modal">{% trans "Vie eteenpäin" %}&hellip;</a>
+                {% elif object in perm.content.CanPublishIdeaDecision %}
+                    <a href="{% url 'content:publish_idea_decision' initiative_id=object.pk %}" class="btn btn-default btn-green ajaxy-link" data-toggle="ajaxy-modal">{% trans "Kirjaa päätös" %}&hellip;</a>
+                {% endif %}
+            {% endif %}
+
+            {% if object in perm.content.CanEditIdea %}
+                <a class="edit-idea edit btn btn-default">{% trans "Muokkaa ideaa" %}</a>
+            {% endif %}
+
+            {% if object in perm.content.CanAddIdeaDetails %}
+                <a href="{% url 'content:add_detail' initiative_id=object.pk %}" id="add-details-btn" class="btn btn-default ajaxy-link edit-link" data-ajaxy-target="#additional-detail-form-wrap">{% fa_icon "edit" %} {% trans "Uusi lisätieto" %}</a>
+            {% endif %}
+
+            {% comment %}
+            {% if object in perm.nkvote.CanCreateGallup %}
+                <a href="{% url 'content:gallup:create' object.pk %}" class="btn btn-default">{% fa_icon "bar-chart fa-fw" %} {% trans "Uusi gallup" %}</a>
+            {% endif %}
+            {% endcomment %}
+
+            {% if object in perm.content.CanCreateSurvey %}
+                <a id="create-survey-btn" href="{% url 'content:create_survey' object.pk %}" class="btn btn-default ajaxy-link disable-after-press" data-ajaxy-method="post">{% fa_icon "bar-chart fa-fw" %} {% trans "Uusi kysely" %}</a>
+            {% endif %}
+
+            {% block idea_tools_menu %}
+                {% if object in perm.content.CanViewIdeaTools %}
+                    {{ block.super }}
+                {% endif %}
+            {% endblock idea_tools_menu %}
+        </div>
+        {% if object in perm.content.CanEditIdea %}
+            <div class="preview-mode text-center">
+                <a class="edit-idea save btn btn-default">{% trans "Tallenna" %}</a>
+                <a class="edit-idea cancel btn btn-default">{% trans "Peruuta muokkaus" %}</a>
+            </div>
+        {% endif %}
+    </div>
+
 
     {% if object.status == object.STATUS_DRAFT %}
         <script type="text/javascript">
@@ -11,11 +133,11 @@
         </script>
 
         <div class="alert alert-info">
-            {% blocktrans %}Idea on luonnostilassa ja voit jatkaa idean muokkausta. Täytä idean kuvausteskti. Voit lisätä mm. kuvia ja linkittää videoita. Idealle voi lisätä myös pääkuvan joka näkyy hakusivulla otsikon yläpuolella. Julkaise valmis idea “Julkaise idea -painikkeesta”. Kun julkaistulla idealla on ensimmäinen kannatus tai kommentti, sitä ei voi enää muokata, mutta sille voi kirjata lisätietoja.{% endblocktrans %}
+            {% trans "Idea on luonnos ja voit jatkaa idean muokkausta. Täytä idean kuvausteksti. Voit lisätä mm. kuvia ja linkittää videoita. Idealle voi lisätä myös pääkuvan joka näkyy hakusivulla otsikon yläpuolella. Julkaise valmis idea “Julkaise idea -painikkeesta”. Kun julkaistulla idealla on ensimmäinen kannatus tai kommentti, sitä ei voi enää muokata, mutta sille voi kirjata lisätietoja." %}
         </div>
     {% endif %}
 
-    <div id="idea-picture" class="ajaxy-wrap editable-wrap">
+    <div id="idea-picture" class="ajaxy-wrap editable-wrap" data-form-wrap="picture">
         {% include "content/idea_detail_picture.html" %}
     </div>
 
@@ -26,15 +148,26 @@
     {% endif %}
 
 
-    <div id="title" class="ajaxy-wrap editable-wrap">
-        {% include "content/idea_detail_title.html" %}
+    <div id="title" class="ajaxy-wrap editable-wrap" data-form-wrap="title">
+        {% include "content/idea_detail_title.html" with no_edit=True %}
     </div>
 
     {{ block.super }}
 
-    <div class="description ajaxy-wrap editable-wrap">
-        {% include "content/idea_detail_description.html" %}
+    <div id="description" class="description ajaxy-wrap editable-wrap" data-form-wrap="description">
+        {% include "content/idea_detail_description.html" with no_edit=True %}
     </div>
+
+    <div id="idea-settings" class="ajaxy-wrap editable-wrap" data-form-wrap="settings"></div>
+
+    {% if object in perm.content.CanEditIdea%}
+        <div class="idea-edit-buttons">
+            <div class="preview-mode text-center">
+                <a class="edit-idea save btn btn-default">{% trans "Tallenna" %}</a>
+                <a class="edit-idea cancel btn btn-default">{% trans "Peruuta muokkaus" %}</a>
+            </div>
+        </div>
+    {% endif %}
 
     {% moderation_reasons object %}
 
@@ -46,7 +179,7 @@
             {% else %}
                 <div class="alert alert-info">
                     {% if object.status == object.STATUS_DRAFT %}
-                        {% trans "Idea on luonnostilassa ja se ei näy muille käyttäjille ennen kuin se on julkaistu." %}
+                        {% trans "Idea on luonnos ja se ei näy muille käyttäjille ennen kuin se on julkaistu." %}
                     {% else %}
                         {% blocktrans with status=object.status_or_visibility %}Ideaa ei voi kannattaa, koska se on tilassa "{{ status }}".{% endblocktrans %}
                     {% endif %}
@@ -64,26 +197,23 @@
             {% include "content/idea_detail_additional_details.html" %}
         </section>
     {% endif %}
-
-    <!-- flag link object also in content/idea_detail_additional_details_list.html for layout reasons -->
-    <!-- todo: DRY -->
-    {% if object not in perm.content.CanAddIdeaDetails %}
-        {% if object.status != object.STATUS_DRAFT %}
-            <hr>
-            {% flag_link object %}
-        {% endif %}
-    {% endif %}
-
-     {% if object in perm.content.CanChangeIdeaSettings %}
-         <hr>
-         <a href="{% url 'content:toggle_idea_premoderation' initiative_id=object.pk premoderation_state=object.premoderation|yesno:"0,1" %}" class="ajaxy-link btn btn-default" data-ajaxy-method="POST" title="{% trans "Jos kommenttien esimoderointi otetaan käyttöön, ideaan lisättävät kommentit julkaistaan vasta kun palvelun moderaattori on hyväksynyt ne." %}">
-             {% if object.premoderation %}{% fa_icon "check-square-o" alt=_("käytössä") %}{% else %}{% fa_icon "square-o" alt=_("ei käytössä") %}{% endif %} {% trans "Kommenttien esimoderointi" %}
-         </a>
-         <a href="{% url 'content:toggle_idea_commenting' initiative_id=object.pk commenting_state=object.commenting_closed|yesno:"0,1" %}" class="ajaxy-link btn btn-default" data-ajaxy-method="POST" title="{% trans "Kommentoinnin sulkeminen ja avaaminen." %}">
-             {% if object.commenting_closed %}{% fa_icon "check-square-o" alt=_("kyllä") %}{% else %}{% fa_icon "square-o" alt=_("ei") %}{% endif %} {% trans "Kommentointi suljettu" %}
-         </a>
+    {% if object.status != object.STATUS_DRAFT %}
+        {% flag_link object extraclass='pull-right' %}
+        <div class="clearfix"></div>
     {% endif %}
 {% endblock idea_main %}
+
+{% block idea_owners_inclusion %}
+    {% include "content/idea_detail_owners.html" with no_edit=True %}
+{% endblock idea_owners_inclusion %}
+
+{% block idea_organizations_inclusion %}
+   {% include "content/idea_detail_organizations.html" with no_edit=True %}
+{% endblock idea_organizations_inclusion %}
+
+{% block idea_tags_inclusion %}
+    {% include "content/idea_detail_tags.html" with no_edit=True %}
+{% endblock idea_tags_inclusion %}
 
 {% block initiative_stats %}
     {% if object.status != object.STATUS_DRAFT %}
@@ -97,22 +227,10 @@
     {% endif %}
 {% endblock idea_share_buttons %}
 
-{% block idea_tools_menu %}
-    {% if object in perm.content.CanViewIdeaTools %}
-        {{ block.super }}
-    {% endif %}
-{% endblock idea_tools_menu %}
+{% block idea_tools %}{% endblock idea_tools %}
 
 {% block idea_tools_menu_items %}
     {% if object in perm.content.CanViewIdeaTools %}
-        {% if object in perm.nkvote.CanCreateGallup %}
-            <li role="presentation">
-                <a role="menuitem" tabindex="-1" href="{% url 'content:gallup:create' object.pk  %}">
-                    {% fa_icon "bar-chart fa-fw" %} {% trans "Uusi gallup" %}
-                </a>
-            </li>
-        {% endif %}
-
         <!-- moved to share buttons -->
         <!--{% if object in perm.content.CanCreatePdf %}
             <li role="presentation">
@@ -165,9 +283,9 @@
 {% endblock idea_tools_menu_items %}
 
 {% block idea_gallup %}
-    {% if object.interaction != object.INTERACTION_REGISTERED_USERS or request.user.is_authenticated %}
-        {% for gallup in object.gallup_set.all %}
-            {% if gallup in perm.nkvote.CanViewGallup %}
+    {% for gallup in object.gallup_set.all %}
+        {% if gallup in perm.nkvote.CanViewGallup %}
+            {% if gallup.interaction != gallup.INTERACTION_REGISTERED_USERS or request.user.is_authenticated %}
                 <aside class="ajaxy-wrap">
                     <a name="gallup-{{ gallup.id }}"></a>
                     {# Below checks could probably be done better #}
@@ -182,10 +300,12 @@
                     {% elif gallup.default_results %}
                         {% include "gallup/well.html" with show_results=True %}
                     {% else %}
-                        {% include "gallup/well.html"%}
+                        {% include "gallup/well.html" %}
                     {% endif %}
                 </aside>
             {% endif %}
-        {% endfor %}
-    {% endif %}
+        {% endif %}
+    {% endfor %}
+
+    <div id="surveys" class="ajaxy-wrap" data-ajaxy-url="{{ survey_block_url }}">{% include 'idea_survey/survey_wrap.html' %}</div>
 {% endblock idea_gallup %}

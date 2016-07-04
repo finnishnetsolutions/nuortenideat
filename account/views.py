@@ -413,7 +413,7 @@ class UserProfileView(UserProfileMixin, generic.DetailView):
             user_id=user.pk).count()
         kwargs["summary"] = True
         kwargs['form'] = self.form_class
-        kwargs['is_public_profile'] = False if self.request.user == user else True
+        kwargs['show_private_data'] = True if self.request.user == user else False
         return kwargs
 
 

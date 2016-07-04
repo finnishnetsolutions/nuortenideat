@@ -1,0 +1,12 @@
+{% load i18n survey_tags %}
+
+{% if question.answers.all %}
+    <div class="survey-question-answers survey-question-answers-text panel panel-nuka">
+        <div class="panel-heading">{% trans "Vastaukset" %}</div>
+        {% if no_pagination %}
+            {% show_text_answers question paginate=False %}
+        {% else %}
+            {% show_text_answers question paginate %}
+        {% endif %}
+    </div>
+{% endif %}

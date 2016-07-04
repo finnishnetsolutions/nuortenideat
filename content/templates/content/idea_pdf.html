@@ -30,7 +30,6 @@
                 $('input[name="output_method"]:checked').trigger('change');
 
                 $('input[name="email_receiver_type"]').on('change', function() {
-                    console.log($(this).val());
                     $('#id_email_recipient_organization_wrap').toggle($(this).val() == '{{ form.EMAIL_RECEIVER_TYPE_INTERNAL }}')
                     $('#id_email_recipient_wrap, #id_email_recipient_name_wrap').toggle($(this).val() == '{{ form.EMAIL_RECEIVER_TYPE_EXTERNAL }}')
                 })
@@ -39,6 +38,9 @@
 
                 $('#id_included_comments').on('change', function() {
                     $('.comment-checkbox').prop('checked', false);
+                    if (!$(this).val()) {
+                        return false;
+                    }
                     $.each($(this).val(), function(i, pk) {
                         var sel = 'input[data-comment-pk="'+pk+'"]';
                         $(sel).prop('checked', true);
@@ -144,24 +146,24 @@
 
 {% block content %}
 
-    <h1 class="pdf-hide">
-        {% trans "Vie idea eteenpäin" %}
-    </h1>
+    <div class="well pdf-hide">
+        <h1>{% trans "Vie idea eteenpäin" %}</h1>
 
-    {% if not pdf_mode %}
-        <div id="pdf-form">
-            <a name="submit-pdf-form"></a>
-            <form id="form-element" action="{% url "content:idea_to_pdf" initiative_id=object.pk %}#submit-pdf-form" method="post" novalidate>
-                {% csrf_token %}
-                {% bootstrap_form form %}
-                <input id="form-submit" type="submit" name="submit" class="btn btn-default" value="{% trans "OK" %}">
-                <a class="btn btn-default" href="{{ object.get_absolute_url }}">{% trans "Peruuta" %}</a>
-            </form>
-        </div>
-    {% endif %}
+        {% if not pdf_mode %}
+            <div id="pdf-form">
+                <a name="submit-pdf-form"></a>
+                <form id="form-element" action="{% url "content:idea_to_pdf" initiative_id=object.pk %}#submit-pdf-form" method="post" novalidate>
+                    {% csrf_token %}
+                    {% bootstrap_form form %}
+                    <input id="form-submit" type="submit" name="submit" class="btn btn-default" value="{% trans "OK" %}">
+                    <a class="btn btn-default" href="{{ object.get_absolute_url }}">{% trans "Peruuta" %}</a>
+                </form>
+            </div>
+        {% endif %}
 
-    <h2 class="pdf-hide">{% trans "Esikatselu" %}</h2>
-    <div class="alert alert-info pdf-hide">{% trans "Tämä on PDF-luonnin esikatselu. Voit vielä piilottaa kommentteja ennen tulostusta." %}</div>
+        <h2>{% trans "Esikatselu" %}</h2>
+        <div class="alert alert-info">{% trans "Tämä on PDF-luonnin esikatselu. Voit vielä piilottaa kommentteja ennen tulostusta." %}</div>
+    </div>
 
     {{ block.super }}
 
@@ -252,6 +254,12 @@
     {% for gallup in object.gallup_set.all %}
         <aside class="ajaxy-wrap">
             {% include "gallup/well.html" with show_results=True disabled=True %}
+        </aside>
+    {% endfor %}
+
+    {% for idea_survey in object.idea_surveys.all %}
+        <aside class="ajaxy-wrap">
+            {% include 'idea_survey/survey_container.html' with edit_mode=False no_pagination=True %}
         </aside>
     {% endfor %}
 {% endblock idea_gallup %}

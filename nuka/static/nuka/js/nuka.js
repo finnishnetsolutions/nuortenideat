@@ -42,4 +42,7 @@ $(function () {
         $(this).parent().removeClass("buttonselect-label-focus");
     });
 
+    $(document).on('click', '.disable-after-press', function() {
+       $(this).addClass('disabled');
+    });
 });

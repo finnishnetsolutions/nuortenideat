@@ -1,0 +1,11 @@
+{% load i18n survey_tags %}
+
+<div class="survey-element survey-element-page">
+    {% trans "Sivu" %} <span class="survey-element-page-number">{% survey_element_subtype_order element as element %}</span> [{{ element.pk }}]
+
+    {% if edit_mode %}
+        <div class="btn-group pull-right">
+            {% include "survey/edit_mode/element_buttons.html" %}
+        </div>
+    {% endif %}
+</div>

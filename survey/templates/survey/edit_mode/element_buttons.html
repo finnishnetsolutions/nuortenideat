@@ -1,0 +1,5 @@
+{% load i18n %}
+
+<a href="{% url 'survey:element:move_up' survey_id=element.survey.pk element_id=element.pk %}" class="btn btn-default survey-element-up" title="{% trans 'Nosta' %}"><span class="glyphicon glyphicon-arrow-up"></span></a>
+<a href="{% url 'survey:element:move_down' survey_id=element.survey.pk element_id=element.pk %}" class="btn btn-default survey-element-down" title="{% trans 'Laske' %}"><span class="glyphicon glyphicon-arrow-down"></span></a>
+<a href="{% url 'survey:element:delete' survey_id=element.survey.pk element_id=element.pk %}" class="btn btn-danger survey-element-delete" title="{% trans 'Poista' %}"><span class="glyphicon glyphicon-remove"></span></a>

@@ -6,6 +6,7 @@ from libs.permitter import perms
 
 from content.models import Idea
 from content.perms import OwnsInitiative, InitiativeIsNotArchived
+from nkvote.models import Gallup
 from nkvote.utils import answered_gallup
 from nuka import perms as nuka
 
@@ -67,7 +68,7 @@ class AnsweringGallupRequiresLogin(nuka.BasePermission):
         super(AnsweringGallupRequiresLogin, self).__init__(**kwargs)
 
     def is_authorized(self):
-        return self.gallup.idea.interaction == Idea.INTERACTION_REGISTERED_USERS
+        return self.gallup.interaction == Gallup.INTERACTION_REGISTERED_USERS
 
 
 class GallupHasAnswers(nuka.BasePermission):

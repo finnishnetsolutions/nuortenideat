@@ -1,0 +1,50 @@
+{% load i18n bootstrap3 %}
+
+<div class="survey-element survey-element-mode-edit survey-element-question ajaxy-wrap {% if new %}survey-element-new{% endif %}">
+    <form action="{{ request.path }}" class="ajaxy-form" method="post" data-ajaxy-target-method="replaceWith" novalidate>
+        <div class="survey-question-title">{{ question_type_display }}</div>
+
+        {% csrf_token %}
+        {% bootstrap_field form.text %}
+        {% bootstrap_field form.instruction_text %}
+        {% bootstrap_field form.required %}
+        {% bootstrap_field form.type %}
+
+        {% if is_option_input %}
+            <div class="survey-question-options">
+                {% bootstrap_field form.options %}
+            </div>
+            <div class="clearfix margin-top-sm"></div>
+        {% endif %}
+
+        {% if not element.pk %}
+            {% bootstrap_field form.order %}
+            <input type="hidden" name="prefix_id" value="{{ prefix_id }}" class="prefix_id">
+        {% endif %}
+
+        <button type="submit" class="btn btn-primary survey-element-save" title="{% trans 'Tallenna' %}">{% bootstrap_icon "ok" %} {% trans "Tallenna" %}</button>
+        {% if element.pk %}
+            <a href="{% url 'survey:question' survey_id=element.survey_id question_id=element.pk %}" class="btn btn-default ajaxy-link" data-ajaxy-target-method="replaceWith">
+                {% trans "Peruuta" %}
+            </a>
+        {% endif %}
+
+        <div class="btn-group pull-right">
+            {% if not element.pk %}
+                {% include "survey/edit_mode/element_buttons_temp_element.html" %}
+            {% else %}
+                {% include "survey/edit_mode/element_buttons.html" %}
+            {% endif %}
+        </div>
+        <div class="clearfix"></div>
+    </form>
+</div>
+
+<script type="text/javascript">
+    $(function() {
+        $('.survey-element-save').on('click', function() {
+            $('html, body').animate({ scrollTop: $(this).parents('.survey-element').offset().top }, 500);
+            return true;
+        });
+    })
+</script>

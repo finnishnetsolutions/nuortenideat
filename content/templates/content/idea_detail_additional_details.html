@@ -3,5 +3,5 @@
 <h4>{% trans "Lisätietoa" %}</h4>
 
 <div id="list_details" class="ajaxy-wrap editable-wrap">
-   {% include "content/idea_detail_additional_details_list.html" %}
+    {% include "content/idea_detail_additional_details_list.html" with details=object.details.all %}
 </div>

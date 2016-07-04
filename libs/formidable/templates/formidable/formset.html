@@ -1,0 +1,12 @@
+<div{{ attrs }}>
+    <div class="formidable-formset-forms" data-formset-id="{{ formset_id }}">
+        {{ forms_html }}
+    </div>
+    <div class="formidable-formset-actions">
+        {{ delete_input }}
+        {% include "formidable/formset-actions.html" %}
+    </div>
+</div>
+<script>
+    $('.{{ formset_id }}:last').formidableFormset({{ options_json }});
+</script>

@@ -1,0 +1,13 @@
+{% load i18n configs %}{% base_url as base_url %}{% blocktrans with idea_url=idea_url sender_name=sender_name sender_email=sender_email %}Hei,
+
+Nuortenideat.fi-palveluun on kirjoitettu idea, joka on ohjattu sinun käsiteltäväksi. Tutustu ideaan ja vastaa nuoren esittämään muutos- tai parannusehdotukseen lähettämällä viesti alla olevaan sähköpostiosoitteeseen. Jos et ole oikea henkilö käsittelemään asiaa, pyydämme välittämään idean eteenpäin sähköpostitse oikealle henkilölle ja ilmoittamaan alla olevaan osoitteeseen, kenelle idea on välitetty vastattavaksi. Idean kirjoittajan on tärkeä saada tietää, miten asia etenee ja miten se on otettu huomioon!
+
+Idea on osoitteessa {{ base_url }}{{ idea_url }}.
+
+Ilmoita alla olevaan sähköpostiosoitteeseen tiedot siitä, miten idean käsittely etenee ja millaisen päätöksen se saa. Tiedot idean etenemisestä sekä päätös perusteluineen julkaistaan Nuortenideat.fi-palvelussa idean yhteydessä, kun ne on saatu. Näin myös idean kirjoittaja sekä sitä kommentoineet ja kannattaneet nuoret saavat tiedon, miten ehdotus on huomioitu. Tiedot idean vastaanottamisesta ja etenemisestä pyydetään toimittamaan kuukauden kuluessa. Tiedot päätöksestä voit ilmoittaa myöhemmin sen saatuasi.
+
+Kiitos yhteistyöstä!
+
+{{ sender_name }}
+sähköposti: {{ sender_email }}
+{% endblocktrans %}

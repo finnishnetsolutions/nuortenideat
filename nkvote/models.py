@@ -80,6 +80,13 @@ class Gallup(models.Model):
     DEFAULT_QUESTIONS = 1
     DEFAULT_RESULTS = 2
 
+    INTERACTION_EVERYONE = 1
+    INTERACTION_REGISTERED_USERS = 2
+    INTERACTION_CHOICES = (
+        (INTERACTION_EVERYONE,          _("Kaikki")),
+        (INTERACTION_REGISTERED_USERS,  _("Rekisteröityneet käyttäjät")),
+    )
+
     idea = models.ForeignKey(Idea)
     status = models.SmallIntegerField(default=STATUS_DRAFT)
     default_view = models.SmallIntegerField(default=DEFAULT_QUESTIONS)
@@ -87,6 +94,9 @@ class Gallup(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     opened = models.DateTimeField(null=True)
     closed = models.DateTimeField(null=True)
+    interaction = models.SmallIntegerField(_("Kuka saa vastata gallupiin?"),
+                                           choices=INTERACTION_CHOICES,
+                                           default=INTERACTION_EVERYONE)
 
     def default_results(self):
         return self.default_view == self.DEFAULT_RESULTS

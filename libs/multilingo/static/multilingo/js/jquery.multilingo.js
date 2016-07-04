@@ -17,7 +17,6 @@
                     activeLanguage;
 
                 opts = $.extend({}, $.fn.multilingo.defaults, opts);
-
                 langSelect = $(opts.langSelect)
 
                 if (!opts.visibleLanguages) {

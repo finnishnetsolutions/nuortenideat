@@ -1,17 +1,31 @@
-{% extends "content/idea_edit_base_form.html" %}
 {% load i18n bootstrap3 %}
-{% block form_body %}
-    {% if form.instance.picture %}
-    <div class="form-group">
-        <label class="control-label" for="id_current_picture">{% trans "Nykyinen kuva" %}</label>
-        {% include 'content/idea_main_picture.html' with object=form.instance %}
-    </div>
-    {% endif %}
-    {{ block.super }}
-{% endblock form_body %}
-{% block form_actions %}
-    {% if form.instance.picture %}
-        <a href="{% url 'content:delete_idea_picture' initiative_id=form.instance.pk %}" class="btn btn-default remove-picture ajaxy-link" data-ajaxy-method="DELETE">{% bootstrap_icon "remove" %} {% trans "Poista kuva" %}</a>
-    {% endif %}
-    {{ block.super }}
-{% endblock form_actions %}
+
+<div class="modal-header">
+
+    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">{% trans "Sulje" %}</span></button>
+    <br>
+</div>
+<div class="modal-body">
+
+    <form action="{{ request.path }}" method="post" class="ajaxy-form {% block form_classes %}{% endblock form_classes %}" novalidate>
+        {% csrf_token %}
+
+        {% if form.instance.picture %}
+            <div class="form-group">
+                <label class="control-label" for="id_current_picture">{% trans "Nykyinen kuva" %}</label>
+                {% include 'content/idea_main_picture.html' with object=form.instance %}
+            </div>
+        {% endif %}
+
+        {% bootstrap_form form %}
+        {% if request.is_ajax %}{# HACK: dont re-display non-ajax messsages already show on page header #}
+            {% bootstrap_messages %}
+        {% endif %}
+        <button class="btn btn-default" type="submit">{% bootstrap_icon "ok" %} {% trans "Tallenna" %}</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">{% trans "Sulje" %}</button>
+        {% if form.instance.picture %}
+            <a href="{% url 'content:delete_idea_picture' initiative_id=form.instance.pk %}" class="btn btn-default pull-right remove-picture ajaxy-link" data-ajaxy-method="DELETE">{% bootstrap_icon "remove" %} {% trans "Poista kuva" %}</a>
+        {% endif %}
+        <div class="clearfix"></div>
+    </form>
+</div>

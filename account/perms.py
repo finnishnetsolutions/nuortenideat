@@ -49,7 +49,6 @@ class IsClosed(AccountBasePermission):
 
 class CanDisconnectSocial(AccountBasePermission):
     def is_authorized(self):
-        print len(self.account.password), 'Salasanan pittuus'
         return len(self.account.password) > 0
 
 

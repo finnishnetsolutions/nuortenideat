@@ -11,10 +11,16 @@ from django.utils.translation import get_language
 
 
 class SingleLanguageWidgetMixIn(object):
+    def __init__(self, attrs=None, **kwargs):
+        if attrs is None:
+            attrs = {"class": "multilingo-input"}
+        super(SingleLanguageWidgetMixIn, self).__init__(attrs=attrs, **kwargs)
+
     def render(self, name, value, attrs=None):
         attrs = (attrs or {}).copy()
-        label = attrs.pop('data-language-label', None) or \
-                self.attrs.get('data-language-label', None)
+        final_attrs = self.build_attrs(attrs)
+        label = final_attrs.pop('data-language-label', None) or \
+            final_attrs.get('data-language-label', None)
         html = ''
         if label:
             html += mark_safe('<div class="language-label">%s</div>' % escape(label))
@@ -35,11 +41,14 @@ class MultiLingualWidget(MultiWidget):
     init_js = """
     <script type="text/javascript">
         $(function () {
-            var wrap = $('#%(id)s').parents('.multilingo-wrap').first();
+            var wrap = $('#%(id)s').closest('.multilingo-wrap');
             if (!wrap.length) {
-                wrap = $('#%(id)s').parents('form').first();
+                wrap = $('#%(id)s').closest('form');
             }
-            if (!wrap.data('multilingo')) {
+            if (wrap.data('multilingo')) {
+                wrap.multilingo('refresh');
+            }
+            else {
                 wrap.multilingo(%(options)s);
             }
         });
@@ -82,8 +91,6 @@ class MultiLingualWidget(MultiWidget):
                                    id='%s-%s' % (id_, self._lang_code(i)))
             html = '<div class="multilingo-language-version" ' \
                    'data-language-code="%s">' % self._lang_code(i)
-            final_attrs.setdefault('class', '')
-            final_attrs['class'] += ' multilingo-input'
             html += widget.render(name + '-%s' % self._lang_code(i), widget_value,
                                   final_attrs)
             html += '</div>'

@@ -1,12 +1,15 @@
 # coding=utf-8
 
 from __future__ import unicode_literals
+from django.contrib.contenttypes.models import ContentType
+from django.template.loader import render_to_string
 
-from datetime import datetime
+import requests
 import logging
 import json
-from operator import attrgetter
 
+from datetime import datetime
+from operator import attrgetter
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.syndication.views import Feed
@@ -14,26 +17,23 @@ from django.core.mail.message import EmailMessage
 from django.core.urlresolvers import reverse, reverse_lazy
 from django.db import transaction
 from django.http.response import HttpResponseRedirect, JsonResponse, \
-    Http404
+    Http404, HttpResponse
 from django.shortcuts import redirect, get_object_or_404, render_to_response
 from django.template.context import RequestContext
 from django.utils import timezone
 from django.utils.html import escape
 from django.utils.translation import ugettext, get_language, ugettext_lazy as _
-from django.views.generic.base import View, RedirectView
+from django.views.generic.base import View, RedirectView, TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView, FormView
 from django.views.generic.list import ListView
 from requests.exceptions import ConnectionError
-from wkhtmltopdf.views import PDFTemplateView
-import requests
-from actions.signals import action_performed
 
-from content import perms
-from content.forms import PublishIdeaDecisionForm, KuaTransferMembershipReasonForm, \
-    KuaTransferBlankForm
-from content.perms import CanTransferIdeaToKUAWithoutExtraConfirmation
-from content.utils import close_idea_target_gallups
+from wkhtmltopdf.views import PDFTemplateView
+from actions.signals import action_performed
+from content.models import IdeaSurvey
+from content.survey_perms import CanAnswerSurvey
+from content.utils import close_idea_target_gallups, close_idea_target_surveys
 from libs.attachtor import views as attachtor
 from libs.attachtor.models.models import UploadGroup
 from kuaapi.factories import KuaInitiativeStatus
@@ -45,15 +45,16 @@ from nkvote.utils import answered_gallups, answered_options, vote, \
     get_vote, get_votes, set_vote_cookie
 from nkwidget.forms import WidgetIdeaForm
 from nuka.utils import strip_tags
-from nuka.views import PreFetchedObjectMixIn
+from nuka.views import PreFetchedObjectMixIn, JsonMultiModelFormView
 from organization.models import Organization
-from .forms import CreateIdeaForm, CreateQuestionForm, CreateQuestionFormAnon, \
-    AdditionalDetailForm, IdeaToPdfForm, IdeaSearchForm, IdeaToPdfFormModifier
-from .forms import AttachmentUploadForm
-from .models import Idea, Initiative, Question, AdditionalDetail
-from .perms import CanVoteIdea
-from .pdfprint import BetterPDFTemplateResponse
+from survey.forms import SurveyFormset
+from survey.models import Survey, SurveyOption
+from survey.conf import config as survey_config
 
+from . import perms, forms
+from .models import Idea, Initiative, Question, AdditionalDetail
+from .pdfprint import BetterPDFTemplateResponse
+from survey.utils import get_submitter, survey_formset_initial
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +86,7 @@ class ListAndSearchView(ListAndSearchViewMixIn, ListView):
 class IdeaListView(ListAndSearchView):
     paginate_by = 15
     template_name = 'content/initiative_list.html'
-    form_class = IdeaSearchForm
+    form_class = forms.IdeaSearchForm
     queryset = Idea._default_manager.get_queryset()
 
     def get_form_kwargs(self):
@@ -158,8 +159,12 @@ class IdeaBoxesView(ListView):
 
 class CreateIdeaView(CreateView):
     model = Idea
-    form_class = CreateIdeaForm
+    form_class = forms.CreateIdeaForm
     template_name = 'content/create_idea_form.html'
+
+    #@method_decorator(enable_file_upload_cache)
+    #def dispatch(self, request, *args, **kwargs):
+    #    return super(CreateIdeaView, self).dispatch(request, *args, **kwargs)
 
     def get_form_kwargs(self):
         kwargs = super(CreateIdeaView, self).get_form_kwargs()
@@ -182,7 +187,8 @@ class CreateIdeaView(CreateView):
         obj.creator = self.request.user
         obj.save()
         form.save_m2m()
-
+        
+        #clear_file_upload_cache(self.request)
         # action processing
         action_performed.send(sender=form.instance, created=True)
 
@@ -210,12 +216,17 @@ class IdeaDetailView(PreFetchedObjectMixIn, DetailView):
         context["keksit"] = self.request.COOKIES
         context["answered_gallups"] = answered_gallups(self.request)
         context["answered_options"] = answered_options(self.request)
-        context["idea_voteable"] = CanVoteIdea(
+        context["idea_voteable"] = perms.CanVoteIdea(
             request=self.request, obj=idea).is_authorized()
         context["vote"] = get_vote(self.request, Idea, self.kwargs["initiative_id"])
         context["comment_votes"] = get_votes(
             self.request, CustomComment, comments
         )
+        context['comment_block_url'] = reverse('content:comment_block_idea', kwargs={
+            'initiative_id': idea.pk})
+        context['survey_block_url'] = reverse('content:survey_block_idea', kwargs={
+            'initiative_id': idea.pk})
+        context["show_results_choices"] = survey_config.show_results_choices
         return context
 
 
@@ -279,22 +290,99 @@ class IdeaPartialEditView(PreFetchedObjectMixIn, UpdateView):
         })
 
 
+class IdeaEditView(PreFetchedObjectMixIn, JsonMultiModelFormView):
+    preview_template_name_syntax = 'content/idea_detail_{prefix}.html'
+    form_template_name_syntax = 'content/idea_multiform/{prefix}_inputs.html'
+    form_default_template = 'content/idea_multiform/base_inputs.html'
+
+    form_classes = (
+        ('title', forms.EditInitiativeTitleForm),
+        ('picture', forms.DummyPictureForm),
+        ('description', forms.EditInitiativeDescriptionForm),
+        ('owners', forms.EditIdeaOwnersForm),
+        ('tags', forms.EditInitiativeTagsForm),
+        ('organizations', forms.EditIdeaOrganizationsForm),
+        ('settings', forms.EditIdeaSettingsForm),
+    )
+
+    def get_form_classes(self):
+        instance = self.get_object()
+        return tuple((prefix, form_class)
+                     for prefix, form_class in self.form_classes
+                     if not hasattr(form_class, 'perm_class') or form_class.perm_class(
+            request=self.request, obj=instance).is_authorized)
+
+    def get_form_kwargs(self, prefix):
+        kwargs = super(IdeaEditView, self).get_form_kwargs(prefix)
+        kwargs['instance'] = self.get_object()
+        return kwargs
+
+    def get_preview_context(self):
+        return {'object': self.get_object(), 'no_edit': True}
+
+    def form_valid(self):
+        reload = True if self.get_object().check_commenting_options_change() else False
+        self.save_forms()
+        return self.render_to_response(self.get_context_data(), preview=True,
+                                       reload=reload)
+
+
 class IdeaPartialDetailView(IdeaDetailView):
     def get_template_names(self):
         return [self.kwargs['template_name'], ]
 
 
-class PublishIdeaView(PreFetchedObjectMixIn, View):
-    def post(self, request, **kwargs):
-        idea = self.get_object()
+class PublishIdeaMixIn(object):
+    def publish_idea(self, idea):
         idea.status = Idea.STATUS_PUBLISHED
         idea.visibility = Idea.VISIBILITY_PUBLIC
         idea.published = timezone.now()
         idea.save()
-        messages.success(request, ugettext("Idea on julkaistu! Voit vielä muokata "
+        messages.success(self.request, ugettext("Idea on julkaistu! Voit vielä muokata "
                                            "ideaa, kunnes siihen tulee ensimmäinen "
                                            "kannanotto tai kommentti."))
-        return redirect('content:idea_detail', initiative_id=idea.pk)
+
+
+class PublishIdeaView(PreFetchedObjectMixIn, PublishIdeaMixIn, View):
+    def post(self, request, **kwargs):
+        idea = self.get_object()
+        if idea.idea_surveys.drafts().count():
+            return JsonResponse({'location': reverse(
+                'content:publish_idea_and_surveys', kwargs={'initiative_id': idea.pk}
+            )})
+
+        self.publish_idea(idea)
+        return JsonResponse({'reload': True})
+
+
+class PublishIdeaAndSurveysView(PreFetchedObjectMixIn, PublishIdeaMixIn, FormView):
+    form_class = forms.PublishIdeaAndSurveysForm
+    template_name = 'content/idea_with_surveys_publish.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(PublishIdeaAndSurveysView, self).get_context_data(**kwargs)
+        context['object'] = self.get_object()
+        return context
+
+    def get_form_kwargs(self, **kwargs):
+        kwargs = super(PublishIdeaAndSurveysView, self).get_form_kwargs(**kwargs)
+        kwargs['instance'] = self.get_object()
+        return kwargs
+
+    def get_success_url(self):
+        return reverse('content:idea_detail', kwargs={
+            'initiative_id': self.get_object().pk})
+
+    @transaction.atomic()
+    def form_valid(self, form):
+        idea = self.get_object()
+        self.publish_idea(idea)
+        if form.cleaned_data['included_surveys']:
+            for idea_survey in form.cleaned_data['included_surveys']:
+                idea_survey.status = IdeaSurvey.STATUS_OPEN
+                idea_survey.opened = datetime.now()
+                idea_survey.save()
+        return super(PublishIdeaAndSurveysView, self).form_valid(form)
 
 
 class IdeaArchiveSwitchMixIn(PreFetchedObjectMixIn):
@@ -317,7 +405,9 @@ class IdeaArchiveSwitchMixIn(PreFetchedObjectMixIn):
 class ArchiveIdeaView(IdeaArchiveSwitchMixIn, View):
     def post(self, request, **kwargs):
         self.change_visibility(Idea.VISIBILITY_ARCHIVED)
-        close_idea_target_gallups(self.get_object())
+        idea = self.get_object()
+        close_idea_target_gallups(idea)
+        close_idea_target_surveys(idea)
         messages.success(request, ugettext("Idea on arkistoitu."))
         """ Pohjaa. Lisää vastaanottajan email ja kieli.Looppaa joka vastaanottajalle oma.
         send_email(
@@ -348,12 +438,25 @@ class IdeaOwnerEditView(IdeaPartialEditView, IdeaArchiveSwitchMixIn):
 
         """ Archiving the Idea when owners are removed """
         self.change_visibility(Idea.VISIBILITY_ARCHIVED)
-        close_idea_target_gallups(self.get_object())
+        idea = self.get_object()
+        close_idea_target_gallups(idea)
+        close_idea_target_surveys(idea)
         messages.success(self.request, ugettext("Idea arkistoitiin, koska sillä ei ole "
                                                 "enää omistajia."))
         return JsonResponse({
             'location': reverse('content:idea_detail', kwargs={
                 'initiative_id': self.kwargs['initiative_id']}),
+        })
+
+
+class IdeaPictureEditView(IdeaPartialEditView):
+    def form_valid(self, form):
+        form.save()
+        messages.success(self.request, ugettext("Tallennus onnistui."))
+        return JsonResponse({
+            'success': True,
+            'next': reverse('content:edit_idea_picture',
+                            kwargs={'initiative_id': self.kwargs['initiative_id']})
         })
 
 
@@ -364,7 +467,7 @@ class DeleteIdeaPictureView(PreFetchedObjectMixIn, View):
         obj.picture_alt_text = ''
         obj.save()
         return JsonResponse({'success': True,
-                             'next': reverse('content:idea_detail_picture',
+                             'next': reverse('content:edit_idea_picture',
                                              kwargs={'initiative_id': obj.pk})})
 
     def post(self, request, **kwargs):
@@ -387,7 +490,7 @@ class DeleteIdeaView(DeleteView):
 
 class IdeaAdditionalDetailEditView(CreateView, UpdateView):
     model = AdditionalDetail
-    form_class = AdditionalDetailForm
+    form_class = forms.AdditionalDetailForm
     template_name = 'content/idea_detail_additional_details_add.html'
 
     def get_context_data(self, **kwargs):
@@ -428,9 +531,9 @@ class CreateQuestionView(CreateView):
 
     def get_form_class(self):
         if self.request.user.is_authenticated():
-            return CreateQuestionForm
+            return forms.CreateQuestionForm
         else:
-            return CreateQuestionFormAnon
+            return forms.CreateQuestionFormAnon
 
     def get_organization(self):
         return get_object_or_404(Organization.objects.all(),  # TODO: active
@@ -548,9 +651,9 @@ class IdeaToPdf(PDFTemplateView):
     def get_form_class(self):
         if perms.CanTransferIdeaForward(request=self.request,
                                         obj=self.get_object()).is_authorized():
-            return IdeaToPdfFormModifier
+            return forms.IdeaToPdfFormModifier
         else:
-            return IdeaToPdfForm
+            return forms.IdeaToPdfForm
 
     def get_object(self):
         return get_object_or_404(Idea, pk=self.kwargs['initiative_id'])
@@ -560,6 +663,7 @@ class IdeaToPdf(PDFTemplateView):
             self.request, CustomComment, self.get_object().public_comments().public()
         )
 
+    @transaction.atomic
     def post(self, request, **kwargs):
         obj = self.get_object()
         form = self.get_form_class()(request.POST, instance=obj)
@@ -585,12 +689,13 @@ class IdeaToPdf(PDFTemplateView):
                 obj.transferred = timezone.now()
                 obj.save()
                 if form.cleaned_data['output_method'] \
-                        == IdeaToPdfForm.OUTPUT_METHOD_EMAIL:
+                        == forms.IdeaToPdfForm.OUTPUT_METHOD_EMAIL:
                     self.save_detail(form, self.create_details_text(form.cleaned_data))
                 elif form.cleaned_data.get('additional_detail', False):
                     self.save_detail(form, form.cleaned_data['additional_detail'])
 
-            if form.cleaned_data['output_method'] == IdeaToPdfForm.OUTPUT_METHOD_EMAIL:
+            if form.cleaned_data['output_method'] == \
+                    forms.IdeaToPdfForm.OUTPUT_METHOD_EMAIL:
                 receivers = self.get_email_receivers(form.cleaned_data)
                 self.mail_pdf(resp, form.cleaned_data['email_message'], receivers)
                 messages.success(request, _("Idea lähetetty sähköpostin liitteenä"))
@@ -615,6 +720,7 @@ class IdeaToPdf(PDFTemplateView):
     def get_email_receivers(self, cleaned_data):
         receivers = set()
         # field is deleted in form.clean if it is not needed
+        receivers = set()
         org = cleaned_data.get('email_recipient_organization', None)
         if org:
             receivers = set(map(lambda u: u.email, org.admins.all()))
@@ -650,14 +756,16 @@ class IdeaToPdf(PDFTemplateView):
         tmp_file_html = resp.render_to_temporary_file(template_name=self.template_name,
                                                       delete=False)
         tmp_file = resp.convert_to_pdf(tmp_file_html.name)
-        msg = EmailMessage(
+        footer_template = 'content/email/transfer_idea_email_footer_text.txt'
+        extended_msg = "\n".join((msg, render_to_string(footer_template)))
+        msg_ready = EmailMessage(
             subject=_("Idea liitteenä - nuortenideat.fi"),
             from_email=settings.DEFAULT_FROM_EMAIL,
-            body=msg,
+            body=extended_msg,
             to=receivers
         )
-        msg.attach(filename=self.filename, content=tmp_file)
-        return msg.send()
+        msg_ready.attach(filename=self.filename, content=tmp_file)
+        return msg_ready.send()
 
 
 class TransferIdeaForwardView(DetailView):
@@ -677,8 +785,8 @@ class TransferIdeaToKUAView(UpdateView):
     def get_form_class(self):
         perm = CanTransferIdeaToKUAWithoutExtraConfirmation
         if perm(request=self.request, obj=self.kwargs['obj']).is_authorized():
-            return KuaTransferBlankForm
-        return KuaTransferMembershipReasonForm
+            return forms.KuaTransferBlankForm
+        return forms.KuaTransferMembershipReasonForm
 
     def form_valid(self, form):
         idea = self.get_object()
@@ -762,7 +870,7 @@ class TransferIdeaToKUAView(UpdateView):
 
 class PublishIdeaDecision(FormView):
     template_name = 'content/publish_idea_decision.html'
-    form_class = PublishIdeaDecisionForm
+    form_class = forms.PublishIdeaDecisionForm
 
     def get_object(self, queryset=None):
         return self.kwargs['obj']
@@ -827,7 +935,7 @@ class IdeaCommentingStatusToggleView(View):
 
 
 class UploadAttachmentView(attachtor.UploadAttachmentView):
-    form_class = AttachmentUploadForm
+    form_class = forms.AttachmentUploadForm
 
     def get_form_kwargs(self):
         kwargs = super(UploadAttachmentView, self).get_form_kwargs()
@@ -852,7 +960,7 @@ class IdeaFeed(Feed):
     title = _("Nuortenideat.fi")
     description = _("Seuraa ideoita.")
     link = settings.BASE_URL
-    form_class = IdeaSearchForm
+    form_class = forms.IdeaSearchForm
     queryset = Idea.objects.get_queryset()
 
     def get_object(self, request, *args, **kwargs):
@@ -875,3 +983,211 @@ class IdeaFeed(Feed):
 
     def item_link(self, item):
         return self.link.rstrip('/') + item.get_absolute_url()
+
+
+class CreateSurvey(PreFetchedObjectMixIn, View):
+    def post(self, request, **kwargs):
+        idea = self.get_object()
+        idea_survey = IdeaSurvey.objects.create(idea=idea)
+
+        survey = Survey.objects.create(show_results=survey_config.show_results_default)
+        idea_survey.content_object = survey
+        idea_survey.save()
+
+        return JsonResponse({'trigger': True})
+
+
+class SurveyBlockView(TemplateView):
+    template_name = 'idea_survey/survey_wrap.html'
+    model = Idea
+    pk_url_kwarg = 'pk'
+
+    def get_context_data(self, **kwargs):
+        initiative = get_object_or_404(self.model, pk=self.kwargs[self.pk_url_kwarg])
+        kwargs['object'] = initiative
+        return kwargs
+
+
+class IdeaSurveyMixin(PreFetchedObjectMixIn):
+    def get_idea_survey(self, survey=None):
+        if not survey:
+            survey = self.get_object()
+        return IdeaSurvey.objects.get(
+            object_id=survey.pk,
+            content_type=ContentType.objects.get_for_model(Survey)
+        )
+
+
+class SurveyDetailView(IdeaSurveyMixin, DetailView):
+    template_name = 'idea_survey/survey_container.html'
+    edit_mode = False
+
+    def get(self, request, *args, **kwargs):
+        obj = self.get_object()
+        if not obj.__class__ == Survey:
+            raise Http404
+
+        if kwargs.get('fresh-template'):
+            self.template_name = 'idea_survey/survey_wrap.html'
+        return super(SurveyDetailView, self).get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super(SurveyDetailView, self).get_context_data(**kwargs)
+
+        survey = self.get_object()
+        idea_survey = self.get_idea_survey(survey)
+        submitter = get_submitter(self.request)
+        initial = survey_formset_initial(survey, submitter)
+        can_answer = CanAnswerSurvey(request=self.request, obj=survey).is_authorized()
+        context["formset"] = SurveyFormset(survey=survey, initial=initial,
+                                           disabled=can_answer is False)
+
+        #if survey.elements.exists():
+        context["edit_mode"] = self.edit_mode
+        #else:
+        #   context["edit_mode"] = True
+
+        context["idea_survey"] = idea_survey
+        context["show_results_choices"] = survey_config.show_results_choices
+        return context
+
+
+class UpdateSurveyShowResults(IdeaSurveyMixin, TemplateView):
+
+    @transaction.atomic()
+    def post(self, request, *args, **kwargs):
+        survey = self.get_object()
+        idea_survey = self.get_idea_survey(survey)
+        value = int(self.kwargs["value"])
+        if value not in dict(survey_config.show_results_choices):
+            return Http404("Invalid survey show_results value.")
+        survey.show_results = value
+        survey.save()
+        return JsonResponse({'trigger': True})
+
+
+class IdeaSurveyInteractionToggleView(IdeaSurveyMixin, View):
+
+    @transaction.atomic()
+    def post(self, request, *args, **kwargs):
+        obj = self.get_idea_survey()
+        obj.interaction = int(kwargs['interaction'])
+        obj.save()
+        return JsonResponse({'trigger': True})
+
+
+class IdeaSurveyStatusChangeView(IdeaSurveyMixin, View):
+    status = None
+
+    @transaction.atomic()
+    def post(self, *args, **kwargs):
+        if not self.status:
+            return Http404("Status missing.")
+
+        obj = self.get_idea_survey()
+        if self.status == IdeaSurvey.STATUS_OPEN:
+            obj.status = IdeaSurvey.STATUS_OPEN
+            obj.opened = datetime.now()
+        elif self.status == IdeaSurvey.STATUS_CLOSED:
+            obj.status = IdeaSurvey.STATUS_CLOSED
+            obj.closed = datetime.now()
+        obj.save()
+
+        return JsonResponse({'trigger': True})
+
+
+# TODO pitäisikö vain arkistoida
+class DeleteIdeaSurveyView(IdeaSurveyMixin, DeleteView):
+    model = IdeaSurvey
+    template_name = "idea_survey/confirm_delete.html"
+
+    @transaction.atomic()
+    def delete(self, request, *args, **kwargs):
+        survey = self.get_object()
+        obj = self.get_idea_survey(survey)
+        success_url = self.get_success_url()
+
+        survey.elements.questions().delete()
+        survey.elements.pages().delete()
+        survey.elements.delete()
+        survey.delete()
+        obj.delete()
+        return HttpResponseRedirect(success_url)
+
+    def get_success_url(self):
+        messages.success(self.request, ugettext('Kysely poistettu.'))
+        obj = self.get_idea_survey()
+        kwargs = {"initiative_id": obj.idea_id}
+        return reverse("content:idea_detail", kwargs=kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super(DeleteIdeaSurveyView, self).get_context_data(**kwargs)
+        obj = self.get_idea_survey()
+        context["idea_id"] = obj.idea_id
+        context['object'] = obj
+        return context
+
+
+class SurveyResultsToPdfView(IdeaSurveyMixin, PDFTemplateView):
+    template_name = 'idea_survey/survey_results_pdf.html'
+    response_class = BetterPDFTemplateResponse
+    model = Survey
+
+    filename = 'nuortenideat_kyselyn_tulokset_{}.pdf'.format(datetime.now().date())
+    show_content_in_browser = False
+    cmd_options = {
+        'viewport-size': '1280x1024',
+        'orientation': 'portrait',
+        'enable-internal-links': True,
+        'enable-external-links': True,
+        'load-media-error-handling': 'ignore',
+        'load-error-handling': 'ignore',
+    }
+
+    def get(self, request, *args, **kwargs):
+        return self.render_to_response(self.get_context_data())
+
+    def get_context_data(self, **kwargs):
+        context = super(SurveyResultsToPdfView, self).get_context_data(**kwargs)
+        survey = self.get_object()
+
+        idea_survey = self.get_idea_survey(survey)
+        context['object'] = survey
+        context['idea_survey'] = idea_survey
+        context['absolute_uri'] = self.request.build_absolute_uri(
+            reverse("content:idea_detail", args=[idea_survey.idea_id])
+        )
+        return context
+
+
+class EditIdeaSurveyNameView(IdeaSurveyMixin, UpdateView):
+    form_class = forms.EditIdeaSurveyNameForm
+    template_name = 'idea_survey/survey_name_form.html'
+
+    def get_form_kwargs(self, **kwargs):
+        kwargs = super(EditIdeaSurveyNameView, self).get_form_kwargs(**kwargs)
+        kwargs['instance'] = self.get_idea_survey()
+        return kwargs
+
+
+    def form_valid(self, form):
+        idea_survey = self.get_idea_survey()
+        idea_survey.title = form.cleaned_data['title']
+        idea_survey.save()
+        return self.get_success_url()
+
+    def get_success_url(self):
+        return JsonResponse({
+            'success': True,
+            'next': reverse('content:idea_survey_name',
+                            kwargs={'survey_id': self.get_object().pk})
+        })
+
+
+class IdeaSurveyNameDetailView(IdeaSurveyMixin, DetailView):
+    template_name = 'idea_survey/survey_name.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(IdeaSurveyNameDetailView, self).get_context_data(**kwargs)
+        context['idea_survey'] = self.get_idea_survey()
+        return context

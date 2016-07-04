@@ -39,9 +39,11 @@ class MunicipalityQuerySet(models.QuerySet):
 class Municipality(models.Model):
     CODE_NO_HOME_MUNICIPALITY_IN_FINLAND = '198'
     CODE_UNKNOWN = '199'
+    CODE_UNIDENTIFIED = '000'
     CODE_ABROAD = '200'
 
-    MAGIC_CODES = (CODE_NO_HOME_MUNICIPALITY_IN_FINLAND, CODE_UNKNOWN, CODE_ABROAD)
+    MAGIC_CODES = (CODE_NO_HOME_MUNICIPALITY_IN_FINLAND, CODE_UNKNOWN, CODE_ABROAD,
+                   CODE_UNIDENTIFIED)
 
     # data from CodeService
     code = models.CharField(max_length=3)

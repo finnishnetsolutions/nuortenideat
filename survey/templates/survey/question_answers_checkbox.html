@@ -1,0 +1,22 @@
+{% load i18n %}
+
+{% with survey_submission_count=question.survey.submissions.all|length %}
+    {% if survey_submission_count %}
+        <div class="survey-question-answers survey-question-answers-checkbox panel panel-nuka">
+            <div class="panel-heading">{% trans "Vastaukset" %}</div>
+            {% if survey_submission_count %}
+                <ul class="list-group">
+                    {% for option in question.options.all %}
+                        <li class="list-group-item survey-question-answer survey-question-answer-checkbox">
+                            {{ option.text }} <span class="badge">{{ option.answers.all|length }} / {{ survey_submission_count }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="panel-body">
+                    <i>{% trans "Ei vastauksia" %}</i>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endwith %}

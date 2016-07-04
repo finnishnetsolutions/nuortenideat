@@ -88,6 +88,7 @@ class GallupFormView(TemplateView):
         except KeyError:
             pass
         del post_data["default_view"]
+        del post_data["interaction"]
         question_inputs = list()
         questions_db_id = list()
         option_inputs = list()
@@ -211,7 +212,7 @@ class GallupFormView(TemplateView):
 
         return questions.values()
 
-    def save(self, questions, default_view):
+    def save(self, questions, default_view, interaction):
         idea = Idea.unmoderated_objects.get(pk=self.kwargs["initiative_id"])
 
         try:
@@ -289,6 +290,8 @@ class GallupFormView(TemplateView):
                 if not option_found:
                     old_option.delete()
 
+        gallup.interaction = interaction
+
         # Add/update the default view shown on the gallup.
         if default_view == "questions":
             gallup.default_view = Gallup.DEFAULT_QUESTIONS
@@ -305,7 +308,8 @@ class GallupFormView(TemplateView):
 
     def post(self, *args, **kwargs):
         questions = self.get_questions(self.request.POST.copy())
-        return self.save(questions, self.request.POST["default_view"])
+        return self.save(questions, self.request.POST["default_view"],
+                         self.request.POST["interaction"])
 
     def get_context_data(self, **kwargs):
         context = super(GallupFormView, self).get_context_data(**kwargs)
@@ -317,6 +321,7 @@ class GallupFormView(TemplateView):
         context["active_language"] = self.request.LANGUAGE_CODE
         lang_dict = [dict([("code", k), ("label", v)]) for k, v in settings.LANGUAGES]
         context["languages_json"] = json.dumps(lang_dict, ensure_ascii=False)
+        context['interaction_choices'] = Gallup.INTERACTION_CHOICES
         return context
 
 

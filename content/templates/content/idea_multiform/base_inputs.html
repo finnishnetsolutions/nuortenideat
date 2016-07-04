@@ -1,0 +1,9 @@
+{% load bootstrap3 i18n %}
+
+{% block content %}
+    <form class="idea-multiform">
+        {% block form_body %}
+            {% bootstrap_form form %}
+        {% endblock form_body %}
+    </form>
+{% endblock %}

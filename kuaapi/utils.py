@@ -5,7 +5,9 @@ from __future__ import unicode_literals
 import json
 import logging
 import re
+import content
 from operator import itemgetter
+from kuaapi.models import KuaInitiativeStatus
 from libs.fimunicipality.models import Municipality
 
 from .models import ParticipatingMunicipality
@@ -32,8 +34,8 @@ def update_participating_municipalities(all_municipalities):
                     "deleting participation...", participant.municipality.long_name)
         participant.delete()
 
-    existing_municipality_codes = set(ParticipatingMunicipality.objects\
-        .values_list('municipality__code', flat=True))
+    existing_municipality_codes = set(ParticipatingMunicipality.objects.
+                                      values_list('municipality__code', flat=True))
 
     new_municipality_codes = active_municipality_codes - existing_municipality_codes
 
@@ -52,3 +54,16 @@ def update_participating_municipalities(all_municipalities):
         logger.info("No new municipalities participating in KUA.")
 
     logger.info("Participating municipalities refreshed.")
+
+
+def get_kua_and_idea_status_map(idea, kua_status=None):
+    status_map = {
+        KuaInitiativeStatus.STATUS_DRAFT: idea.STATUS_DRAFT,
+        KuaInitiativeStatus.STATUS_PUBLISHED: idea.STATUS_PUBLISHED,
+        KuaInitiativeStatus.STATUS_SENT_TO_MUNICIPALITY: idea.STATUS_TRANSFERRED,
+        KuaInitiativeStatus.STATUS_DECISION_GIVEN: idea.STATUS_DECISION_GIVEN
+    }
+
+    if kua_status:
+        return status_map.get(kua_status, None)
+    return status_map

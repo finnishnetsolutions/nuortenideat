@@ -1,0 +1,4 @@
+{% load i18n %}
+---
+{% trans "Nuortenideat.fi on valtakunnallinen vaikuttamispalvelu, jonka kautta nuoret voivat parantaa ja kehittää lähiympäristöään. Nuorten kirjoittamat ideat toimitetaan eteenpäin käsittelyyn ja vastattavaksi asioista päättäville toimijoille. Kaksikielinen palvelu on osa oikeusministeriön demokratiapalveluita verkossa (www.demokratia.fi). Palvelun tuottavat yhteistyössä Nuorten tieto- ja neuvontatyön kehittämiskeskus Koordinaatti, oikeusministeriö sekä opetus- ja kulttuuriministeriö. Tutustu ja ota palvelu käyttöön osoitteessa www.nuortenideat.fi" %}
+---

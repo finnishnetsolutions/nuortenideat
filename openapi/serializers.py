@@ -1,15 +1,17 @@
 # coding=utf-8
 
 from __future__ import unicode_literals
+from django.contrib.contenttypes.models import ContentType
 
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
 from account.models import User
-from content.models import Idea
+from content.models import Idea, IdeaSurvey
 from nkcomments.models import CustomComment
 from openapi.base_serializers import MultilingualTextField, MultilingualUrlField
 from organization.models import Organization
+from survey.models import Survey, SurveyOption, SurveyQuestion
 from tagging.models import Tag
 
 from . import base_serializers as base
@@ -126,6 +128,70 @@ class IdeaCommentsSerializer(serializers.Serializer):
                        request=self.context['request'])
 
 
+class SurveyBaseSerializer(serializers.ModelSerializer):
+    url = serializers.SerializerMethodField()
+    webUrl = MultilingualUrlField()
+
+    def get_url(self, obj):
+        return reverse('openapi:{}-detail'.format(obj.content_type.model),
+                       kwargs={'pk': obj.pk}, request=self.context['request'])
+
+    def get_is_closed(self, obj):
+        return not obj.is_open()
+
+
+class SurveySerializer(SurveyBaseSerializer):
+    is_closed = serializers.SerializerMethodField(help_text="survey has expired")
+
+    class Meta:
+        model = IdeaSurvey
+        fields = ('url', 'is_closed', )
+
+
+class SurveyQuestionSerializer(serializers.Serializer):
+    count = serializers.IntegerField(
+        source='content_object.elements.questions.count',
+        help_text="number of questions in survey")
+    url = serializers.SerializerMethodField('_questions_url',
+                                            help_text="API URL for the questions "
+                                                      "in survey")
+
+    def _questions_url(self, obj):
+        return reverse('openapi:survey-questions',
+                       kwargs={'pk': obj.content_object.pk},
+                       request=self.context['request'])
+
+
+class SurveyDetailSerializer(SurveySerializer):
+
+    questions = SurveyQuestionSerializer(source='*',
+                                         help_text="Survey questions summary")
+
+    class Meta:
+        model = IdeaSurvey
+        fields = ('url', 'is_closed', 'questions',
+                  'webUrl')
+
+
+class IdeaSurveySummarySerializer(serializers.Serializer):
+    url = serializers.SerializerMethodField('_survey_url',
+                                            help_text="API URL for Surveys "
+                                                      "associated with the Idea")
+    count = base.SerializerMethodIntegerField('_survey_count',
+                                              help_text="number of public Surveys "
+                                                        "associated with the Idea")
+
+    def _survey_count(self, obj):
+        ct = ContentType.objects.get_for_model(Survey)
+        data = obj.idea_surveys.exclude(status=IdeaSurvey.STATUS_DRAFT).\
+            filter(content_type_id=ct)
+        return data.count()
+
+    def _survey_url(self, obj):
+        return reverse('openapi:idea-surveys', kwargs={'pk': obj.pk},
+                       request=self.context['request'])
+
+
 class IdeaDetailSerializer(base.HyperlinkedModelSerializer):
     title = MultilingualTextField(help_text="title of the Idea")
     description = MultilingualTextField(source='description_plaintext',
@@ -149,12 +215,13 @@ class IdeaDetailSerializer(base.HyperlinkedModelSerializer):
 
     votes = IdeaVotesSerializer(help_text="Idea votes summary")
     comments = IdeaCommentsSerializer(source='*', help_text="Idea comments summary")
+    surveys = IdeaSurveySummarySerializer(source='*', help_text="Idea surveys summary")
 
     class Meta:
         model = Idea
         fields = ('url', 'published', 'title', 'status', 'description', 'owners',
                   'initiatorOrganization', 'targetOrganizations', 'webUrl', 'votes',
-                  'comments')
+                  'comments', 'surveys')
 
 
 class TagIdeasSummarySerializer(serializers.Serializer):
@@ -211,6 +278,47 @@ class CommentSerializer(base.HyperlinkedModelSerializer):
         fields = ('comment', 'created', 'author', )
 
 
+
+class QuestionOptionsSerializer(serializers.ModelSerializer):
+    pk = serializers.IntegerField(help_text="primary key for option")
+    text = serializers.CharField(help_text="answer option")
+
+    class Meta:
+        model = SurveyOption
+        fields = ('pk', 'text', )
+
+
+class QuestionAnswersSerializer(serializers.ModelSerializer):
+    option_id = serializers.IntegerField(help_text="answer refers to option primary key")
+    text = serializers.CharField(help_text="textual answer to question")
+
+    class Meta:
+        model = SurveyOption
+        fields = ('text', 'option_id')
+
+
+class QuestionSerializer(serializers.ModelSerializer):
+
+    question = MultilingualTextField(source='text', help_text='the question')
+    type = serializers.SerializerMethodField(help_text="type of question")
+    instruction = MultilingualTextField(
+        source='instruction_text', help_text="instructions for answering the question")
+
+    options = QuestionOptionsSerializer(many=True,
+                                        help_text="answer options for question")
+
+    # todo: show answers on if show_results = SHOW_RESULTS_EVERYONE
+    #answers = QuestionAnswersSerializer(many=True,
+    #                                    help_text="submitted answers to question")
+
+    def get_type(self, obj):
+        return obj.get_type_display()
+
+    class Meta:
+        model = SurveyQuestion
+        fields = ('question', 'type', 'instruction', 'options', )
+
+
 class PaginatedIdeaSerializer(base.PaginationSerializer):
     results = IdeaSerializer(many=True)
 
@@ -237,3 +345,17 @@ class PaginatedOrganizationSerializer(base.PaginationSerializer):
 
     class Meta:
         object_serializer_class = OrganizationSerializer
+
+
+class PaginatedSurveySerializer(base.PaginationSerializer):
+    results = SurveySerializer(many=True)
+
+    class Meta:
+        object_serializer_class = SurveyDetailSerializer
+
+
+class PaginatedQuestionSerializer(base.PaginationSerializer):
+    results = QuestionSerializer(many=True)
+
+    class Meta:
+        object_serializer_class = QuestionSerializer
