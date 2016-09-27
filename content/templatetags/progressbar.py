@@ -44,10 +44,18 @@ def _map_statuses(idea):
                 })
                 break
         statuses.append(status_dict)
+
+    # pop out unnecessary statuses
+    if idea.visibility == Idea.VISIBILITY_ARCHIVED and not idea.decision_given:
+        # pop out decision given status
+        statuses.pop(2)
     if idea.status != Idea.STATUS_DRAFT:
+        # pop out draft status
         statuses.pop(0)
     if idea.visibility != Idea.VISIBILITY_ARCHIVED:
+        # pop out archived status
         statuses.pop()
+
     return statuses
 
 

@@ -1,0 +1,10 @@
+{% load i18n %}
+
+<strong>{% if detail.type != detail.TYPE_NONE %} {{ detail.get_type_display }} {% endif %}{{ detail.created|date:"SHORT_DATE_FORMAT" }}</strong>
+
+<div class="clearfix"></div>
+{% block details %}{% endblock details %}
+
+<div class="small-p-margin">
+    {% block wrapped_details %}{% endblock wrapped_details %}
+</div>

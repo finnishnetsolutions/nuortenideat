@@ -19,7 +19,7 @@
                         <i class="ni-icon {{ object.is_idea|yesno:'ni-icon-idea,ni-icon-question' }}"></i>
                     </td>
                     <td>
-                        <a href="{{ object.get_absolute_url }}">{{ object.title }}</a>
+                        <a href="{{ object.get_absolute_url }}"><strong>{{ object.title }}</strong></a>
                         <br>
                         {% if object.initiator_organization %}
                             {% include "content/owner_links.html" with initiator_organization=object.initiator_organization %}
@@ -49,7 +49,7 @@
                     <td>{% include "content/initiative_stats.html" %}</td>
                 </tr>
                 {% empty %}
-                    <tr><td>{% trans "Ei ideoita" %}</td></tr>
+                    <tr><td>{% trans "Ei ideoita tai kysymyksiä" %}</td></tr>
             {% endfor %}
         </tbody>
     </table>

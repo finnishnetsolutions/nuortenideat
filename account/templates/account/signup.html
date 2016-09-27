@@ -10,19 +10,20 @@
 
         <form method="post" novalidate>
             {% csrf_token %}
-            {% if facebook %}
+
+            {% if social and social_picture %}
             <div class="facebook-profile-pic-wrap">
-                <img src="http://graph.facebook.com/{{ facebook_id }}/picture?type=large" alt="{% trans 'Facebook profiilikuva' %}" /><br />
-                <p>{% trans "Käytetäänkö Facebookin profiilikuvaa?" %}</p>
+                <img src="{{ social_picture }}" alt="{% trans 'Profiilikuva' %}" /><br />
+                <p>{% trans "Käytetäänkö profiilikuvaa?" %}</p>
                 <div class="radio">
                     <label>
-                        <input type="radio" name="facebook_pic" value="yes" checked />
+                        <input type="radio" name="social_pic" value="yes" checked />
                         {% trans 'Kyllä' %}
                     </label>
                 </div>
                 <div class="radio">
                     <label>
-                        <input type="radio" name="facebook_pic" value="no" />
+                        <input type="radio" name="social_pic" value="no" />
                         {% trans 'Ei' %}
                     </label>
                 </div>

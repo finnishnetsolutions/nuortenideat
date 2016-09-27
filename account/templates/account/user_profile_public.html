@@ -1,0 +1,54 @@
+{% extends 'account/profile_base.html' %}
+
+{% load i18n static bootstrap3 fontawesome %}
+
+{% block header %}
+    <div class="no-picture-bar-{% if object.organizations.count %}blue{% else %}magenta{% endif %}"></div>
+    <div class="clearfix margin-top-md"></div>
+    <h1 class="no-text-transform text-center">
+
+        {% if object.organizations.count == 1 and object.organizations.first.picture_medium %}
+            <img class="profile-organization-picture" src="{{ object.organizations.first.picture_medium.url }}">
+        {% else %}
+            <i class="ni-icon ni-icon-profile"><span class="sr-only">{% trans "Profiilikuvake" %}</span></i>
+        {% endif %}
+        {% if object.organizations.count %}
+            {{ object.get_full_name }}
+        {% else %}
+            {{ object }}
+        {% endif %}
+
+        {% if object in perm.nkmessages.CanSendMessageTo %}
+            <a class="margin-left-sm" href="{% url 'account:create_message' request.user.pk %}?receivers={{ object.pk }}" title="{% trans 'Lähetä käyttäjälle viesti' %}"><span class="glyphicon glyphicon-envelope"></span></a>
+        {% endif %}
+    </h1>
+    <div class="row margin-top-md">
+        <div class="col-md-6 text-center" style="padding-bottom:10px;">
+            {% include "account/profile_picture.html" with user=object no_link=True img_class='profile-picture' %}
+            {% if object.organizations.count %}
+                <div class="clearfix"></div>
+                <a href="#" class="org-admin-online-status online-status" data-organization-id="{{ object.organizations.first.pk }}" data-username="{{ object.username }}"></a>
+            {% endif %}
+        </div>
+        <div class="col-md-6">
+             <ul class="stats">
+                {% if object.organizations.count %}
+                    <li>{% trans "Yhteyshenkilö" %}: &nbsp;
+                        <ul class="favorites-list list-inline display-inline">
+                            {% for o in object.organizations.all %}
+                                <li class="tag"><a href="{{ o.get_absolute_url }}">{{ o }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                {% endif %}
+                <li>{% trans "Ideoita" %}: {{ ideas_count }}</li>
+                <li>{% trans "Kysymyksiä" %}: {{ questions_count }}</li>
+                <li>{% trans "Kommentteja" %}: {{ comments_count }}</li>
+            </ul>
+        </div>
+    </div>
+{% endblock header %}
+
+{% block subcontent %}
+    {% include 'content/initiative_boxes.html' %}
+{% endblock subcontent %}

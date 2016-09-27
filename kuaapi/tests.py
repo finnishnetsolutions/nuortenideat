@@ -141,8 +141,8 @@ class InitiativeStatusApiCallTest(TestCase):
         self.assertEqual(resp.status_code, BAD_REQUEST)
         self.assertEqual(
             json.loads(resp.content)['failure'],
-            "{'__all__': [u'Kua initiative status with this Kua initiative ja "
-            "Status already exists.']}"
+            "{'__all__': [u'Kua initiative status jolla on n\\xe4m\\xe4 Kua initiative ja "
+            "Status on jo olemassa.']}"
         )
 
     def test_post_sent_to_municipality(self):
@@ -173,7 +173,7 @@ class InitiativeStatusApiCallTest(TestCase):
         self.assertEqual(resp.status_code, BAD_REQUEST)
         self.assertEqual(
             json.loads(resp.content)['failure'],
-             "{'status': [u\"Value u'decision given' is not a valid choice.\"]}"
+             "{'status': [u\"Arvo u'decision given' ei kelpaa.\"]}"
         )
 
     def test_urlencoded_post(self):

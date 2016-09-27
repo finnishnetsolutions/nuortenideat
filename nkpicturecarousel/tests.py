@@ -173,7 +173,7 @@ class AdminUploadTest(NukaTestCase):
         )
 
         resp = self.client.post(add_url, self.data)
-        self.assertContains(resp, "Please correct the errors below.")
+        self.assertContains(resp, "Korjaa allaolevat virheet.")
         self.assertContains(
             resp, "Kuvan korkeus tai leveys ei vastaa pyydettyä.", count=3
         )
@@ -186,7 +186,7 @@ class AdminUploadTest(NukaTestCase):
         del self.data["images-0-alt_text"]
 
         resp = self.client.post(add_url, self.data)
-        self.assertContains(resp, "Please correct the errors below.")
+        self.assertContains(resp, "Korjaa allaolevat virheet.")
         self.assertContains(resp, "Tämä kenttä vaaditaan.", count=5)
 
     def test_upload_duplicate_language(self):
@@ -194,7 +194,7 @@ class AdminUploadTest(NukaTestCase):
         self.data["images-1-language"] = "sv"
 
         resp = self.client.post(add_url, self.data)
-        self.assertContains(resp, "Please correct the errors below.")
+        self.assertContains(resp, "Korjaa allaolevat virheet.")
         self.assertContains(
             resp, "Et voi ladata kahta kieliversiota samasta kielestä.", count=2
         )

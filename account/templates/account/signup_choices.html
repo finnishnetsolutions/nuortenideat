@@ -1,6 +1,6 @@
 {% extends 'nuka/base.html' %}
 
-{% load i18n bootstrap3 %}
+{% load i18n bootstrap3 fontawesome %}
 
 {% block content %}
     <div class="well">
@@ -14,8 +14,10 @@
             </div>
             <div class="col-xs-12 col-md-6">
                 <div>
-                    <h2 class="h3">{% trans "Rekisteröidy Facebook-tunnuksilla" %}</h2>
-                    <a class="btn btn-default" href="{% url 'social:begin' 'facebook' %}?next={% url 'account:activation_done' %}&action=signup">{% trans "Rekisteröidy Facebook-tunnuksillasi" %}</a>
+                    <h2 class="h3">{% trans "Rekisteröidy sosiaalisen median tunnuksilla" %}</h2>
+                    <a class="btn btn-default" href="{% url 'social:begin' BACKEND_KEY_FB %}?next={% url 'account:activation_done' %}&action=signup">{% fa_icon "facebook" alt="facebook" %} {% trans "Rekisteröidy Facebook-tunnuksillasi" %}</a>
+                    <div class="clearfix margin-top-sm"></div>
+                    <a class="btn btn-default" href="{% url 'social:begin' BACKEND_KEY_GOOGLE %}?next={% url 'account:activation_done' %}&action=signup">{% fa_icon "google" alt="google" %} {% trans "Rekisteröidy Google-tunnuksillasi" %}</a>
                 </div>
             </div>
         </div>

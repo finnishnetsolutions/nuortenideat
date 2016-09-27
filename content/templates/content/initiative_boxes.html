@@ -1,39 +1,39 @@
 {% load i18n %}
 <div class="initiative-boxes">
-    {% for object in initiatives %}
+    {% for initiative in initiatives %}
         <article class="initiative-box">
-            {% if object.picture %}
-                <a href="{{ object.get_absolute_url }}"><img class="img-responsive" src="{{ object.picture_narrow.url }}" alt="{{ object.picture_alt_text }}"></a>
+            {% if initiative.picture %}
+                <a href="{{ initiative.get_absolute_url }}"><img class="img-responsive" src="{{ initiative.picture_narrow.url }}" alt="{{ initiative.picture_alt_text }}"></a>
             {% else %}
-                {% if object.initiator_organization %}
+                {% if initiative.initiator_organization %}
                     <div class="no-picture-bar-blue"></div>
                 {% else %}
                     <div class="no-picture-bar-magenta"></div>
                 {% endif %}
             {% endif %}
             <div class="organizations">
-                {% include "content/organization_list.html" with orgs=object.target_organizations.all %}
+                {% include "content/organization_list.html" with orgs=initiative.target_organizations.all %}
             </div>
-            <a href="{{ object.get_absolute_url }}">
-                <h2>{{ object.title }}</h2>
+            <a href="{{ initiative.get_absolute_url }}">
+                <h2>{{ initiative.title }}</h2>
             </a>
             <div class="date">
-                {{ object.published|date:"d.m.Y" }}
+                {{ initiative.published|date:"d.m.Y" }}
             </div>
             {% comment %}
             <div class="description">
-                {{ object.description_plaintext|truncatechars:150 }}
+                {{ initiative.description_plaintext|truncatechars:150 }}
             </div>
             {% endcomment %}
-            {% include "content/initiative_stats.html" %}
-            {% if not object.initiator_organization %}
+            {% include "content/initiative_stats.html" with object=initiative %}
+            {% if not initiative.initiator_organization %}
             <div class="owner-list">
-                {% include "content/owner_list.html" with owners=object.owners.all all_small=True %}
+                {% include "content/owner_list.html" with owners=initiative.owners.all all_small=True %}
             </div>
             {% else %}
             <div class="initiator-organization">
-                <a href="{% url 'organization:detail' object.initiator_organization.pk %}">
-                    {{ object.initiator_organization.name }}
+                <a href="{% url 'organization:detail' initiative.initiator_organization.pk %}">
+                    {{ initiative.initiator_organization.name }}
                 </a>
             </div>
             {% endif %}

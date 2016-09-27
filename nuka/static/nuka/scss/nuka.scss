@@ -199,6 +199,10 @@ header {
   }
 }
 
+.profile-organization-picture {
+  max-width: 80px;
+}
+
 
 .organization-picture-wrap {
   > .fa {
@@ -373,11 +377,35 @@ div.no-picture-bar-blue {
   }
 }
 
+.btn-text {
+  border: 0;
+  background-color: inherit;
+}
+
+.dropdown-menu > li > .btn-text {
+  clear: both;
+  color: #333333;
+  display: block;
+  font-weight: normal;
+  line-height: 1.42857;
+  padding: 3px 20px;
+  white-space: nowrap;
+  width: 100%;
+  text-align: left;
+}
+
+.dropdown-menu > li > .btn-text:hover {
+  background-color: #F5F5F5;
+  color: #262626;
+  text-decoration: none;
+}
+
 h1 {
   font-weight: normal;
   font-size: $font-size-48;
   text-transform: uppercase;
 }
+
 @media only screen and (max-width: 500px) {
   h1 {
     font-size: $font-size-36;
@@ -438,6 +466,10 @@ p {
     min-width: $diameter;
     min-height: $diameter;
   }
+}
+
+.no-border {
+  border: 0;
 }
 
 .profile-pic-large {
@@ -890,7 +922,7 @@ a.fixed-write-idea:hover {
   }
 }
 
-.survey-element-mode-answer.survey-has-answers {
+.survey-element-mode-answer.survey-has-answers:not(.can-answer-survey) {
   input[disabled], textarea[disabled], div.radio, div.checkbox {
     display: none;
   }
@@ -2163,7 +2195,7 @@ div.idea-transfer-method-col {
 
   .preview-mode {
     display: none;
-  }  
+  }
 }
 
 div.multiform-border {
@@ -2222,3 +2254,13 @@ fieldset.multiform-fieldset {
     color: #fff;
   }
 }
+
+.no-text-transform {
+  text-transform: none;
+}
+
+.online-status:not(.online) {
+  text-decoration: none;
+  cursor: default;
+}
+

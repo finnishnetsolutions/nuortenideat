@@ -102,13 +102,8 @@ CanViewSurveyModifyMenu = perms.Or(OwnsSurvey, nuka.IsModerator)
 
 CanOpenSurvey = perms.And(
     SurveyInitiativeIsPublic,
-    perms.Or(
-        perms.And(SurveyIsDraft, OwnsSurvey),
-        perms.And(
-            perms.Or(SurveyIsDraft, SurveyIsClosed),
-            nuka.IsModerator
-        ),
-    )
+    perms.Or(SurveyIsDraft, SurveyIsClosed),
+    perms.Or(OwnsSurvey, nuka.IsModerator)
 )
 
 CanCloseSurvey = perms.And(

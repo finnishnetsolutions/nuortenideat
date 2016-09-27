@@ -47,15 +47,25 @@
         <hr>
         <h3>{% trans "Tiliasetukset" %}</h3>
         {% if user in perm.account.CanEditUser %}
-            {% if not object.facebook_associated %}
-                <a class="btn btn-default" href="{% url 'social:begin' 'facebook' %}?next={{ request.path }}&action=associate">
+
+            {% if not object.social_connection %}
+                <a class="btn btn-default" href="{% url 'social:begin' BACKEND_KEY_FB %}?next={{ request.path }}&action=associate">
                     {% trans "Yhdistä Facebook-tiliin" %}
+                </a>
+                <a class="btn btn-default" href="{% url 'social:begin' BACKEND_KEY_GOOGLE %}?next={{ request.path }}&action=associate">
+                    {% trans "Yhdistä Google-tiliin" %}
                 </a>
             {% else %}
                 {% if object in perm.account.CanDisconnectSocial %}
-                    <form action="{% url 'social:disconnect' 'facebook' %}?next={{ request.path }}" method="post">
+                    <form action="{% url 'social:disconnect' object.social_connection %}?next={{ request.path }}" method="post">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-default">{% trans "Poista Facebook-tilin yhdistys" %}</button>
+                        <button type="submit" class="btn btn-default">{% spaceless %}
+                            {% if object.social_connection == BACKEND_KEY_GOOGLE %}
+                                {% trans "Poista Google-tilin yhdistys" %}
+                            {% elif object.social_connection == BACKEND_KEY_FB %}
+                                {% trans "Poista Facebook-tilin yhdistys" %}
+                            {% endif %}
+                        {% endspaceless %}</button>
                     </form>
                 {% endif %}
             {% endif %}

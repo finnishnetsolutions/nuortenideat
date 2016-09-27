@@ -1,7 +1,7 @@
 {% load i18n fontawesome favorites bootstrap3 %}
 
 <ul class="favorites-list list-inline display-inline">
-    {% fav_list ct_id user as obj_list %}
+    {% fav_list ct_id object as obj_list %}
     {% for item in obj_list %}
         <li class="tag">
             {% if item.get_absolute_url %}
@@ -16,7 +16,7 @@
 </ul>
 
 {% if user in perm.account.CanEditUser and not no_edit %}
-    <a href="{% url 'favorite:favorite_edit' user_id=user.pk ct_id=ct_id %}" class="btn btn-default ajaxy-link edit-link">
+    <a href="{% url 'favorite:favorite_edit' user_id=object.pk ct_id=ct_id %}" class="btn btn-default ajaxy-link edit-link">
         {% fa_icon "edit" %} {% if title %}<span style="margin-left: 5px">{{ title }}</span>{% endif %}
     </a>
     <div class="clearfix"></div>

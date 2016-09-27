@@ -19,6 +19,7 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, \
 from bootstrap3_datetime.widgets import DateTimePicker
 from account.models import NotificationOptions
 from actions.models import Action
+from content.models import Idea, Question
 
 from libs.djcontrib.forms.fields import PhoneNumberField
 from libs.djcontrib.forms.forms import FieldReAttrMixIn
@@ -87,12 +88,13 @@ class UserForm(FieldReAttrMixIn, UserCreationFormWithValidation):
         # HACK: Copy-paste from ``django.contirb.auth.forms.UserCreationForm``,
         # because it uses hardcoded ``auth.User`` model class.
         username = self.cleaned_data["username"]
+
         try:
             User._default_manager.get(username=username)
         except User.DoesNotExist:
             return username
         raise forms.ValidationError(
-            self.error_messages['duplicate_username'],
+            _("Käyttäjätunnus on jo käytössä."),
             code='duplicate_username',
         )
 
@@ -206,8 +208,11 @@ class EmailConfirmationForm(forms.ModelForm):
 
     @classmethod
     def hashables(cls, user):
+        last_login = None
+        if user.last_login:
+            last_login = user.last_login.replace(microsecond=0, tzinfo=None)
         return [user.password,
-                user.last_login.replace(microsecond=0, tzinfo=None),
+                last_login,
                 cls.__name__,
                 settings.SECRET_KEY]
 
@@ -354,18 +359,27 @@ class UserProfileIdeaListForm(forms.ModelForm):
         ('content.idea', _("Seuratut ideat")),
         ('tagging.tag', _("Seuratut aiheet")),
         ('organization.organization', _("Seuratut organisaatiot")),
-        ('affected', _("Vaikutetut ideat")),
+        ('affected', _("Vaikutetut ideat ja kysymykset")),
     ]
 
+    TYPE_CHOICES = [
+        ('', _("Kaikki")),
+        (ContentType.objects.get_for_model(Idea).id, _("Ideat")),
+        (ContentType.objects.get_for_model(Question).id, _("Kysymykset")),
+    ]
+
+    initiative_ct_id = forms.ChoiceField(choices=TYPE_CHOICES,
+                                        widget=AutoSubmitButtonSelect, required=False,
+                                        label=_("Näytä"))
     ct_natural_key = forms.ChoiceField(choices=KEY_CHOICES, widget=AutoSubmitButtonSelect,
-                                       required=False, label=_("Näytä"))
+                                       required=False, label="")
 
     def save(self, commit=True):
-        raise Exception("Ei salllittu")
+        raise Exception("Ei sallittu")
 
     class Meta:
         model = User
-        fields = ('ct_natural_key', )
+        fields = ('initiative_ct_id', 'ct_natural_key', )
 
 
 class UsernameForm(forms.ModelForm):

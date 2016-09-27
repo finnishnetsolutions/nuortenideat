@@ -47,7 +47,7 @@ class ContentFlag(ActionGeneratingModelMixin, models.Model):
     reason = models.CharField(_("syy ilmoitukseen"), max_length=250,
                               help_text=_("Kerro lyhyesti, mikä tekee sisällöstä "
                                           "asiattoman. Enintään %d merkkiä.") % 250)
-    status = models.SmallIntegerField(_("tila"), max_length=1, choices=STATUS_CHOICES,
+    status = models.SmallIntegerField(_("tila"), choices=STATUS_CHOICES,
                                       default=STATUS_FLAGGED)
     created = models.DateTimeField(default=timezone.now)
     updated = models.DateTimeField(default=timezone.now)

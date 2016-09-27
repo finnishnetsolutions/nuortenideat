@@ -429,6 +429,68 @@ class ProfileInitiativesListTest(TestCase):
 
         self.client.login(username=self.user1.username, password=DEFAULT_PASSWORD)
         resp = self.client.get(
-            '/fi/kayttaja/%d/lista/?ct_natural_key=content.idea' % self.user1.pk
+            '/fi/kayttaja/%d/lista/?initiative_ct_id=&ct_natural_key=content.idea' %
+            self.user1.pk
         )
         self.assertContains(resp, organization.name, count=1)
+
+
+class ProfilePageVisibilityTest(TestCase):
+    def setUp(self):
+        self.user1 = UserSettingsFactory().user
+        contact_user = UserSettingsFactory().user
+        self.organization = OrganizationFactory(admins=[contact_user,])
+        self.contact_user = User.objects.get(pk=contact_user.pk)
+        self.admin = UserFactory(groups=[
+            Group.objects.get(name=GROUP_NAME_ADMINS)
+        ])
+
+    def test_view_user_profile_not_authenticated(self):
+        resp = self.client.get('/fi/kayttaja/%d/' % self.user1.pk)
+        self.assertTemplateUsed(resp, 'account/user_profile_public.html')
+
+        self.assertNotContains(resp, '<li>Yhteyshenkilö:')
+        self.assertNotContains(resp, 'Lähetä käyttäjälle viesti')
+        self.assertNotContains(resp, "{} {}".format(self.user1.settings.first_name,
+                                                    self.user1.settings.last_name))
+        self.assertNotContains(resp, '<img class="profile-organization-picture')
+        self.assertNotContains(resp, '<img class="org-admin-online-status')
+
+        self.assertContains(resp, '<div class="no-picture-bar-magenta">')
+
+    def test_view_contact_user_profile_not_authenticated(self):
+        resp = self.client.get('/fi/kayttaja/%d/' % self.contact_user.pk)
+        self.assertTemplateUsed(resp, 'account/user_profile_public.html')
+
+        self.assertNotContains(resp, 'Lähetä käyttäjälle viesti')
+
+        self.assertContains(resp, '<li>Yhteyshenkilö:')
+        self.assertContains(resp, '<div class="no-picture-bar-blue">')
+        self.assertContains(resp, self.contact_user.get_full_name())
+
+    def test_view_contact_user_profile_authenticated(self):
+        self.client.login(username=self.user1.username, password=DEFAULT_PASSWORD)
+        resp = self.client.get('/fi/kayttaja/%d/' % self.contact_user.pk)
+        self.assertTemplateUsed(resp, 'account/user_profile_public.html')
+
+        self.assertNotContains(resp, '<li>Seuratut aiheet:')
+        self.assertNotContains(resp, '<li>Seuratut organisaatiot:')
+
+        self.assertContains(resp, 'Lähetä käyttäjälle viesti')
+
+    def test_view_user_profile_as_admin(self):
+        self.client.login(username=self.admin.username, password=DEFAULT_PASSWORD)
+        resp = self.client.get('/fi/kayttaja/%d/' % self.user1.pk)
+        self.assertTemplateUsed(resp, 'account/user_profile.html')
+        self.assertNotContains(resp, '<li>Seuratut aiheet:')
+        self.assertNotContains(resp, '<li>Seuratut organisaatiot:')
+
+        self.assertContains(resp, 'Profiili</h1>')
+
+    def test_view_own_profile(self):
+        self.client.login(username=self.user1.username, password=DEFAULT_PASSWORD)
+        resp = self.client.get('/fi/kayttaja/%d/' % self.user1.pk)
+        self.assertTemplateUsed(resp, 'account/user_profile.html')
+        self.assertContains(resp, '<li>Seuratut aiheet:')
+        self.assertContains(resp, '<li>Seuratut organisaatiot:')
+        self.assertContains(resp, 'Oma sivu</h1>')

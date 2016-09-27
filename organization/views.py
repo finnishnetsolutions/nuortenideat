@@ -10,19 +10,20 @@ from django.db.models.query_utils import Q
 from django.http.response import JsonResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext, ugettext_lazy as _
-from django.views.generic.base import View
+from django.views.generic.base import View, TemplateView
 
 from django.views.generic.detail import DetailView
-from django.views.generic.edit import UpdateView, CreateView
+from django.views.generic.edit import UpdateView, CreateView, FormView
 from django.views.generic.list import ListView
 from cropping.views import CropPictureView, EditCroppablePictureView
 
 from .models import Organization
 
 from content.models import Idea, Question, Initiative
-from nuka.views import PreFetchedObjectMixIn
+from nuka.views import PreFetchedObjectMixIn, ExportView
 from organization.forms import CreateOrganizationForm, OrganizationSearchForm, \
-    OrganizationSearchFormAdmin, EditPictureForm, CropPictureForm
+    OrganizationSearchFormAdmin, EditPictureForm, CropPictureForm, \
+    OrganizationDetailIdeaListForm
 from organization.perms import CanEditOrganization
 
 
@@ -34,10 +35,11 @@ class OrganizationListView(ListView):
     form_class = None
 
     def get_form_kwargs(self):
-        return {}
+        return {'user': self.request.user}
 
     def get_form_class(self):
-        if self.request.user.is_authenticated() and self.request.user.is_moderator:
+        user = self.request.user
+        if user.is_authenticated() and (user.is_moderator or user.organizations):
             return OrganizationSearchFormAdmin
         return OrganizationSearchForm
 
@@ -73,31 +75,81 @@ class CreateOrganizationView(CreateView):
         return super(CreateOrganizationView, self).form_invalid(form)
 
 
-class OrganizationDetailView(PreFetchedObjectMixIn, DetailView):
+class OrganizationDetailBaseView(PreFetchedObjectMixIn):
+    form_class = OrganizationDetailIdeaListForm
+
+    def get_form_kwargs(self):
+        kwargs = {
+            'is_admin': CanEditOrganization(request=self.request,
+                                            obj=self.get_object()).is_authorized(),
+        }
+        return kwargs
+
+    def get_default_search_params(self):
+        return Q(Q(initiator_organization=self.get_object()) |
+                 Q(target_organizations=self.get_object()))
+
+    def get_initiatives(self):
+        # If the user can edit the organization, show all their initiatives.
+        if CanEditOrganization(request=self.request,
+                               obj=self.get_object()).is_authorized():
+            qs = Initiative.objects.filter(self.get_default_search_params()).\
+                order_by("-created").distinct()
+        # If the user cannot edit the organization, only show public initiatives.
+        else:
+            qs = Initiative.objects.filter(
+                Q(visibility=Initiative.VISIBILITY_PUBLIC),
+                self.get_default_search_params()
+            ).order_by("-published").distinct()
+        return qs
+
+    def get_ideas(self):
+        if CanEditOrganization(request=self.request,
+                               obj=self.get_object()).is_authorized():
+            qs = Idea.objects.filter(self.get_default_search_params()).\
+                order_by("-created").distinct()
+        # only get public ideas.
+        else:
+            qs = Idea.objects.filter(
+                Q(visibility=Initiative.VISIBILITY_PUBLIC),
+                self.get_default_search_params()
+            ).order_by("-published").distinct()
+        return qs
+
+
+class OrganizationDetailView(OrganizationDetailBaseView, DetailView):
     model = Organization
 
     def get_context_data(self, **kwargs):
         context = super(OrganizationDetailView, self).get_context_data(**kwargs)
-
-        # If the user can edit the organization, show all their initiatives.
-        if CanEditOrganization(request=self.request,
-                               obj=self.get_object()).is_authorized():
-            context["initiatives_list"] = Initiative.objects.filter(
-                Q(initiator_organization=self.get_object()) |
-                Q(target_organizations=self.get_object())
-            ).order_by("-created").distinct()
-        # If the user cannot edit the organization, only show public initiatives.
-        else:
-            context["initiatives_list"] = Initiative.objects.filter(
-                Q(visibility=Initiative.VISIBILITY_PUBLIC),
-                Q(initiator_organization=self.get_object()) |
-                Q(target_organizations=self.get_object())
-            ).order_by("-published").distinct()
-
+        context["initiatives_list"] = self.get_initiatives()
         context['ideas_count'] = context['initiatives_list'].exclude(
             polymorphic_ctype_id=ContentType.objects.get_for_model(Question).pk).count()
         context['question_count'] = context['initiatives_list'].exclude(
             polymorphic_ctype_id=ContentType.objects.get_for_model(Idea).pk).count()
+        context['form'] = self.form_class(**self.get_form_kwargs())
+        return context
+
+
+class OrganizationIdeaList(OrganizationDetailBaseView, ExportView):
+    template_name = 'content/initiative_boxes_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(OrganizationIdeaList, self).get_context_data(**kwargs)
+        search_form = self.form_class(self.request.GET, **self.get_form_kwargs())
+        qs = self.get_initiatives()
+
+        status = self.request.GET['status']
+        if status:
+            status_field = search_form.STATUS_FIELD_MAP[int(status)]
+
+            # only ideas have status field
+            if status_field == search_form.FIELD_STATUS:
+                qs = self.get_ideas()
+
+        if search_form.is_valid():
+            qs = search_form.filter(qs)
+        context['initiatives'] = qs
         return context
 
 

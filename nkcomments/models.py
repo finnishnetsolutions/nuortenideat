@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from django.contrib.contenttypes.models import ContentType
 
 from django.db import models
-from django.contrib.comments.models import Comment
+from django_comments.models import Comment
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.signals import post_save

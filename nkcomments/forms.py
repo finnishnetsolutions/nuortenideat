@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 
 from django import forms
 from django.conf import settings
-from django.contrib.comments.forms import CommentForm
+from django_comments.forms import CommentForm
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from django.utils.encoding import force_text

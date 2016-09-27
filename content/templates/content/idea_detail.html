@@ -13,9 +13,10 @@
 
     <script type="text/javascript" src="{% static 'idea_survey/js/idea_survey.js' %}"></script>
 
-    {% if object in perm.content.CanEditIdea %}
-        <script type="text/javascript">
-            $(function() {
+    <script type="text/javascript">
+        $(function()
+            {{% if object in perm.content.CanEditIdea %}
+
                 function getFormElements(url) {
                     $.get(url, function(data) {
                         updateFormElements(data);
@@ -62,17 +63,23 @@
                         updateFormElements(data);
                     });
                 });
+            {% endif %}
 
-                $('#add-details-btn').on('click', function() {
-                    window.scrollTo(0, $("#additional-detail-form-wrap").offset().top);
-                });
-
-                $(document).on('click', '.add-details-cancel', function() {
-                    $('#idea-additional-detail-list').trigger('ajaxy-reload');
-                });
+            $('#add-details-btn').on('click', function() {
+                window.scrollTo(0, $("#additional-detail-form-wrap").offset().top);
             });
-        </script>
-    {% endif %}
+
+            $(document).on('click', '.add-details-cancel', function() {
+                $('#additional-detail-form-wrap').html('');
+            });
+
+            $(document).on('ajaxy-refreshed', '#idea-additional-detail-list > .new-detail', function() {
+                $('#additional-detail-form-wrap').html('');
+                $(this).removeClass('new-detail');
+                $('<li class="new-detail ajaxy-wrap"></li>').appendTo('#idea-additional-detail-list');
+            });
+        });
+    </script>
 {% endblock js_extra %}
 
 {% block precontent %}

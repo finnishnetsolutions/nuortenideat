@@ -3,7 +3,6 @@
 from __future__ import unicode_literals
 
 from collections import OrderedDict
-from easy_thumbnails.files import get_thumbnailer
 import requests
 import re
 import logging
@@ -31,29 +30,29 @@ from django.views import generic
 from django.views.generic.base import TemplateView, View
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import UpdateView
-from account.models import NotificationOptions, UserSettings
+from account.perms import CanEditUser
 from actions import lists
 from actions.models import Action
 from cropping.views import CropPictureView, EditCroppablePictureView
-
-from libs.djcontrib.views.generic import MultiModelFormView
-
-from account.forms import EditProfilePictureForm, MessageForm, UserProfileIdeaListForm, \
-    UsernameForm, NotificationOptionsForm, PasswordChangeFormWithValidation, \
-    CropProfilePictureForm
-from content.models import Initiative, Idea, Question
-from content.perms import CanSeeAllInitiatives
-
-from .forms import EmailConfirmationForm, LoginForm, UserForm, UserSignUpForm, \
-    UserActivateForm, UserSettingsEditForm
+from favorite.utils import get_favorite_objects_by_natural_key
 from libs.permitter.tests.perms import IsAuthenticated
-from .models import User
+from libs.djcontrib.views.generic import MultiModelFormView
 from nkcomments.models import CustomComment
 from nkmessages.models import Message
 from nkvote.models import Vote
 from nkvote.utils import get_voted_objects
 from nuka.utils import send_email
+from nuka.views import ExportView
 from smslog.models import SentTxtMessages
+from content.models import Initiative, Idea, Question
+from content.perms import CanSeeAllInitiatives
+
+from .forms import EmailConfirmationForm, LoginForm, UserForm, UserSignUpForm, \
+    UserActivateForm, UserSettingsEditForm, EditProfilePictureForm, MessageForm, \
+    UserProfileIdeaListForm, UsernameForm, NotificationOptionsForm, \
+    PasswordChangeFormWithValidation, CropProfilePictureForm
+from .models import User, NotificationOptions
+
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -80,7 +79,7 @@ class SignupView(MultiModelFormView):
     confirmation_email_template = 'account/email/confirm_signup.txt'
     confirmation_sms_template = 'account/sms/confirm_signup.txt'
 
-    facebook = False
+    social = None
 
     def form_invalid(self):
         messages.error(self.request, _("Täytä kaikki pakolliset kentät."))
@@ -109,10 +108,11 @@ class SignupView(MultiModelFormView):
                 )
                 a_obj.save()
 
-        if not self.facebook:
+        if not self.social:
             return HttpResponseRedirect(reverse('account:activate'))
         else:
-            return HttpResponseRedirect(reverse('account:activate_facebook'))
+            return HttpResponseRedirect(
+                reverse('account:activate_{}'.format(self.social)))
 
     def presave_usersettings(self, obj):
         """Link ``UserSettings`` to ``User`` before attempting to save."""
@@ -133,10 +133,15 @@ class SignupView(MultiModelFormView):
                                            'user_id': user.pk}
 
         # Save the profile picture from Facebook, if chosen to.
-        if self.facebook and self.request.POST["facebook_pic"] == "yes":
+        if self.social and self.request.POST['social_pic'] == 'yes':
             facebook_id = self.request.session.get("fb_id")
-            url = "http://graph.facebook.com/{0}/picture?type=large".format(facebook_id)
+            url = self.request.session.get('social', {}).get('picture')
             picture = urlopen(url).read()
+            user.settings.original_picture.save(
+                user.username + "-social.jpg",
+                ContentFile(picture),
+                save=True
+            )
             user.settings.picture.save(
                 user.username + "-social.jpg",
                 ContentFile(picture),
@@ -182,31 +187,33 @@ class SignupView(MultiModelFormView):
         return '%04d' % randint(1, 9999)
 
     def get_usersettings_initial(self):
-        if self.facebook:
-            return {
-                "email": self.request.session.get("fb_email"),
-                "first_name": self.request.session.get("fb_first_name"),
-                "last_name": self.request.session.get("fb_last_name"),
-            }
+        if self.social:
+            social_data = self.request.session.get('social')
+            mapped = {}
+            keys = ['email', 'first_name', 'last_name',]
+
+            for k in keys:
+                mapped[k] = social_data.get(k, '')
+            return mapped
         else:
             try:
-                del self.request.session["fb_email"]
-                del self.request.session["fb_first_name"]
-                del self.request.session["fb_last_name"]
+                del self.request.session['social']
             except KeyError:
                 pass
 
     def get_context_data(self, **kwargs):
         context = super(SignupView, self).get_context_data(**kwargs)
-        context["facebook"] = self.facebook
-        context["facebook_id"] = self.request.session.get("fb_id")
+        context["social"] = self.social
+        if self.social:
+            context['social_picture'] = self.request.session.get('social', {}).\
+                get('picture', '')
         return context
 
 
 class ActivateView(generic.FormView):
     template_name = 'account/signup_activation.html'
     form_class = UserActivateForm
-    facebook = False
+    social = False
 
     def dispatch(self, request, *args, **kwargs):
         if 'sign_up' not in request.session:
@@ -253,8 +260,8 @@ class ActivateView(generic.FormView):
         # TODO: logging configuration
         logger.info('User %s logged in. IP: %s', user.username,
                     self.request.META['REMOTE_ADDR'])
-        if self.facebook:
-            return redirect("social:complete", "facebook")
+        if self.social:
+            return redirect("social:complete", self.social)
         else:
             return TemplateResponse(self.request, 'account/signup_activated.html',
                                     {'object': user})
@@ -397,6 +404,11 @@ class UserProfileView(UserProfileMixin, generic.DetailView):
     def get_object(self, queryset=None):
         return self.kwargs['obj']
 
+    def get_template_names(self):
+        if CanEditUser(request=self.request, obj=self.get_object()).is_authorized():
+            return 'account/user_profile.html'
+        return 'account/user_profile_public.html'
+
     def get_context_data(self, **kwargs):
         kwargs = super(UserProfileView, self).get_context_data(**kwargs)
         user = self.get_object()
@@ -413,11 +425,13 @@ class UserProfileView(UserProfileMixin, generic.DetailView):
             user_id=user.pk).count()
         kwargs["summary"] = True
         kwargs['form'] = self.form_class
-        kwargs['show_private_data'] = True if self.request.user == user else False
+        kwargs['owns_profile'] = True if self.request.user == user else False
+        # if not kwargs['owns_profile'] and self.request.user.is_moderator:
+        #    kwargs['owns_profile'] = True
         return kwargs
 
 
-class UserProfileIdeaList(UserProfileMixin, TemplateView):
+class UserProfileIdeaList(UserProfileMixin, ExportView):
     template_name = 'account/user_profile_idea_list.html'
 
     def get_object(self, **kwargs):
@@ -426,11 +440,21 @@ class UserProfileIdeaList(UserProfileMixin, TemplateView):
     def get_context_data(self, *args, **kwargs):
         context = super(UserProfileIdeaList, self).get_context_data()
         context['ct_natural_key'] = self.request.GET['ct_natural_key']
+        ct_id = self.request.GET['initiative_ct_id']
         context['object'] = self.get_object()
-        if not re.match('^([a-z])+\.([a-z])+$', context['ct_natural_key']):
-            context['obj_list'] = self.get_non_favorite_initiatives(
-                context['ct_natural_key'])
-            context['ct_natural_key'] = None
+
+        # haetaan ensin seuratut, jos natural key annettu
+        if re.match('^([a-z])+\.([a-z])+$', context['ct_natural_key']):
+            qs = get_favorite_objects_by_natural_key(
+                context['ct_natural_key'], self.get_object(), True)
+        else:
+            # sen jälkeen else suodatetaan 'affected'
+            qs = self.get_non_favorite_initiatives(context['ct_natural_key'])
+
+        # sen jälkeen suodatetaan ct_id:llä
+        if ct_id:
+            qs = qs.filter(polymorphic_ctype_id=ct_id)
+        context['obj_list'] = qs
         return context
 
     def get_non_favorite_initiatives(self, mode):

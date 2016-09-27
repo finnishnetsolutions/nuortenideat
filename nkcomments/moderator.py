@@ -2,7 +2,7 @@
 
 from __future__ import unicode_literals
 
-from django.contrib.comments.models import Comment
+from django_comments.models import Comment
 
 from libs.moderation import moderation
 

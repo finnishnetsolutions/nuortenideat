@@ -1,5 +1,5 @@
 {% load i18n fontawesome %}
 {% if object in perm.content.CanAddIdeaDetails %}
-    <a href="{% url 'content:edit_detail' initiative_id=object.pk additional_detail_id=row.id %}" title="{% trans "Muokkaa lisätietoa" %}" class="top-right btn btn-default ajaxy-link">{% fa_icon "edit" %}</a>
+    <a href="{% url 'content:edit_detail' initiative_id=object.pk additional_detail_id=detail.id %}" title="{% trans "Muokkaa lisätietoa" %}" class="top-right btn btn-default ajaxy-link">{% fa_icon "edit" %}</a>
     <div class="clearfix"></div>
 {% endif %}

@@ -1,13 +1,48 @@
 {% extends 'nuka/base.html' %}
-{% load i18n fontawesome staticfiles %}
+{% load i18n fontawesome staticfiles bootstrap3 nuka_tags %}
 
 {% block meta_extra %}
-    {% with yesnoargs=object.picture_medium.url|add:","|add:FB_NK_LOGO_URL %}
-        {% include 'nuka/meta_og_tags.html' with title=object description=object.description_plaintext picture_url=object.picture|yesno:yesnoargs %}
-    {% endwith %}
+    {% include 'nuka/meta_og_tags.html' with title=object description=object.description_plaintext picture_url=object|og_pic_url %}
 {% endblock meta_extra %}
 
 {% block title %}{% trans "Organisaatio" %}: {{ object }} - {{ block.super }}{% endblock title %}
+
+{% block js_extra %}
+    <script type="text/javascript" src="{% static "nuka/js/jquery.buttonselect.js" %}"></script>
+    <script type="text/javascript" src="{% static "nuka/js/initiatives_export.js" %}"></script>
+    <script type="text/javascript">
+        $(function() {
+            var only_idea_option_values = ['3', '6', '9'];
+            var only_idea_options_texts = ['Avoin', 'Viety eteenpäin', 'Päätös annettu', 'Öppen', 'Idén förts vidare', 'Beslut utfärdad'];
+
+            $('#id_status').on('change', function() {
+                if ($.inArray($(this).val(), only_idea_option_values) !== -1) {
+                    $('#id_initiative_ct_id_wrap').find('label:contains("Kysymykset")').hide();
+                    $('#id_initiative_ct_id_wrap').find('label:contains("Frågor")').hide();
+                } else {
+                    $('#id_initiative_ct_id_wrap').find('label').show();
+                }
+            });
+
+            $('#id_initiative_ct_id').on('change', function() {
+                if ($(this).val() == '27') {
+                    $.each($('#id_status_wrap').find('label'), function() {
+                        var elem = $(this);
+                        $.each(only_idea_options_texts, function(i, text) {
+                            if (elem.text().match(text)) {
+                                elem.hide();
+                            }
+                        });
+                    });
+                } else {
+                    $('#id_status_wrap').find('label').show();
+                }
+            });
+
+            $('#export-buttons').appendTo($('#id_status_wrap > .form-control'));
+        });
+    </script>
+{% endblock js_extra %}
 
 {% block content %}
     {% if not object.is_active %}
@@ -95,9 +130,20 @@
     </div>
 
 
+    <div class="well">
+        <h3 class="h2-style">{% trans "Ideat ja kysymykset" %}</h3>
 
-    <h3 class="h2-style">{% trans "Ideat ja kysymykset" %}</h3>
+        <form class="ajaxy-form" id="idea-form" data-ajaxy-target="#initiative_list" novalidate method="get" action="{% url 'organization:idea_list' object.pk %}">
+            {% bootstrap_field form.initiative_ct_id %}
+            {% bootstrap_field form.status %}
+            {% include 'nuka/export/initiatives_export_buttons.html' %}
+            <div class="clearfix"></div>
+        </form>
+        <div class="well loader-gif" style="display:none;"><img src="{% static 'nuka/img/ajax-loader.gif' %}" alt="{% trans "Odotetaan hakutulosta" %}"></div>
+        <div id="initiative_list" class="ajaxy-wrap">
+            {% include "content/initiative_boxes_list.html" with initiatives=initiatives_list %}
+        </div>
+    </div>
 
-    {% include "content/initiative_boxes_list.html" with initiatives=initiatives_list %}
 
 {% endblock %}

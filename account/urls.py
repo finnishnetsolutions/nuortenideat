@@ -6,6 +6,7 @@ from django.conf.urls import patterns, url
 from django.contrib.auth import views as auth
 from django.utils.translation import ugettext as _
 from account.perms import CanEditUser, CanViewUser
+from account.pipeline import BACKEND_KEY_FB, BACKEND_KEY_GOOGLE
 
 from libs.djcontrib.conf.urls import decorated_patterns
 from libs.djcontrib.utils.decorators import combo
@@ -21,15 +22,19 @@ from nuka.decorators import legacy_json_plaintext
 
 urlpatterns = patterns('',
     url(r'^rekisteroidy/$', views.SignupView.as_view(), name='signup'),
-    url(r'^rekisteroidy/facebook/$', views.SignupView.as_view(facebook=True),
-        name='signup_facebook'),
+    url(r'^rekisteroidy/facebook/$', views.SignupView.as_view(social=BACKEND_KEY_FB),
+        name='signup_{}'.format(BACKEND_KEY_FB)),
+    url(r'^rekisteroidy/google/$', views.SignupView.as_view(social=BACKEND_KEY_GOOGLE),
+        name='signup_{}'.format(BACKEND_KEY_GOOGLE)),
     url(r'^valitse-rekisteroitymistapa/$', views.SignupChoicesView.as_view(),
         name='signup_choices'),
     url(r'^kirjaudu-sisaan/$', views.LoginView.as_view(), name='login'),
     url(r'^kirjaudu-ulos/$', views.LogoutView.as_view(), name='logout'),
     url(r'^aktivoi/$', views.ActivateView.as_view(), name='activate'),
-    url(r'^aktivoi/facebook/$', views.ActivateView.as_view(facebook=True),
-        name='activate_facebook'),
+    url(r'^aktivoi/facebook/$', views.ActivateView.as_view(social=BACKEND_KEY_FB),
+        name='activate_{}'.format(BACKEND_KEY_FB)),
+    url(r'^aktivoi/google/$', views.ActivateView.as_view(social=BACKEND_KEY_GOOGLE),
+        name='activate_{}'.format(BACKEND_KEY_GOOGLE)),
     url(r'^vahvista-sahkoposti/(?P<token>\w{26,50})/$',
         views.EmailConfirmationView.as_view(),
         name='confirm_email'),

@@ -6,7 +6,7 @@ from celery.app import shared_task
 from django.conf import settings
 from django.core.mail import send_mail
 
-from nuka.utils import render_email_template
+from nuka.utils import render_email_template, send_email
 from smslog.models import SentTxtMessages
 
 
@@ -21,9 +21,9 @@ def send_sms_log_as_email():
 
     context = {'start_date': start_date, 'end_date': end_date, 'count': messages.count()}
 
-    subject, body = render_email_template('smslog/email/sent_txt_messages.txt', context)
-    send_mail(subject=subject, message=body, recipient_list=[
-        settings.SMS_LOG_EMAIL_RECEIVER, ], from_email=None)
-
-
-
+    send_email(
+        'Tekstiviestiraportti',
+        'smslog/email/sent_txt_messages.txt',
+        context,
+        [settings.SMS_LOG_EMAIL_RECEIVER, ],
+    )

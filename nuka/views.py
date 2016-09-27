@@ -17,6 +17,7 @@ from django.templatetags.static import static
 from django.template import loader
 from django.utils.translation import override
 from django.views.generic.base import RedirectView, TemplateView, View
+from content.admin import InitiativeResource
 from libs.djcontrib.views.generic import MultiModelFormView
 from nkpicturecarousel.models import PictureCarouselSet, PictureCarouselImage
 
@@ -179,3 +180,37 @@ class JsonMultiModelFormView(MultiModelFormView):
     def form_invalid(self):
         super(JsonMultiModelFormView, self).form_invalid()
         return self.render_to_response(self.get_context_data())
+
+
+class ExportView(TemplateView):
+
+    # context key name for queryset
+    context_queryset_keys = ['initiatives', 'obj_list']
+
+    def get(self, request, *args, **kwargs):
+        if 'export' in request.GET:
+            response_params = {
+                'xlsx': {
+                    'content_type':
+                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                          'content_disposition': 'attachment; filename="export.xlsx"'},
+                'csv': {'content_type': 'text/csv',
+                        'content_disposition': 'attachment; filename="export.csv"'},
+            }
+            output_type = request.GET['export']
+            context = self.get_context_data()
+            qs = []
+            for qs_key in self.context_queryset_keys:
+                if context.get(qs_key, None):
+                    qs = context[qs_key]
+                    break
+            resource = InitiativeResource().export(qs)
+
+            response = HttpResponse(
+                getattr(resource, output_type),
+                content_type=response_params[output_type]['content_type'])
+            response['Content-Disposition'] = \
+                response_params[output_type]['content_disposition']
+            return response
+        return super(ExportView, self).get(request, *args, **kwargs)
+

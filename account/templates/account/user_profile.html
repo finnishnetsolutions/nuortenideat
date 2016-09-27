@@ -1,21 +1,56 @@
 {% extends 'account/profile_base.html' %}
+{% load i18n static bootstrap3 fontawesome favorites active_class %}
 
-{% load i18n static bootstrap3 %}
+{% block js_extra %}
+    <script type="text/javascript" src="{% static "nuka/js/jquery.buttonselect.js" %}"></script>
+    <script type="text/javascript" src="{% static "nuka/js/initiatives_export.js" %}"></script>
+    <script type="text/javascript">
+        $(function() {
+            var only_idea_option_values = ['content.idea'];
+            var only_idea_options_texts = ['Seuratut ideat', 'Idéer som du följer'];
+
+            $('#id_ct_natural_key').on('change', function(e) {
+                var ct_wrap = $('#id_initiative_ct_id_wrap');
+                if ($.inArray($(this).val(), only_idea_option_values) !== -1) {
+                    ct_wrap.find('label:contains("Kysymykset")').hide();
+                    ct_wrap.find('label:contains("Frågor")').hide();
+                } else {
+                    ct_wrap.find('label').show();
+                }
+            });
+
+            $('#id_initiative_ct_id').on('change', function(e) {
+                if ($(this).val() == '27') {
+                    $.each($('#id_ct_natural_key_wrap').find('label'), function() {
+                        console.log($(this).text());
+                        if ($.inArray($(this).text(), only_idea_options_texts) !== -1) {
+                            console.log('hide');
+                            $(this).hide();
+                        }
+                    });
+                } else {
+                    $('#id_ct_natural_key_wrap').find('label').show();
+                }
+            });
+
+            $('#export-buttons').appendTo($('#id_ct_natural_key_wrap > .form-control'));
+        });
+    </script>
+{% endblock js_extra %}
 
 {% block subcontent %}
     <div class="well">
         <h2>{% trans "Omat ideat ja kysymykset" %}</h2>
 
-        {% if object == request.user %}
-            <form class="ajaxy-form" data-ajaxy-target="#initiative_list" novalidate method="get" action="{% url 'account:idea_list' user_id=object.pk %}">
+        {% if object == request.user or owns_profile %}
+            <form class="ajaxy-form" id="idea-form" data-ajaxy-target="#initiative_list" novalidate method="get" action="{% url 'account:idea_list' user_id=object.pk %}">
                 {% bootstrap_form form %}
+                {% include 'nuka/export/initiatives_export_buttons.html' %}
                 <div class="clearfix"></div>
-                <!--<button type="submit" class="btn btn-default">{% trans "Hae" %}</button>-->
             </form>
         {% endif %}
     </div>
-
-
+    <div class="well loader-gif" style="display:none;"><img src="{% static 'nuka/img/ajax-loader.gif' %}" alt="{% trans "Odotetaan hakutulosta" %}"></div>
     <div id="initiative_list" class="ajaxy-wrap">
         {% include 'account/user_profile_idea_list.html' with obj_list=initiatives %}
     </div>

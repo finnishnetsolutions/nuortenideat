@@ -12,6 +12,7 @@ from .models import Instruction
 
 
 class InstructionDetailFirst(RedirectView):
+    permanent = False
     pattern_name = 'help:instruction_detail'
 
     def get_redirect_url(self, *args, **kwargs):
@@ -33,6 +34,7 @@ class InstructionDetail(ListView):
 
 
 class LinkedInstructionRedirectView(RedirectView):
+    permanent = False
     pattern_name = 'help:instruction_detail'
 
     def get_redirect_url(self, *args, **kwargs):

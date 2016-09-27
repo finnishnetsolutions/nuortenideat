@@ -418,8 +418,8 @@ class IdeaSurvey(models.Model):
     )
 
     idea = models.ForeignKey(Idea, related_name='idea_surveys')
-    content_type = models.ForeignKey(ContentType)
-    object_id = models.PositiveIntegerField()
+    content_type = models.ForeignKey(ContentType, default=None)
+    object_id = models.PositiveIntegerField(default=None)
     content_object = GenericForeignKey()
     status = models.SmallIntegerField(default=STATUS_DRAFT)
     created = models.DateTimeField(auto_now_add=True)

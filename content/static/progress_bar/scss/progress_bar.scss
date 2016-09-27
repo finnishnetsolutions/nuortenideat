@@ -46,10 +46,10 @@ ul.checkout-bar {
     }
     &.visited {
       font-weight: bold;
-      z-index: 99999;
+      z-index: 1000;
       &:before {
        background: $bar-color;
-        z-index: 99999;
+        z-index: 1000;
       }
     }
     &:before {

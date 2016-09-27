@@ -3,3 +3,4 @@ Jinja2==2.8
 pylint==1.4.4
 pep8==1.6.2
 django-debug-toolbar==1.4
+django-werkzeug-debugger-runserver==0.3

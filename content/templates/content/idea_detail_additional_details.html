@@ -2,6 +2,7 @@
 
 <h4>{% trans "Lisätietoa" %}</h4>
 
-<div id="list_details" class="ajaxy-wrap editable-wrap">
+<div id="list_details" class="ajaxy-wrap editable-wrap" data-ajaxy-url="{% url 'content:list_details' object.pk %}">
     {% include "content/idea_detail_additional_details_list.html" with details=object.details.all %}
 </div>
+

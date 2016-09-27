@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.utils.datastructures import SortedDict
+from collections import OrderedDict
 from django.core.exceptions import ImproperlyConfigured
 from django.contrib import messages
 from django.contrib.messages import constants
@@ -10,6 +10,7 @@ from django.views.generic.base import RedirectView, ContextMixin, TemplateRespon
 
 
 class FlashRedirectView(RedirectView):
+    permanent = False
     message = None
     message_type = None
 
@@ -58,7 +59,7 @@ class MultiFormView(ContextMixin, TemplateResponseMixin, View):
     form_classes = ()
 
     def __init__(self, *args, **kwargs):
-        self.forms = SortedDict()
+        self.forms = OrderedDict()
         super(MultiFormView, self).__init__(*args, **kwargs)
 
     def get_context_data(self, **kwargs):

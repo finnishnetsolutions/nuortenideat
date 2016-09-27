@@ -18,8 +18,7 @@ from libs.multilingo.models import fields as multilingo
 class Voter(models.Model):
     VOTER_COOKIE = "joku"
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, default=None,
-                             unique=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, default=None)
     voter_id = models.CharField(max_length=32, unique=True)
     created = models.DateTimeField(default=timezone.now)
 

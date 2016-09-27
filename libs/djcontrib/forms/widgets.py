@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 from django import forms
 from django.utils.translation import ugettext as _
 from django.utils.html import format_html, escape
-from django.forms.util import flatatt
+from django.forms.utils import flatatt
 from django.utils.safestring import mark_safe
 
 

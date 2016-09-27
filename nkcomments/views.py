@@ -4,8 +4,8 @@ from __future__ import unicode_literals
 
 from django.apps import apps
 from django.contrib import messages
-from django.contrib.comments import signals
-from django.contrib.comments.views.comments import CommentPostBadRequest
+from django_comments import signals
+from django_comments.views.comments import CommentPostBadRequest
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.core.urlresolvers import reverse
 from django.http.response import JsonResponse

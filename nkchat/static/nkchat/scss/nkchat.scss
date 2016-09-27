@@ -41,6 +41,9 @@ $moderator-color: #0F2AA3;
           color: white;
         }
       }
+      a.moderator-offline {
+        cursor: default;
+      }
       &.dropup {
         > a {
           background-color: $color-blue;

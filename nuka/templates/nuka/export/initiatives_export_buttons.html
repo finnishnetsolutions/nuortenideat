@@ -1,0 +1,12 @@
+{% load i18n %}
+
+<div id="export-buttons" class="btn-group pull-right">
+    <button value="excel" class="btn btn-default btn-lg dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        {% trans "Vie" %} <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu">
+        <li><button type="submit" name="export" value="xlsx" class="btn-text">{% trans "Excel" %}</button></li>
+        <li><button type="submit" name="export" value="csv" class="btn-text">{% trans "CSV" %}</button></li>
+    </ul>
+</div>
+

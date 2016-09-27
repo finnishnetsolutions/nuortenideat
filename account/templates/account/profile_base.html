@@ -4,82 +4,76 @@
 
 {% block title %}{% trans "Oma sivu" %} - {{ block.super }}{% endblock title %}
 
-{% block js_extra %}
-    <script type="text/javascript" src="{% static "nuka/js/jquery.buttonselect.js" %}"></script>
-{% endblock js_extra %}
+
 
 {% block content %}
     <header class="detail-page-header well">
-        <h1>
-            <i class="ni-icon ni-icon-profile"><span class="sr-only">{% trans "Oma sivu" %}</span></i>
-            {% if not show_private_data %}
-                {% trans 'Julkinen profiili' %}
-            {% else %}
-                {% trans 'Oma sivu' %}
-            {% endif %}
-        </h1>
-        <ul class="nav nav-tabs nuka-nav-tabs" role="tablist">
-            {% if object in perm.account.CanEditUser %}
+        {% block header %}
+            <h1>
+                <i class="ni-icon ni-icon-profile"><span class="sr-only">{% trans "Oma sivu" %}</span></i> {% if not owns_profile %}{% trans 'Profiili' %}{% else %}{% trans 'Oma sivu' %}{% endif %}</h1>
+
+            <ul class="nav nav-tabs nuka-nav-tabs" role="tablist">
                 <li {% class_active_if_url "account:profile" %}><a href="{% url 'account:profile' object.pk %}">{% trans "Yhteenveto" %}</a></li>
                 <li {% class_active_if_url "account:messages" %}{% class_active_if_url "account:show_message" %}{% class_active_if_url "account:create_message" %}>
                     <a href="{% url 'account:messages' object.pk %}">{% trans "Viestit" %}</a>
                 </li>
                 <li {% class_active_if_url "account:settings" %}><a href="{% url 'account:settings' object.pk %}">{% trans "Omat tiedot ja asetukset" %}</a></li>
-                <li {% class_active_if_url "account:password" %}><a href="{% url 'account:password' object.pk %}">{% trans "Vaihda salasana" %}</a></li>
+                {% if not object.social_connection %}
+                    <li {% class_active_if_url "account:password" %}><a href="{% url 'account:password' object.pk %}">{% trans "Vaihda salasana" %}</a></li>
+                {% endif %}
+            </ul>
+            {% if summary %}
+                <div class="row margin-top-md">
+                    <div class="col-md-3" style="padding-bottom:10px;">
+                        {% include "account/profile_picture.html" with user=object no_link=True %}
+                    </div>
+                    <div class="col-md-9">
+                        {% if object in perm.account.CanEditUser %}
+                            <a class="btn btn-default btn-lg btn-green pull-right" href="{% url 'content:create_idea' %}">
+                                <img src="{% static 'nuka/img/ikoni_lamppu_valkoinen.png' %}" alt=""> {% trans "Kirjoita idea" %}
+                            </a>
+                        {% endif %}
+                        <h2 class="h3-style">
+                            {% if not owns_profile and object.organizations.count %}
+                                {{ object.get_full_name }}
+                            {% else %}
+                                {{ object }}
+                            {% endif %}
+
+                            {% if object in perm.nkmessages.CanSendMessageTo %}
+                                <a class="margin-left-sm" href="{% url 'account:create_message' request.user.pk %}?receivers={{ object.pk }}" title="{% trans 'Lähetä käyttäjälle viesti' %}"><span class="glyphicon glyphicon-envelope"></span></a>
+                            {% endif %}
+
+                            {% if object in perm.account.CanEditUser %}<a class="btn btn-default margin-left-sm" href="{% url 'account:settings' object.pk %}">{% fa_icon "edit" %}</a>{% endif %}
+                        </h2>
+                        <ul class="stats">
+                            {% if object.organizations.count %}
+                                <li>{% trans "Yhteyshenkilö" %}: &nbsp;
+                                    <ul class="favorites-list list-inline display-inline">
+                                        {% for o in object.organizations.all %}
+                                            <li class="tag"><a href="{{ o.get_absolute_url }}">{{ o }}</a></li>
+                                        {% endfor %}
+                                    </ul>
+                                </li>
+                            {% endif %}
+                            <li>{% trans "Ideoita" %}: {{ ideas_count }}</li>
+                            <li>{% trans "Kysymyksiä" %}: {{ questions_count }}</li>
+                            <li>{% trans "Kommentteja" %}: {{ comments_count }}</li>
+                            {% if owns_profile %}
+                                <li>{% trans "Seuratut aiheet" %}: &nbsp;
+                                    {% fav_get_ct_id 'tagging.tag' as ct_id %}
+                                    {% include "favorite/favorite_detail.html" with user=object ct_id=ct_id no_edit=True %}
+                                </li>
+                                <li>{% trans "Seuratut organisaatiot" %}: &nbsp;
+                                    {% fav_get_ct_id 'organization.organization' as ct_id %}
+                                    {% include "favorite/favorite_detail.html" with user=object ct_id=ct_id no_edit=True %}
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
             {% endif %}
-        </ul>
-        {% if summary %}
-            <div class="row" style="margin-top: 30px;">
-                <div class="col-md-3" style="padding-bottom:10px;">
-                    {% include "account/profile_picture.html" with user=object no_link=True %}
-                </div>
-                <div class="col-md-9">
-                    {% if object in perm.account.CanEditUser %}
-                        <a class="btn btn-default btn-lg btn-green pull-right" href="{% url 'content:create_idea' %}">
-                            <img src="{% static 'nuka/img/ikoni_lamppu_valkoinen.png' %}" alt=""> {% trans "Kirjoita idea" %}
-                        </a>
-                    {% endif %}
-                    <h2 class="h3-style">
-                        {% if not show_private_data and object.organizations.count %}
-                            {{ object.get_full_name }}
-                        {% else %}
-                            {{ object }}
-                        {% endif %}
-
-                        {% if object in perm.nkmessages.CanSendMessageTo %}
-                            <a class="margin-left-sm" href="{% url 'account:create_message' request.user.pk %}?receivers={{ object.pk }}" title="{% trans 'Lähetä käyttäjälle viesti' %}"><span class="glyphicon glyphicon-envelope"></span></a>
-                        {% endif %}
-
-                        {% if object in perm.account.CanEditUser %}<a class="btn btn-default margin-left-sm" href="{% url 'account:settings' object.pk %}">{% fa_icon "edit" %}</a>{% endif %}
-                    </h2>
-                    <ul class="stats">
-                        {% if object.organizations.count %}
-                            <li>{% trans "Yhteyshenkilö" %}: &nbsp;
-                                <ul class="favorites-list list-inline display-inline">
-                                    {% for o in object.organizations.all %}
-                                        <li class="tag"><a href="{{ o.get_absolute_url }}">{{ o }}</a></li>
-                                    {% endfor %}
-                                </ul>
-                            </li>
-                        {% endif %}
-                        <li>{% trans "Ideoita" %}: {{ ideas_count }}</li>
-                        <li>{% trans "Kysymyksiä" %}: {{ questions_count }}</li>
-                        <li>{% trans "Kommentteja" %}: {{ comments_count }}</li>
-                        {% if show_private_data %}
-                            <li>{% trans "Seuratut aiheet" %}: &nbsp;
-                                {% fav_get_ct_id 'tagging.tag' as ct_id %}
-                                {% include "favorite/favorite_detail.html" with user=object ct_id=ct_id no_edit=True %}
-                            </li>
-                            <li>{% trans "Seuratut organisaatiot" %}: &nbsp;
-                                {% fav_get_ct_id 'organization.organization' as ct_id %}
-                                {% include "favorite/favorite_detail.html" with user=object ct_id=ct_id no_edit=True %}
-                            </li>
-                        {% endif %}
-                    </ul>
-                </div>
-            </div>
-        {% endif %}
+        {% endblock header %}
     </header>
-
     {% block subcontent %}{% endblock subcontent %}
 {% endblock content %}

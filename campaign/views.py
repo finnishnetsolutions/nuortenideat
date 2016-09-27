@@ -12,6 +12,7 @@ from .models import Campaign
 
 
 class CampaignDetailFirstView(RedirectView):
+    permanent = False
     pattern_name = 'campaign:campaign_detail'
 
     def get_redirect_url(self, *args, **kwargs):

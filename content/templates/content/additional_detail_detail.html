@@ -1,0 +1,7 @@
+{% extends 'content/additional_detail_base.html' %}
+{% load i18n bleach_tags %}
+
+{% block wrapped_details %}
+    {% include 'content/additional_detail_edit_link.html' with detail=detail object=detail.idea %}
+    {{ detail.detail|bleach|linebreaksbr }}
+{% endblock wrapped_details %}

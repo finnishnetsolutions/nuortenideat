@@ -10,6 +10,7 @@ from .models import Topic
 
 
 class TopicDetailFirst(RedirectView):
+    permanent = False
     pattern_name = 'info:topic_detail'
 
     def get_redirect_url(self, *args, **kwargs):

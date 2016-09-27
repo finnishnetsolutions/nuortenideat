@@ -22,6 +22,7 @@ from image_cropping.fields import ImageRatioField
 
 from imagekit.models.fields import ProcessedImageField, ImageSpecField
 from pilkit.processors.resize import SmartResize, ResizeToFit
+from account.pipeline import BACKEND_KEY_GOOGLE, BACKEND_KEY_FB
 from actions.models import ActionTypeMixin
 from cropping.fields import ProcessedImageFieldWithCropping
 from cropping.models import CroppingModelMixin
@@ -112,9 +113,9 @@ class User(auth.PermissionsMixin, auth.AbstractBaseUser):
     is_staff = models.BooleanField(_('staff status'), default=False,
                                    help_text=_('Designates whether the user can log into '
                                                'this admin site.'))
-    status = models.SmallIntegerField(_("tila"), choices=STATUS_CHOICES, max_length=10,
+    status = models.SmallIntegerField(_("tila"), choices=STATUS_CHOICES,
                                       default=STATUS_CHOICES[0][0])
-    joined = models.DateTimeField(_("liittynyt"), auto_now_add=True, default=timezone.now)
+    joined = models.DateTimeField(_("liittynyt"), default=timezone.now)
     modified = models.DateTimeField(_("muokattu"), auto_now=True)
 
     organizations = models.ManyToManyField('organization.Organization',
@@ -190,7 +191,16 @@ class User(auth.PermissionsMixin, auth.AbstractBaseUser):
         return reverse('account:profile', kwargs={'user_id': self.pk})
 
     def facebook_associated(self):
-        return self.social_auth.get(provider="facebook") is not None
+        return self.social_auth.get(provider=BACKEND_KEY_FB) is not None
+
+    def google_associated(self):
+        return self.social_auth.get(provider=BACKEND_KEY_GOOGLE) is not None
+
+    def social_connection(self):
+        con = self.social_auth.get()
+        if con:
+            return con.provider
+        return False
 
     @cached_property
     def organization_ids(self):
@@ -202,7 +212,6 @@ class User(auth.PermissionsMixin, auth.AbstractBaseUser):
         if not self.is_moderator:
             received_count = self.received_messages.all().count()
             read_count = self.read_messages.all().count()
-            return received_count - read_count
         else:
             received_count = Message.objects.filter(
                 Q(to_moderator=True) | Q(receivers=self)
@@ -210,7 +219,8 @@ class User(auth.PermissionsMixin, auth.AbstractBaseUser):
             read_count = Message.objects.filter(
                 Q(to_moderator=True) | Q(receivers=self), read_by=self
             ).exclude(deleted_by=self).count()
-            return received_count - read_count
+        unread = received_count - read_count
+        return unread if unread > 0 else 0
 
     @property
     def email(self):

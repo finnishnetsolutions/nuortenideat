@@ -26,7 +26,7 @@ LOG_DIR = os.path.join(os.path.dirname(os.path.dirname(BASE_DIR)), 'var', 'log',
 
 DEBUG = False
 
-TEMPLATE_DEBUG = False
+#TEMPLATE_DEBUG = False
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/dev/howto/deployment/checklist/
@@ -78,7 +78,7 @@ INSTALLED_APPS = PROJECT_APPS + (
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'django.contrib.sites',
-    'django.contrib.comments',
+    'django_comments',
     'bootstrap3',
     'bootstrap3_datetime',
     'compressor',
@@ -127,6 +127,7 @@ MIDDLEWARE_CLASSES = (
 AUTHENTICATION_BACKENDS = (
                            'django.contrib.auth.backends.ModelBackend',
                            'social.backends.facebook.Facebook2OAuth2',
+                           'social.backends.google.GoogleOAuth2',
                            )
 TEMPLATE_CONTEXT_PROCESSORS = (
                                'django.contrib.auth.context_processors.auth',
@@ -215,30 +216,40 @@ STATIC_ROOT = os.path.join(APP_DIR, 'static-tmp')
 STATICFILES_DIRS = ()
 
 STATICFILES_FINDERS = (
-                       'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-                       'compressor.finders.CompressorFinder',
-                       )
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'djangobower.finders.BowerFinder',
+    'compressor.finders.CompressorFinder',
+)
 
 BOWER_INSTALLED_APPS = (
-                        'jquery#1.11.1',
-                        'underscore#1.8.3',
-                        'bootstrap#3.1.1',
-                        'bootstrap-multiselect#0.9.8',
-                        'bootstrap-sass-official#3.1.1+2',
-                        'bootstrap3-datetimepicker#3.1.3',
-                        'select2#3.5.1',
-                        'select2-bootstrap3-css#1.4.1',
-                        'fontawesome#4.2.0',
-                        'jquery-form#3.46.0',
-                        'masonry#3.1.5',
-                        'firebase#1.0.24',
-                        'firechat#1.0.0',
-                        'mustache#0.8.2',
-                        'backfire#0.3.0',
-                        'backbone#1.1.0',
-                        'backbone-super#1.0.2',
-                        'moment#2.8.3',
-                        )
+    'select2#3.5.4',
+    'select2-bootstrap3-css#1.4.6',
+    'bootstrap3-datetimepicker#4.15.35',
+    'bootstrap#3.3.5',
+    'fontawesome#4.4.0',
+    #'jquery#2.1.4',
+    'bootstrap-sass-official#3.1.1+2',
+
+    'jquery#1.11.1',
+    'underscore#1.8.3',
+    #'bootstrap#3.1.1',
+    'bootstrap-multiselect#0.9.8',
+    #'bootstrap-sass-official#3.1.1+2',
+    #'bootstrap3-datetimepicker#3.1.3',
+    #'select2#3.5.1',
+    #'select2-bootstrap3-css#1.4.1',
+    #'fontawesome#4.2.0',
+    'jquery-form#3.46.0',
+    'masonry#3.1.5',
+    'firebase#1.0.24',
+    'firechat#1.0.0',
+    'mustache#0.8.2',
+    'backfire#0.3.0',
+    'backbone#1.1.0',
+    'backbone-super#1.0.2',
+    'moment#2.14.1',
+)
 
 BOWER_COMPONENTS_ROOT = STATIC_ROOT
 
@@ -315,6 +326,7 @@ BLEACH_ALLOWED_STYLES = ['font-family', 'font-weight', 'text-decoration', 'font-
 SITE_ID = 1
 
 SOCIAL_AUTH_FACEBOOK_SCOPE = ['email']
+#SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = []
 SOCIAL_AUTH_PIPELINE = (
                         'social.pipeline.social_auth.social_details',
                         'social.pipeline.social_auth.social_uid',
@@ -502,3 +514,5 @@ THUMBNAIL_PROCESSORS = (
 ) + thumbnail_settings.THUMBNAIL_PROCESSORS
 
 IMAGE_CROPPING_JQUERY_URL = None
+
+FB_LOGO_URL = 'nuka/img/nuorten_ideat_logo_fb.png'

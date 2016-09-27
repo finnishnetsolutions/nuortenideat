@@ -79,6 +79,7 @@ urlpatterns = patterns(
     ),
 ) + decorated_patterns('', combo(org_by_pk, check_perm(CanViewOrganization)),
     url(r'(?P<pk>\d+)/$', views.OrganizationDetailView.as_view(), name='detail'),
+    url(r'(?P<pk>\d+)/lista/$', views.OrganizationIdeaList.as_view(), name='idea_list'),
     *partial_detail_urls
 ) + decorated_patterns('', combo(org_by_pk, check_perm(CanEditOrganization)),
     url(r'(?P<pk>\d+)/kuva/$', views.PictureView.as_view(),

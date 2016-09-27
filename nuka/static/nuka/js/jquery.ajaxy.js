@@ -14,16 +14,22 @@ $(function () {
                 } catch (e) {
                 }
             }
-
             if (resp.success) {
 
                 if (successWrap) {
                    wrap = $(successWrap);
                 }
                 var next = resp.next || returnUrl;
-                wrap.load(next, function () {
-                    wrap.trigger('ajaxy-refreshed');
-                });
+                if (targetMethod) {
+                    $.get(next, function(data) {
+                        wrap[targetMethod](data);
+                        wrap.trigger('ajaxy-refreshed');
+                    });
+                } else {
+                    wrap.load(next, function () {
+                        wrap.trigger('ajaxy-refreshed');
+                    });
+                }
             } else if (resp.location) {
                 window.location = resp.location;
             } else if (resp.reload) {

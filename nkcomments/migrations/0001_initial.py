@@ -7,7 +7,7 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('comments', '__first__'),
+        ('django_comments', '__first__'),
     ]
 
     operations = [
@@ -19,6 +19,6 @@ class Migration(migrations.Migration):
                 'ordering': ('submit_date',),
                 'proxy': True,
             },
-            bases=('comments.comment',),
+            bases=('django_comments.comment',),
         ),
     ]

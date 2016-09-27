@@ -1,5 +1,8 @@
 {% load fontawesome staticfiles cropping %}
-<div class="organization-picture-wrap">
+
+{% if not nowrap %}
+    <div class="organization-picture-wrap">
+{% endif %}
     {% if object.picture %}
 
         <img class="img-responsive{{ img_class|yesno:" ," }}{{ img_class }}" src="{% spaceless %}
@@ -12,4 +15,6 @@
     {% else %}
         <img class="img-responsive{{ img_class|yesno:" ," }}{{ img_class }}" src="{% static 'nuka/img/organisaatio_placeholder200x200.png' %}" alt="{{ object.name }}">
     {% endif %}
-</div>
+{% if not nowrap %}
+    </div>
+{% endif %}

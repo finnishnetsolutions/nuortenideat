@@ -472,9 +472,9 @@ class InitiativeSearchForm(forms.ModelForm):
     )
 
     def filtrate(self, idea_qs):
-        organizations = self.cleaned_data['organizations']
-        tags = self.cleaned_data['tags']
-        municipalities = self.cleaned_data["municipalities"]
+        organizations = self.cleaned_data.get('organizations', None)
+        tags = self.cleaned_data.get('tags', None)
+        municipalities = self.cleaned_data.get("municipalities", None)
 
         if organizations:
             idea_qs = idea_qs.filter(
@@ -496,8 +496,7 @@ class InitiativeSearchForm(forms.ModelForm):
         raise Exception("Ei sallittu")
 
 
-class IdeaSearchForm(InitiativeSearchForm):
-
+class IdeaStatusForm(forms.ModelForm):
     FIELD_STATUS = 'status'
     FIELD_VISIBILITY = 'visibility'
 
@@ -509,14 +508,53 @@ class IdeaSearchForm(InitiativeSearchForm):
     )
 
     STATUS_FIELD_MAP = {
-        Idea.STATUS_PUBLISHED: 'status',
-        Idea.STATUS_TRANSFERRED: 'status',
-        Idea.STATUS_DECISION_GIVEN: 'status',
-        Idea.VISIBILITY_ARCHIVED: 'visibility',
+        Idea.STATUS_PUBLISHED: FIELD_STATUS,
+        Idea.STATUS_TRANSFERRED: FIELD_STATUS,
+        Idea.STATUS_DECISION_GIVEN: FIELD_STATUS,
+        Idea.VISIBILITY_ARCHIVED: FIELD_VISIBILITY,
     }
 
     status = forms.ChoiceField(choices=(('', _("Kaikki")), ) + SEARCH_STATUS_CHOICES,
                                widget=AutoSubmitButtonSelect, required=False, label=False)
+
+    def filter_status(self, qs, publicity_filter=True):
+        status = self.cleaned_data.get('status', None)
+        if status:
+            status_field = self.STATUS_FIELD_MAP[int(status)]
+            qs = qs.filter(**{status_field: status})
+            if status_field == self.FIELD_VISIBILITY \
+                    and int(status) == Idea.VISIBILITY_ARCHIVED:
+                qs = self.filter_visibility_archived_qs(qs)
+
+        if publicity_filter:
+            if not status or not self.FIELD_VISIBILITY == status_field:
+                qs = qs.filter(visibility=Initiative.VISIBILITY_PUBLIC)
+
+        return qs
+
+    def filter_visibility_archived_qs(self, qs):
+        if not self.is_authenticated:
+            return qs.none()
+
+        # if not moderator, then only show archived ideas owned by user
+        if not self.user.is_moderator:
+            options = {'owners': self.user}
+
+            # for organization admins even targeted ideas
+            if self.user.organization_ids:
+                qs = qs.filter(
+                    Q(**options) |
+                    Q(initiator_organization__in=self.user.organization_ids) |
+                    Q(target_organizations__in=self.user.organization_ids))
+            else:
+                qs = qs.filter(**options)
+        return qs
+
+    class Meta:
+        pass
+
+
+class IdeaSearchForm(InitiativeSearchForm, IdeaStatusForm):
 
     words = forms.CharField(label=_("Hae ideaa"), required=False)
 
@@ -558,43 +596,15 @@ class IdeaSearchForm(InitiativeSearchForm):
 
         self.fields['status'].choices = new_choices
 
-    def filter_visibility_archived_qs(self, qs):
-        if not self.is_authenticated:
-            return qs.none()
-
-        # if not moderator, then only show archived ideas owned by user
-        if not self.user.is_moderator:
-            options = {'owners': self.user}
-
-            # for organization admins even targeted ideas
-            if self.user.organization_ids:
-                qs = qs.filter(
-                    Q(**options) |
-                    Q(initiator_organization__in=self.user.organization_ids) |
-                    Q(target_organizations__in=self.user.organization_ids))
-            else:
-                qs = qs.filter(**options)
-        return qs
-
     def filtrate(self, idea_qs):
         idea_qs = super(IdeaSearchForm, self).filtrate(idea_qs)
 
-        status = self.cleaned_data['status']
-        words = self.cleaned_data['words']
-        organization_initiated = self.cleaned_data["organization_initiated"]
-        if status:
-            status_field = self.STATUS_FIELD_MAP[int(status)]
-            idea_qs = idea_qs.filter(**{status_field: status})
-
-            if status_field == self.FIELD_VISIBILITY \
-                    and int(status) == Idea.VISIBILITY_ARCHIVED:
-                idea_qs = self.filter_visibility_archived_qs(idea_qs)
+        words = self.cleaned_data.get('words', None)
+        organization_initiated = self.cleaned_data.get("organization_initiated", None)
+        idea_qs = self.filter_status(idea_qs)
 
         if words:
             idea_qs = idea_qs.filter(search_text__icontains=words)
-
-        if not status or not self.FIELD_VISIBILITY == status_field:
-            idea_qs = idea_qs.filter(visibility=Initiative.VISIBILITY_PUBLIC)
 
         if organization_initiated:
             idea_qs = idea_qs.exclude(initiator_organization__isnull=True)

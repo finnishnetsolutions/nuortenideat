@@ -231,6 +231,7 @@ class IdeaDetailView(PreFetchedObjectMixIn, DetailView):
 
 
 class IdeaVoteView(RedirectView):
+    permanent = False
     choice = Vote.VOTE_NONE
     pattern_name = "content:idea_detail"
 
@@ -259,7 +260,7 @@ class IdeaPartialEditView(PreFetchedObjectMixIn, UpdateView):
     # not in use for now
     no_moderation_reason_templates = (
         # 'content/idea_edit_title_form.html',
-        # 'content/idea_edit_picture_form.html',
+        'content/idea_edit_picture_form.html',
         # 'content/idea_edit_description_form.html',
     )
 
@@ -488,30 +489,50 @@ class DeleteIdeaView(DeleteView):
         return super(DeleteIdeaView, self).get_success_url()
 
 
-class IdeaAdditionalDetailEditView(CreateView, UpdateView):
+class IdeaAdditionalDetailEditBaseView(UpdateView):
     model = AdditionalDetail
     form_class = forms.AdditionalDetailForm
     template_name = 'content/idea_detail_additional_details_add.html'
 
     def get_context_data(self, **kwargs):
-        context = super(IdeaAdditionalDetailEditView, self).get_context_data(**kwargs)
-        if self.get_object().pk is not None:
-            context['detail_update'] = True
+        context = super(IdeaAdditionalDetailEditBaseView, self).get_context_data(**kwargs)
+        context['detail'] = self.get_object()
+        return context
+
+    def form_valid(self, form):
+        obj = form.save()
+        return JsonResponse({
+            'success': True,
+            'next': reverse('content:show_detail', kwargs={
+                'initiative_id': self.kwargs['obj'].pk,
+                'additional_detail_id': obj.pk,
+            })})
+
+
+class IdeaAdditionalDetailCreateView(IdeaAdditionalDetailEditBaseView):
+
+    def get_object(self):
+        return AdditionalDetail(idea=self.kwargs['obj'])
+
+
+class IdeaAdditionalDetailEditView(IdeaAdditionalDetailEditBaseView):
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(self.kwargs['obj'].details,
+                                     pk=self.kwargs['additional_detail_id'])
+
+
+class IdeaAdditionalDetailDetailView(DetailView):
+    template_name = 'content/additional_detail_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(IdeaAdditionalDetailDetailView, self).get_context_data(**kwargs)
+        context['detail'] = self.get_object()
         return context
 
     def get_object(self, queryset=None):
-        if 'additional_detail_id' in self.kwargs:
-            return get_object_or_404(self.kwargs['obj'].details,
-                                     pk=self.kwargs['additional_detail_id'])
-        else:
-            return AdditionalDetail(idea=self.kwargs['obj'])
-
-    def form_valid(self, form):
-        form.save()
-        return JsonResponse({
-            'success': True,
-            'next': reverse('content:list_details',
-                            kwargs={'initiative_id': self.kwargs['obj'].pk})})
+        return get_object_or_404(self.kwargs['obj'].details,
+                                 pk=self.kwargs['additional_detail_id'])
 
 
 class IdeaAdditionalDetailListView(ListView):
@@ -611,6 +632,7 @@ class DeleteQuestionView(DeleteView):
 
 
 class QuestionToIdea(RedirectView):
+    permanent = False
     pattern_name = 'content:idea_detail'
 
     def post(self, request, *args, **kwargs):
@@ -988,11 +1010,8 @@ class IdeaFeed(Feed):
 class CreateSurvey(PreFetchedObjectMixIn, View):
     def post(self, request, **kwargs):
         idea = self.get_object()
-        idea_survey = IdeaSurvey.objects.create(idea=idea)
-
         survey = Survey.objects.create(show_results=survey_config.show_results_default)
-        idea_survey.content_object = survey
-        idea_survey.save()
+        IdeaSurvey.objects.create(idea=idea, content_object=survey)
 
         return JsonResponse({'trigger': True})
 

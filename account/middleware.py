@@ -13,7 +13,7 @@ from social.exceptions import AuthCanceled
 class CustomSocialExceptionMiddleware(SocialAuthExceptionMiddleware):
     def process_exception(self, request, exception):
         if type(exception) is AuthCanceled:
-            messages.error(request, _("Facebookin yhdistäminen peruutettiin."))
+            messages.error(request, _("Tiliin yhdistäminen peruutettiin."))
             strategy = getattr(request, 'social_strategy', None)
             action = strategy.session_get("action")
             if action == "login":

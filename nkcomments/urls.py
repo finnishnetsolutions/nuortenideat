@@ -18,16 +18,9 @@ from .models import CustomComment
 from .perms import CanVoteComment, CanDeleteComment
 
 
-urlpatterns = patterns('django.contrib.comments.views',
+urlpatterns = patterns('django_comments.views',
     url(r'^(?P<initiative_id>\d+)/post/$', combo(obj_by_pk(Initiative, "initiative_id"),
                           check_perm(CanCommentInitiative))(views.post_comment), name='post-comment'),
-    #url(r'^posted/$', 'comments.comment_done', name='comments-comment-done'),
-    #url(r'^flag/(\d+)/$', 'moderation.flag', name='comments-flag'),
-    #url(r'^flagged/$', 'moderation.flag_done', name='comments-flag-done'),
-    #url(r'^delete/(\d+)/$', 'moderation.delete', name='comments-delete'),
-    #url(r'^deleted/$', 'moderation.delete_done', name='comments-delete-done'),
-    #url(r'^approve/(\d+)/$', 'moderation.approve', name='comments-approve'),
-    #url(r'^approved/$', 'moderation.approve_done', name='comments-approve-done')
 )
 
 # Votes

@@ -3,9 +3,13 @@
 from __future__ import unicode_literals
 
 from django import forms
+from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
+from django.db.models.query_utils import Q
 from django.forms.models import ModelForm
 from django.utils.translation import ugettext, ugettext_lazy as _
+from content.forms import IdeaSearchForm, IdeaStatusForm
+from content.models import Initiative, Idea, Question
 
 from libs.attachtor.forms.forms import RedactorAttachtorFormMixIn
 from libs.fimunicipality.models import Municipality
@@ -193,6 +197,7 @@ class OrganizationBaseSearchForm(ModelForm):
     )
 
     def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user')
         super(OrganizationBaseSearchForm, self).__init__(*args, **kwargs)
 
         # Set the result count to the status labels.
@@ -201,6 +206,8 @@ class OrganizationBaseSearchForm(ModelForm):
             if value:
                 if value is self.NOT_ACTIVE:
                     qs = Organization._default_manager.filter(is_active=False)
+                    if not self.user.is_moderator:
+                        qs = qs.filter(pk__in=self.user.organization_ids)
                 else:
                     qs = Organization.objects.filter(type=value)
             else:
@@ -222,6 +229,8 @@ class OrganizationBaseSearchForm(ModelForm):
 
             if organization_type == self.NOT_ACTIVE:
                 qs = qs.filter(is_active=0)
+                if not self.user.is_moderator:
+                    qs = qs.filter(pk__in=self.user.organization_ids)
             else:
                 if int(organization_type) == Organization.TYPE_OTHER:
                     other_types = (
@@ -264,3 +273,53 @@ class OrganizationSearchFormAdmin(OrganizationBaseSearchForm):
         choices=(("", _("Kaikki")), ) + ADMIN_CHOICES,
         widget=AutoSubmitButtonSelect, required=False, label=False
     )
+
+
+class OrganizationDetailIdeaListForm(IdeaStatusForm):
+
+    TYPE_CHOICES = [
+        ('', _("Kaikki")),
+        (ContentType.objects.get_for_model(Idea).id, _("Ideat")),
+        (ContentType.objects.get_for_model(Question).id, _("Kysymykset")),
+    ]
+
+    initiative_ct_id = forms.ChoiceField(choices=TYPE_CHOICES,
+                                         widget=AutoSubmitButtonSelect, required=False,
+                                         label=_("Näytä"))
+
+    user = None
+    is_authenticated = False
+
+    def __init__(self, *args, **kwargs):
+        self.is_admin = kwargs.pop('is_admin', None)
+        super(OrganizationDetailIdeaListForm, self).__init__(*args, **kwargs)
+
+        new_choices = []
+        for status, label in self.fields['status'].choices:
+            if status:
+                status_field = self.STATUS_FIELD_MAP[int(status)]
+                if status_field == self.FIELD_VISIBILITY:
+                    if status == Idea.VISIBILITY_ARCHIVED:
+                        # remove option "archived" if not authenticated
+                        if not self.is_admin:
+                            continue
+            new_choices.append((status, label))
+        self.fields['status'].choices = new_choices
+
+    def filter(self, qs):
+        ct_id = self.cleaned_data.get('initiative_ct_id', None)
+        qs = self.filter_status(qs, publicity_filter=False)
+        if ct_id:
+            qs = qs.filter(polymorphic_ctype_id=ct_id)
+        return qs
+
+    def filter_visibility_archived_qs(self, qs):
+        if not self.is_admin:
+            return qs.none()
+        return qs.filter(visibility=Initiative.VISIBILITY_ARCHIVED)
+
+    class Meta:
+        model = Initiative
+        fields = ('initiative_ct_id', 'status', )
+
+

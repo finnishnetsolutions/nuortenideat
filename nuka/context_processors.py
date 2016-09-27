@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 
 from django.utils.translation import ugettext as _
 from django.conf import settings
+from account.pipeline import BACKEND_KEY_FB, BACKEND_KEY_GOOGLE
 
 
 def nuka_settings(req):
@@ -16,6 +17,8 @@ def nuka_settings(req):
         'GOOGLE_ANALYTICS_ID': getattr(settings, 'GOOGLE_ANALYTICS_ID', None),
         'PRACTICE': settings.PRACTICE,
         'SITE_NAME': site_name,
-        'FB_NK_LOGO_URL': 'nuka/img/nuorten_ideat_logo_fb.png',
+        # TODO: Should be absolute url
         'ABSOLUTE_URI': req.build_absolute_uri(),
+        'BACKEND_KEY_FB': BACKEND_KEY_FB,
+        'BACKEND_KEY_GOOGLE': BACKEND_KEY_GOOGLE,
     }

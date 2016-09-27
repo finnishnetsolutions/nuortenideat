@@ -1,11 +1,9 @@
 {% extends 'nuka/base.html' %}
 
-{% load i18n static bootstrap3 permitter bleach_tags configs %}
+{% load i18n static bootstrap3 permitter bleach_tags configs nuka_tags %}
 
 {% block meta_extra %}
-    {% with yesnoargs=object.picture_main.url|add:","|add:FB_NK_LOGO_URL %}
-        {% include 'nuka/meta_og_tags.html' with title=object.title description=object.description_plaintext picture_url=object.picture|yesno:yesnoargs %}
-    {% endwith %}
+    {% include 'nuka/meta_og_tags.html' with title=object.title description=object.description_plaintext picture_url=object|og_pic_url %}
 {% endblock meta_extra %}
 
 {% block js_extra %}
@@ -21,14 +19,15 @@
              * Ask for confirmation to leave the page if:
              * - description or detail field are open
              * - comment field has focus
-
+            **/
+            {% comment %}
             $(window).on("beforeunload", function() {
                 var comment = $("#id_comment");
                 if ($("#id_description-fi, #id_description-sv").length || $("#additional-details").find(".multilingo-input").length || comment.val()) {
                     return "{% trans 'Sinulla on tallentamattomia muutoksia. Poistutaanko sivulta? Tallentamattomat muutokset menetetään.' %}";
                 }
             });
-             **/
+            {% endcomment %}
         });
     </script>
 {% endblock %}
