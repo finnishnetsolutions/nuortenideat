@@ -40,3 +40,13 @@ class MultiLangDict(dict):
                 if v:
                     return v
         return value
+
+    def get_other_languages_values_list(self, key):
+        langs = []
+        for lang in self.keys():
+            if lang == key:
+                continue
+            if lang in self and self[lang]:
+                langs.append(self[lang])
+        return langs
+

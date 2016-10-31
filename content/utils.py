@@ -48,8 +48,8 @@ def warn_unpublished(warn_date, archive_date):
     for idea in ideas:
         for receiver in idea_receivers(idea):
             send_email(
-                _("Idea '%s' on ollut julkaisematon %d päivää.")
-                % (idea.title, unpublished_days),
+                _("Idea '{name}' on ollut julkaisematon {days} päivää.".format(
+                    name=idea.title, days=unpublished_days)),
                 "content/email/unpublished_warning.txt",
                 {
                     "idea": idea,

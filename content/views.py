@@ -624,7 +624,7 @@ class DeleteQuestionView(DeleteView):
             ugettext('Kysymys "{0}" on poistettu.'.format(obj.title))
         )
         return JsonResponse({
-            'location': reverse('organization:detail', kwargs={'pk': organization.pk})
+            'location': organization.get_absolute_url()
         })
 
     def post(self, request, **kwargs):
@@ -805,7 +805,7 @@ class TransferIdeaToKUAView(UpdateView):
         return self.kwargs['obj']
 
     def get_form_class(self):
-        perm = CanTransferIdeaToKUAWithoutExtraConfirmation
+        perm = perms.CanTransferIdeaToKUAWithoutExtraConfirmation
         if perm(request=self.request, obj=self.kwargs['obj']).is_authorized():
             return forms.KuaTransferBlankForm
         return forms.KuaTransferMembershipReasonForm

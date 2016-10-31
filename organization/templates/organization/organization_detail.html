@@ -136,7 +136,9 @@
         <form class="ajaxy-form" id="idea-form" data-ajaxy-target="#initiative_list" novalidate method="get" action="{% url 'organization:idea_list' object.pk %}">
             {% bootstrap_field form.initiative_ct_id %}
             {% bootstrap_field form.status %}
-            {% include 'nuka/export/initiatives_export_buttons.html' %}
+            {% if object in perm.organization.CanExportInitiatives %}
+                {% include 'nuka/export/initiatives_export_buttons.html' %}
+            {% endif %}
             <div class="clearfix"></div>
         </form>
         <div class="well loader-gif" style="display:none;"><img src="{% static 'nuka/img/ajax-loader.gif' %}" alt="{% trans "Odotetaan hakutulosta" %}"></div>

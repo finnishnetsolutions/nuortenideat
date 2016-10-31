@@ -14,9 +14,10 @@ from .models import Favorite
 class FavoriteBaseUpdateView(UpdateView):
 
     def get_object(self):
-        return Favorite.objects.filter(user_id=self.kwargs['user_id'],
-                                       content_type_id=self.kwargs['content_type_id'],
-                                       object_id=self.kwargs['object_id']).first()
+        return Favorite.objects.filter(
+            user_id=self.kwargs.get('user_id', self.request.user.pk),
+            content_type_id=self.kwargs['content_type_id'],
+            object_id=self.kwargs['object_id']).first()
 
     def post(self, request, *args, **kwargs):
         if not self.request.user.is_authenticated():
@@ -31,7 +32,7 @@ class FavoriteBaseUpdateView(UpdateView):
 
     def follow(self):
         Favorite.objects.create(
-            user_id=self.kwargs['user_id'],
+            user_id=self.kwargs.get('user_id', self.request.user.pk),
             content_type_id=self.kwargs['content_type_id'],
             object_id=self.kwargs['object_id']
         )
@@ -74,7 +75,6 @@ class UserFavoriteEditView(UpdateView):
         return self.FORM_CLASSES["{0}.{1}".format(ct.app_label, ct.model)]
 
     def get_success_url(self):
-        print self.kwargs['user_id']
         return reverse('favorite:favorite_detail', kwargs={
                 'user_id': self.kwargs['user_id'],
                 'ct_id': self.kwargs['ct_id']
@@ -96,7 +96,6 @@ class UserFavoriteDetailView(DetailView):
         return User.objects.get(pk=self.kwargs['user_id'])
 
     def get_context_data(self, **kwargs):
-        print self.kwargs['user_id']
         context = super(UserFavoriteDetailView, self).get_context_data()
         context['object'] = self.get_object()
         context['ct_id'] = self.kwargs['ct_id']

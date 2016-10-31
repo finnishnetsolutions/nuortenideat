@@ -97,9 +97,15 @@ class CreateOrganizationTest(TestCase):
 
 
 class OrganizationDetailTest(TestCase):
-    def test_organization_detail_visitor(self):
+
+    def test_organization_detail_slug_redirect(self):
         org = OrganizationFactory()
         resp = self.client.get('/fi/organisaatiot/%d/' % org.pk)
+        self.assertRedirects(resp, org.get_absolute_url())
+
+    def test_organization_detail_visitor(self):
+        org = OrganizationFactory()
+        resp = self.client.get(org.get_absolute_url())
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, '<h1 class="h3-style">%s' % org.name)
         self.assertNotContains(resp, 'fa-edit')
@@ -108,7 +114,7 @@ class OrganizationDetailTest(TestCase):
         user = UserFactory()
         org = OrganizationFactory(admins=[user, ])
         self.client.login(username=user.username, password=DEFAULT_PASSWORD)
-        resp = self.client.get('/fi/organisaatiot/%d/' % org.pk)
+        resp = self.client.get(org.get_absolute_url())
         self.assertTemplateUsed(resp, 'organization/organization_detail.html')
         self.assertTemplateUsed(resp, 'organization/organization_detail_description.html')
         self.assertContains(resp, 'fa-edit', count=4)

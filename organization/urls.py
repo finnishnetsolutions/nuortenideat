@@ -18,8 +18,11 @@ from nuka.perms import IsAuthenticated, IsModerator
 from . import views, forms
 from .models import Organization
 from .perms import CanViewOrganization, CanEditOrganization
+from slug.decorators import slug_to_object
+from slug.views import SlugRedirect
 
-organization_as_obj = obj_by_pk(Organization, "pk")
+org_by_pk = obj_by_pk(Organization)
+obj_by_slug = slug_to_object(Organization)
 
 # TODO: DRY against content.urls, generic edit&detail view?
 
@@ -49,47 +52,40 @@ partial_edit_patterns = [
     ) for u in ORGANIZATION_FRAGMENT_URLS
 ]
 
-org_by_pk = obj_by_pk(Organization)
-
 urlpatterns = patterns(
     '',
     url(r'^$', views.OrganizationListView.as_view(), name='list'),
     url(r'uusi/$', check_perm(IsAuthenticated)(views.CreateOrganizationView.as_view()),
         name='create'),
-    url(
-        r'^(?P<pk>\d+)/arkistoi/',
-        organization_as_obj(
-            check_perm(IsModerator)(views.OrganizationArchiveView.as_view())
-        ),
-        name='archive'
-    ),
-    url(
-        r'^(?P<pk>\d+)/piilota/',
-        organization_as_obj(
+    url(r'^(?P<pk>\d+)/arkistoi/',
+        org_by_pk(check_perm(IsModerator)(views.OrganizationArchiveView.as_view())),
+        name='archive'),
+    url(r'^(?P<pk>\d+)/piilota/',
+        org_by_pk(
             check_perm(IsModerator)(views.OrganizationSetActiveView.as_view(active=False))
         ),
-        name='deactivate'
-    ),
-    url(
-        r'^(?P<pk>\d+)/aktivoi/',
-        organization_as_obj(
+        name='deactivate'),
+    url(r'^(?P<pk>\d+)/aktivoi/',
+        org_by_pk(
             check_perm(IsModerator)(views.OrganizationSetActiveView.as_view(active=True))
         ),
-        name='activate'
-    ),
+        name='activate'),
 ) + decorated_patterns('', combo(org_by_pk, check_perm(CanViewOrganization)),
-    url(r'(?P<pk>\d+)/$', views.OrganizationDetailView.as_view(), name='detail'),
-    url(r'(?P<pk>\d+)/lista/$', views.OrganizationIdeaList.as_view(), name='idea_list'),
+    url(r'^(?P<pk>\d+)/$', SlugRedirect.as_view(model=Organization, permanent=False),
+        name='detail_pk'),
+    url(r'^(?P<pk>\d+)/lista/$', views.OrganizationIdeaList.as_view(), name='idea_list'),
     *partial_detail_urls
+) + decorated_patterns('', combo(obj_by_slug, check_perm(CanViewOrganization)),
+    url(r'^(?P<slug>[\w-]+)/$', views.OrganizationDetailView.as_view(), name='detail'),
 ) + decorated_patterns('', combo(org_by_pk, check_perm(CanEditOrganization)),
-    url(r'(?P<pk>\d+)/kuva/$', views.PictureView.as_view(),
+    url(r'^(?P<pk>\d+)/kuva/$', views.PictureView.as_view(),
         name='picture'),
-    url(r'(?P<pk>\d+)/kuva/muokkaa/$',
+    url(r'^(?P<pk>\d+)/kuva/muokkaa/$',
         legacy_json_plaintext(views.EditPictureView.as_view()),
         name='edit_picture'),
-    url(r'(?P<pk>\d+)/kuva/rajaa/$',
+    url(r'^(?P<pk>\d+)/kuva/rajaa/$',
         views.CropProfilePictureView.as_view(), name='crop_picture'),
-    url(r'(?P<pk>\d+)/kuva/poista/$',
+    url(r'^(?P<pk>\d+)/kuva/poista/$',
         views.DeletePictureView.as_view(),
         name='delete_picture'),
     *partial_edit_patterns

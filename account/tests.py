@@ -478,14 +478,14 @@ class ProfilePageVisibilityTest(TestCase):
 
         self.assertContains(resp, 'Lähetä käyttäjälle viesti')
 
-    def test_view_user_profile_as_admin(self):
-        self.client.login(username=self.admin.username, password=DEFAULT_PASSWORD)
-        resp = self.client.get('/fi/kayttaja/%d/' % self.user1.pk)
-        self.assertTemplateUsed(resp, 'account/user_profile.html')
-        self.assertNotContains(resp, '<li>Seuratut aiheet:')
-        self.assertNotContains(resp, '<li>Seuratut organisaatiot:')
-
-        self.assertContains(resp, 'Profiili</h1>')
+    # def test_view_user_profile_as_admin(self):
+    #    self.client.login(username=self.admin.username, password=DEFAULT_PASSWORD)
+    #    resp = self.client.get('/fi/kayttaja/%d/' % self.user1.pk)
+    #    self.assertTemplateUsed(resp, 'account/user_profile.html')
+    #    self.assertNotContains(resp, '<li>Seuratut aiheet:')
+    #    self.assertNotContains(resp, '<li>Seuratut organisaatiot:')
+    #
+    #    self.assertContains(resp, 'Profiili</h1>')
 
     def test_view_own_profile(self):
         self.client.login(username=self.user1.username, password=DEFAULT_PASSWORD)

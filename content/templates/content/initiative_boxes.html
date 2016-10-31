@@ -32,7 +32,7 @@
             </div>
             {% else %}
             <div class="initiator-organization">
-                <a href="{% url 'organization:detail' initiative.initiator_organization.pk %}">
+                <a href="{{ initiative.initiator_organization.get_absolute_url }}">
                     {{ initiative.initiator_organization.name }}
                 </a>
             </div>

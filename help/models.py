@@ -8,10 +8,11 @@ from django.utils.translation import ugettext_lazy as _
 from mptt.models import MPTTModel, TreeForeignKey
 
 from libs.multilingo.models.fields import MultilingualTextField
+from slug.models import SlugifiedModel
 
 
 @python_2_unicode_compatible
-class Instruction(MPTTModel):
+class Instruction(MPTTModel, SlugifiedModel):
     title = MultilingualTextField(_("Otsikko"), max_length=255)
     description = MultilingualTextField(_("Sisältö"))
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children',
@@ -31,9 +32,16 @@ class Instruction(MPTTModel):
     def __str__(self):
         return '%s' % self.title
 
+    # inherits SlugifiedModel get_absolute_url
+    def absolute_url_viewname(self):
+        return 'help:instruction_detail'
+
+    def slugifiable_text(self):
+        return self.title
+
     class MPTTMeta:
         order_insertion_by = ['title']
 
     class Meta:
-        verbose_name = _("Ohje")
-        verbose_name_plural = _("Ohjeet")
+        verbose_name = _("ohje")
+        verbose_name_plural = _("ohjeet")

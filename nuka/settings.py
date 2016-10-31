@@ -68,6 +68,7 @@ PROJECT_APPS = (
     'smslog',
     'campaign',
     'nuka.apps.NukaSurveyAppConfig',
+    'slug',
 )
 
 INSTALLED_APPS = PROJECT_APPS + (
@@ -98,6 +99,7 @@ INSTALLED_APPS = PROJECT_APPS + (
     'easy_thumbnails',
     'file_resubmit',
     'libs.formidable',
+    'reversion',
 )
 
 # todo: formidable tests fails

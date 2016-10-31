@@ -15,7 +15,7 @@ class NukaSurveyAppConfig(SurveyAppConfig):
     show_results_choices = SurveyAppConfig.show_results_choices + (
         (SHOW_RESULTS_OWNERS, _("Omistajat")),
     )
-    show_results_default = SurveyAppConfig.SHOW_RESULTS_EVERYONE
+    show_results_default = SHOW_RESULTS_OWNERS
     client_identifier_path = "account.ClientIdentifier"
     get_client_identifier_path = "account.utils.get_client_identifier"
 

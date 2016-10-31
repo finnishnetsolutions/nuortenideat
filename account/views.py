@@ -426,8 +426,9 @@ class UserProfileView(UserProfileMixin, generic.DetailView):
         kwargs["summary"] = True
         kwargs['form'] = self.form_class
         kwargs['owns_profile'] = True if self.request.user == user else False
-        # if not kwargs['owns_profile'] and self.request.user.is_moderator:
-        #    kwargs['owns_profile'] = True
+        if not kwargs['owns_profile'] and self.request.user.is_authenticated() and \
+                self.request.user.is_moderator:
+            kwargs['owns_profile'] = True
         return kwargs
 
 

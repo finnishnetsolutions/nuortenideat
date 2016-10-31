@@ -1,6 +1,6 @@
 {% extends 'nuka/base.html' %}
 
-{% load i18n bootstrap3 mptt_tags %}
+{% load i18n bootstrap3 mptt_tags slugify %}
 
 {% block title %}{% trans "Tietoa palvelusta" %} - {{ block.super }}{% endblock title %}
 
@@ -12,7 +12,8 @@
                 <ul style="list-style-type:none; padding-left:15px;">
                     {% recursetree object_list %}
                         <li>
-                            <a href="{% url 'help:instruction_detail' pk=node.pk %}">
+                            {% get_slug node slug_list request.LANGUAGE_CODE 'slug' %}
+                            <a href="{% url 'help:instruction_detail' slug=slug %}">
                                 {{ node.title }}
                             </a>
                             {% if not node.is_leaf_node %}

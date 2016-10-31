@@ -1,6 +1,6 @@
 {% load i18n staticfiles %}
 
-<a href="{% url 'organization:detail' organization.pk %}">
+<a href="{{ organization.get_absolute_url }}">
     {% if organization.picture %}
         <img class="organization-picture" src="{{ organization.picture_medium.url }}" alt="{% trans "Organisaation profiilikuva" %}: {{ organization }}">
     {% else %}

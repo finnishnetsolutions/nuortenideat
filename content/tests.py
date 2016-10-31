@@ -1317,3 +1317,25 @@ class IdeaSearchFormTest(TestCase):
 
         self.assertTrue(Idea.VISIBILITY_ARCHIVED in choices)
         self.assertEqual(choices[Idea.VISIBILITY_ARCHIVED], "Arkistoitu (1)")
+
+
+class IdeaFavoriteTest(TestCase):
+
+    def setUp(self):
+        # login
+        self.user = UserFactory()
+        self.user2 = UserFactory()
+        self.client.login(username=self.user.username, password=DEFAULT_PASSWORD)
+
+        # create idea
+        self.idea = IdeaFactory(
+            creator=self.user2,
+            status=Idea.STATUS_PUBLISHED,
+            visibility=Idea.VISIBILITY_DRAFT,
+        )
+
+    def test_follow_idea(self):
+        ct = ContentType.objects.get_for_model(Idea)
+        resp = self.client.post('/fi/suosikit/seuraa/{}/{}/'.format(ct.pk, self.idea.pk))
+        self.assertEqual(resp.status_code, 200)
+

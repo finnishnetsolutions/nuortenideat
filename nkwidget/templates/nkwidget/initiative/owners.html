@@ -1,5 +1,5 @@
 {% if initiative.initiator_organization %}
-    <a href="{% url 'organization:detail' initiative.initiator_organization.pk %}" target="_blank">
+    <a href="{{ initiative.initiator_organization.get_absolute_url }}" target="_blank">
         {{ initiative.initiator_organization.name }}
     </a>
 {% else %}

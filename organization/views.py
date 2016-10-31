@@ -139,7 +139,7 @@ class OrganizationIdeaList(OrganizationDetailBaseView, ExportView):
         search_form = self.form_class(self.request.GET, **self.get_form_kwargs())
         qs = self.get_initiatives()
 
-        status = self.request.GET['status']
+        status = self.request.GET['status'] if 'status' in self.request.GET else None
         if status:
             status_field = search_form.STATUS_FIELD_MAP[int(status)]
 
@@ -221,10 +221,7 @@ class DeletePictureView(View):
 
 class OrganizationSetActiveMixIn(PreFetchedObjectMixIn):
     def get_success_url(self):
-        return reverse(
-            'organization:detail',
-            kwargs={'pk': self.get_object().pk}
-        )
+        return self.get_object().get_absolute_url()
 
     def set_active(self, active=True):
         question = self.get_object()

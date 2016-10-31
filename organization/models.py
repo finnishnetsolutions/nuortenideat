@@ -28,6 +28,7 @@ from kuaapi.models import ParticipatingMunicipality
 
 from nuka.models import MultilingualRedactorField, MultilingualTextField
 from nuka.utils import strip_tags
+from slug.models import SlugifiedModel
 
 
 def _organization_pic_path(obj, name):
@@ -49,7 +50,8 @@ class OrganizationQuerySet(models.QuerySet):
 
 
 @python_2_unicode_compatible
-class Organization(ActionGeneratingModelMixin, models.Model, CroppingModelMixin):
+class Organization(ActionGeneratingModelMixin, SlugifiedModel, models.Model,
+                   CroppingModelMixin):
     TYPE_UNKNOWN = 0
     TYPE_NATION = 1
     TYPE_ORGANIZATION = 3
@@ -109,8 +111,8 @@ class Organization(ActionGeneratingModelMixin, models.Model, CroppingModelMixin)
     def get_cropping_cancel_url(self):
         return reverse('organization:picture', kwargs={'pk': self.pk})
 
-    def get_absolute_url(self):
-        return reverse('organization:detail', kwargs={'pk': self.pk})
+    def absolute_url_viewname(self):
+        return 'organization:detail'
 
     def is_real_organization(self):
         return self.type not in self.MAGIC_TYPES
@@ -132,6 +134,9 @@ class Organization(ActionGeneratingModelMixin, models.Model, CroppingModelMixin)
         admin_list = [a.get_full_name() for a in self.admins.all()]
         return ", ".join(admin_list)
 
+    def slugifiable_text(self):
+        return self.name
+
     # action processing
     def action_kwargs_on_create(self):
 
@@ -151,6 +156,7 @@ def activate_approved_organization(instance=None, status=None, **kwargs):
     if status == MODERATION_STATUS_APPROVED and not instance.is_active:
         instance.is_active = True
         instance.save()
+
 
 @receiver(pre_save, sender=Organization)
 def update_search_text(instance=None, **kwargs):

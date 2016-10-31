@@ -39,3 +39,5 @@ CanEditOrganization = perms.And(
     nuka.IsAuthenticated,
     perms.Or(IsOrganizationAdmin, nuka.IsModerator)
 )
+
+CanExportInitiatives = CanEditOrganization
